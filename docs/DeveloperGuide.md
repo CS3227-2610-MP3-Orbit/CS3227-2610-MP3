@@ -37,7 +37,34 @@ code that is currently deployed:
 
 ## Spec-driven development
 
+Every feature starts as a draft under `workflow/specs/`. A named human must approve material
+requirements before implementation. Acceptance tests reference criterion IDs, and requirement
+changes flow through spec → tests → code. `npm run check:spec` checks traceability. Each role leaves a
+handoff using `workflow/handoffs/_TEMPLATE.md`, including exact scope, spec version, actual command
+results, findings, and the next decision.
+
 ## Specialised agents and the `workflow/` folder
+
+Four project-scoped Codex agents are defined in `.codex/agents/`: `requirements_architect`,
+`developer`, `tester_verifier`, and `security_reviewer`. `.codex/config.toml` enables at most two
+concurrent subagent threads, disables project web search and login shells, and lets independent
+verification and security review run in parallel. Native files live under `.codex/` because that is
+Codex's discovery location; workflow prompts, handoffs, evaluation fixtures, and recorded results
+remain under `workflow/`.
+
+The main Codex session is the coordinator. It supplies requirement IDs, the exact approved spec
+version, relevant files, allowed edit paths, and expected evidence. It obtains human specification
+approval before calling the developer, then sends the result to independent verification and security
+review. Findings may pass through at most two automatic developer/review cycles before unresolved
+issues are returned to a human. Agents never merge, deploy, or approve their own work.
+
+Custom subagents inherit the parent's sandbox, approval policy, provider, and MCP servers. Therefore,
+per-agent path limits, read-only behavior, no delegation, and retry limits are instruction-enforced;
+they are not separate operating-system permissions. Apps, plugins, memories, and permission-request
+tools are disabled in each agent file. To enforce a read-only review technically, invoke its parent
+session with `--sandbox read-only`. CI, CODEOWNERS, branch protection, GitHub environment reviewers,
+application authorization, and database RLS enforce gates outside model output. Full invocation and
+validation instructions are in `workflow/agents/README.md` and `workflow/evaluation/README.md`.
 
 ## Environments and deployment
 

@@ -22,7 +22,7 @@ umbrella draft review
 → human approval
 → acceptance/security tests
 → implementation and unit tests
-→ independent tester-security review
+→ independent tester_verifier and security_reviewer review
 → documentation and handoff
 → pull request and CI
 → development deployment
@@ -93,7 +93,8 @@ A feature is done only when:
 - Acceptance, security, and unit tests reference the approved criteria and pass.
 - Lint, type checking, unit tests, traceability, build, database lint/tests, and applicable Playwright
   tests pass.
-- A tester-security reviewer has recorded findings, and all high-severity findings are resolved.
+- The tester_verifier and security_reviewer have recorded findings, and all high-severity findings
+  are resolved.
 - No unauthorized shared-area changes or migration edits remain.
 - User/developer documentation, interaction-log summary, and agent handoffs match the behaviour.
 - A human has reviewed the pull request.
@@ -115,7 +116,7 @@ A feature is done only when:
 | Concurrent booking creates duplicates | Enforce invariants in PostgreSQL and test simultaneous requests |
 | Stored prompt injection crosses roles | Wrap every free-text source, minimize prompt data, validate/render output as plain text |
 | Agent changes requirements while coding | Freeze approved specs; requirement changes return to analyst and human review |
-| Tests mirror wording but miss intent | Independent tester-security role adds adversarial and direct-action/database tests |
+| Tests mirror wording but miss intent | Independent tester_verifier and security_reviewer add adversarial and direct-action/database checks |
 | Dev credentials reach production or agents | Separate GitHub environments, least privilege, secret scanning/review, human prod gate |
 | Docs drift from release | Treat guide updates as definition-of-done evidence and verify before release |
 
@@ -126,7 +127,8 @@ A feature is done only when:
 - **PLN-01-AC2** Given a requirement change after approval, when the change is accepted, then the spec
   changes first, its tests change second, and implementation changes last with new review evidence.
 - **PLN-01-AC3** Given a feature pull request, when it is proposed for merge, then its acceptance
-  criteria map to non-skipped tests and its developer and tester-security handoffs record results.
+  criteria map to non-skipped tests and its developer, tester_verifier, and security_reviewer
+  handoffs record results.
 - **PLN-01-AC4** Given a release candidate, when production deployment is requested, then all required
   CI checks pass, documentation matches the candidate, high-severity findings are closed, and a human
   reviewer approves the production environment.

@@ -86,8 +86,9 @@ documents differ, the difference must be resolved during human review before eit
 - Playwright covers representative happy paths, authorization boundaries, conflict messages, AI
   failure fallbacks, and safe rendering in a browser.
 - Test names or comments reference acceptance-criterion IDs, and `npm run check:spec` passes.
-- A tester-security reviewer attempts direct action invocation, ID substitution, concurrent booking,
-  stored prompt injection, generated-script output, excessive AI calls, timeout, and provider failure.
+- The tester_verifier attempts direct action invocation, ID substitution, concurrent booking, stored
+  prompt injection, generated-script output, excessive AI calls, timeout, and provider failure. The
+  security_reviewer independently assesses the surrounding controls and approval gates.
 
 ## Acceptance criteria
 
