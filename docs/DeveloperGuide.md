@@ -10,6 +10,12 @@
 
 ## Security
 
+### Decisions
+
+| Decision                                                                             | Reason                                                                                                                                  | Trade-off                                                                                                              |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Vercel Deployment Protection is off, so preview (development) deployments are public | On the Hobby plan only one person can be in the Vercel team, so teammates could not open development deployments to test their features | Anyone with a preview link reaches the app's login page; development data is fake and the app requires its own sign-in |
+
 ## Spec-driven development
 
 ## Specialised agents and the `workflow/` folder
