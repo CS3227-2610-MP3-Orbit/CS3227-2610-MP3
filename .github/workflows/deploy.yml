@@ -10,6 +10,8 @@ name: Deploy
 on:
   push:
     branches: [develop, master]
+  # Manual redeploy of the selected branch, e.g. after changing Vercel environment variables.
+  workflow_dispatch:
 
 concurrency:
   group: deploy-${{ github.ref_name }}
