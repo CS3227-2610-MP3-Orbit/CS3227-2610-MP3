@@ -1,3 +1,5 @@
+<!-- Feature PRs target `develop`. Only release PRs (develop → master) target `master`. -->
+
 ## Spec
 
 - Spec: `workflow/specs/...` (status: approved)
