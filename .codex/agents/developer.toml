@@ -47,6 +47,7 @@ Each command/check actually run and its actual result, including failures and un
 Numbered items with severity, reproduction/context, and owner.
 ## Next action
 The exact verification task for the coordinator.
+End with exactly: Handoff evidence: workflow/handoffs/<your-file>.md
 """
 
 [features]

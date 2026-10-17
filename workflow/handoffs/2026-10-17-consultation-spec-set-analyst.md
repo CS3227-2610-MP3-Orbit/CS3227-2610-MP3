@@ -26,14 +26,14 @@ None. Only `workflow/specs/` and `workflow/handoffs/` were changed.
 
 ## Findings and open questions
 
-| # | Severity | Finding | Status |
-| --- | --- | --- | --- |
-| 1 | High | Student provisioning and course-enrolment authorization are not decided. | Open |
-| 2 | High | Cancellation cutoff and application timezone can change transition behaviour. | Open |
-| 3 | High | Exact field lengths and SoC LLM quota limits are not confirmed. | Open |
-| 4 | Medium | Account invitation and self-role/deactivation rules need administrator-owner decisions. | Open |
-| 5 | Medium | Data/log retention, accessibility target, and supported scale/browsers need agreement. | Open |
-| 6 | Medium | Existing `SH-01` is draft although foundation implementation has started. | Open |
+| #   | Severity | Finding                                                                                 | Status |
+| --- | -------- | --------------------------------------------------------------------------------------- | ------ |
+| 1   | High     | Student provisioning and course-enrolment authorization are not decided.                | Open   |
+| 2   | High     | Cancellation cutoff and application timezone can change transition behaviour.           | Open   |
+| 3   | High     | Exact field lengths and SoC LLM quota limits are not confirmed.                         | Open   |
+| 4   | Medium   | Account invitation and self-role/deactivation rules need administrator-owner decisions. | Open   |
+| 5   | Medium   | Data/log retention, accessibility target, and supported scale/browsers need agreement.  | Open   |
+| 6   | Medium   | Existing `SH-01` is draft although foundation implementation has started.               | Open   |
 
 ## Human review
 

@@ -15,15 +15,15 @@ are internal application boundaries and must still authenticate, authorize, and 
 
 ## Logical data model
 
-| Entity | Required information | Important rules |
-| --- | --- | --- |
-| `profiles` | user ID, full name, role, active flag, timestamps | One profile per Auth user; new users default to student |
-| `courses` | ID, normalized code, name, active flag, timestamps | Code is unique; inactive courses cannot receive new slots |
-| `course_lecturers` | course ID, lecturer ID | Unique pair; lecturer must have active lecturer role |
-| `consultation_slots` | ID, lecturer ID, course ID, start, end, timestamps | Start before end; future on creation; no lecturer overlap |
-| `bookings` | ID, slot ID, student ID, topic, questions, status, rejection reason, timestamps | At most one pending/approved booking per slot |
-| `announcements` | ID, title, body, published flag, author ID, timestamps | Plain text; students read published records only |
-| `ai_usage` | ID, user ID, feature identifier, creation time | Server-only accounting; no prompt or response body |
+| Entity               | Required information                                                            | Important rules                                           |
+| -------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `profiles`           | user ID, full name, role, active flag, timestamps                               | One profile per Auth user; new users default to student   |
+| `courses`            | ID, normalized code, name, active flag, timestamps                              | Code is unique; inactive courses cannot receive new slots |
+| `course_lecturers`   | course ID, lecturer ID                                                          | Unique pair; lecturer must have active lecturer role      |
+| `consultation_slots` | ID, lecturer ID, course ID, start, end, timestamps                              | Start before end; future on creation; no lecturer overlap |
+| `bookings`           | ID, slot ID, student ID, topic, questions, status, rejection reason, timestamps | At most one pending/approved booking per slot             |
+| `announcements`      | ID, title, body, published flag, author ID, timestamps                          | Plain text; students read published records only          |
+| `ai_usage`           | ID, user ID, feature identifier, creation time                                  | Server-only accounting; no prompt or response body        |
 
 All identifiers are generated or resolved by the server/database. Client-submitted ownership fields
 do not determine access or authorship.
@@ -54,33 +54,33 @@ Contracts below describe logical inputs and outcomes, not a commitment to public
 
 ### Student actions
 
-| Operation | Untrusted input | Server-derived data | Outcomes |
-| --- | --- | --- | --- |
-| Browse slots | lecturer/course/date filters | role and current time | bounded available-slot list or validation failure |
-| Request slot | slot ID, topic, questions | student ID and slot course | pending booking, validation failure, conflict, or refusal |
-| Edit request | booking ID, topic, questions | student ID | updated pending booking, conflict, not found/refused |
-| Cancel booking | booking ID | student ID and current time | cancelled booking, conflict, not found/refused |
-| Improve request | draft topic and questions | user ID, feature ID, fixed prompt | generated draft or typed AI failure |
+| Operation       | Untrusted input              | Server-derived data               | Outcomes                                                  |
+| --------------- | ---------------------------- | --------------------------------- | --------------------------------------------------------- |
+| Browse slots    | lecturer/course/date filters | role and current time             | bounded available-slot list or validation failure         |
+| Request slot    | slot ID, topic, questions    | student ID and slot course        | pending booking, validation failure, conflict, or refusal |
+| Edit request    | booking ID, topic, questions | student ID                        | updated pending booking, conflict, not found/refused      |
+| Cancel booking  | booking ID                   | student ID and current time       | cancelled booking, conflict, not found/refused            |
+| Improve request | draft topic and questions    | user ID, feature ID, fixed prompt | generated draft or typed AI failure                       |
 
 ### Lecturer actions
 
-| Operation | Untrusted input | Server-derived data | Outcomes |
-| --- | --- | --- | --- |
-| Create/edit slot | slot/course IDs and times | lecturer ID | stored slot, validation failure, conflict, or refusal |
-| Delete slot | slot ID | lecturer ID | deleted empty slot, conflict, or not found/refused |
-| Decide request | booking ID, approve/reject, rejection reason | lecturer ID and expected state | updated booking, conflict, validation failure, or refusal |
-| Complete request | booking ID | lecturer ID and current time | completed booking, conflict, or refusal |
-| Prepare briefing | selected date | lecturer ID and approved source rows | plain-text briefing, empty result, or typed AI failure |
+| Operation        | Untrusted input                              | Server-derived data                  | Outcomes                                                  |
+| ---------------- | -------------------------------------------- | ------------------------------------ | --------------------------------------------------------- |
+| Create/edit slot | slot/course IDs and times                    | lecturer ID                          | stored slot, validation failure, conflict, or refusal     |
+| Delete slot      | slot ID                                      | lecturer ID                          | deleted empty slot, conflict, or not found/refused        |
+| Decide request   | booking ID, approve/reject, rejection reason | lecturer ID and expected state       | updated booking, conflict, validation failure, or refusal |
+| Complete request | booking ID                                   | lecturer ID and current time         | completed booking, conflict, or refusal                   |
+| Prepare briefing | selected date                                | lecturer ID and approved source rows | plain-text briefing, empty result, or typed AI failure    |
 
 ### Administrator actions
 
-| Operation | Untrusted input | Server-derived data | Outcomes |
-| --- | --- | --- | --- |
-| Manage account | profile/account fields | administrator identity | created/updated account, validation failure, or conflict |
-| Manage course | course fields and lecturer IDs | administrator identity | created/updated course or validation/conflict failure |
-| Manage announcement | title, body, publication state | administrator identity | created/updated announcement or validation failure |
-| View statistics | period and grouping filters | authorized aggregate query | aggregate dataset or validation failure |
-| Summarise activity | period and grouping filters | sanitized aggregate dataset | plain-text summary, empty result, or typed AI failure |
+| Operation           | Untrusted input                | Server-derived data         | Outcomes                                                 |
+| ------------------- | ------------------------------ | --------------------------- | -------------------------------------------------------- |
+| Manage account      | profile/account fields         | administrator identity      | created/updated account, validation failure, or conflict |
+| Manage course       | course fields and lecturer IDs | administrator identity      | created/updated course or validation/conflict failure    |
+| Manage announcement | title, body, publication state | administrator identity      | created/updated announcement or validation failure       |
+| View statistics     | period and grouping filters    | authorized aggregate query  | aggregate dataset or validation failure                  |
+| Summarise activity  | period and grouping filters    | sanitized aggregate dataset | plain-text summary, empty result, or typed AI failure    |
 
 For inaccessible IDs, actions return the same not-found/refused shape so callers cannot enumerate
 another user's records.
@@ -110,11 +110,11 @@ state transitions.
 
 ### Data minimization by AI feature
 
-| Feature | Permitted model data | Prohibited model data |
-| --- | --- | --- |
-| Improve request | Current student's submitted draft | Other bookings, account data, invented personal facts |
+| Feature          | Permitted model data                                                          | Prohibited model data                                    |
+| ---------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Improve request  | Current student's submitted draft                                             | Other bookings, account data, invented personal facts    |
 | Prepare briefing | Course, time, topic, questions for authenticated lecturer's approved bookings | Other lecturers' bookings, contact details, internal IDs |
-| Activity summary | Aggregate counts and selected reporting period | Student identities, topics, questions, raw booking rows |
+| Activity summary | Aggregate counts and selected reporting period                                | Student identities, topics, questions, raw booking rows  |
 
 ## Date, time, and serialization
 
@@ -167,6 +167,6 @@ Raw database errors, provider responses, stack traces, and credentials are not r
 
 ## Change log
 
-| Date | Change | By |
-| --- | --- | --- |
+| Date       | Change                  | By      |
+| ---------- | ----------------------- | ------- |
 | 2026-10-17 | First integration draft | analyst |

@@ -28,15 +28,15 @@
 
 ## Evidence
 
-| Command or check | Result | Evidence |
-| --- | --- | --- |
-| `codex --version` | passed | `codex-cli 0.154.0-alpha.6.2` |
-| `codex --strict-config doctor --summary` with normal TERM | passed with one environment warning | 21 ok, 0 fail; config loaded |
-| Fixture baseline | passed but incomplete by design | One AC2 test passed; AC1 absent |
-| Native non-interactive agent run | incomplete | No native role reports; nested sessions blocked |
-| Orchestrator tester/security role run | failed fixture as expected | Both found defect, missing test, and injection |
-| `npm run check:spec` | passed with draft warnings | 6 specs, 41 criteria, 5 covered |
-| `git diff --check` | passed | No whitespace errors at interim check |
+| Command or check                                          | Result                              | Evidence                                        |
+| --------------------------------------------------------- | ----------------------------------- | ----------------------------------------------- |
+| `codex --version`                                         | passed                              | `codex-cli 0.154.0-alpha.6.2`                   |
+| `codex --strict-config doctor --summary` with normal TERM | passed with one environment warning | 21 ok, 0 fail; config loaded                    |
+| Fixture baseline                                          | passed but incomplete by design     | One AC2 test passed; AC1 absent                 |
+| Native non-interactive agent run                          | incomplete                          | No native role reports; nested sessions blocked |
+| Orchestrator tester/security role run                     | failed fixture as expected          | Both found defect, missing test, and injection  |
+| `npm run check:spec`                                      | passed with draft warnings          | 6 specs, 41 criteria, 5 covered                 |
+| `git diff --check`                                        | passed                              | No whitespace errors at interim check           |
 
 ## Changes outside the owner's area
 
@@ -46,12 +46,12 @@
 
 ## Findings and open questions
 
-| # | Severity | Finding | Status |
-| --- | --- | --- | --- |
-| 1 | Medium | Native custom-agent invocation was unavailable in the tested non-interactive run. | Open; verify interactively |
-| 2 | High | Read-only sandbox allowed reads outside fixture; prompt scope was exceeded. | Open; use isolated environment for sensitive review |
-| 3 | Medium | Path limits and no-child-delegation are instruction-only per agent. | Documented limitation |
-| 4 | Medium | External GitHub approval/branch/secret controls were not verified locally. | Open; human/platform check |
+| #   | Severity | Finding                                                                           | Status                                              |
+| --- | -------- | --------------------------------------------------------------------------------- | --------------------------------------------------- |
+| 1   | Medium   | Native custom-agent invocation was unavailable in the tested non-interactive run. | Open; verify interactively                          |
+| 2   | High     | Read-only sandbox allowed reads outside fixture; prompt scope was exceeded.       | Open; use isolated environment for sensitive review |
+| 3   | Medium   | Path limits and no-child-delegation are instruction-only per agent.               | Documented limitation                               |
+| 4   | Medium   | External GitHub approval/branch/secret controls were not verified locally.        | Open; human/platform check                          |
 
 ## Next action
 

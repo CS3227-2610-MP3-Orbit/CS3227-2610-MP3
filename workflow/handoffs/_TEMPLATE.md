@@ -1,5 +1,28 @@
 # Handoff: <task ID / requirement IDs> — <agent> → <coordinator or human>
 
+<!--
+Keep this JSON block valid. The completion hook validates structure, not truth or approval.
+Use [] for no changed files or no unresolved issues. "blocked" and "not-run" are honest results.
+-->
+<!-- HANDOFF:BEGIN -->
+
+{
+"schemaVersion": 1,
+"taskId": "<task ID>",
+"requirementIds": ["<requirement or acceptance-criterion ID>"],
+"status": "passed | failed | blocked | incomplete",
+"changedFiles": ["<path, or leave this array empty>"],
+"verification": [
+{
+"check": "<command or review>",
+"result": "passed | failed | blocked | not-run",
+"evidence": "<actual concise result>"
+}
+],
+"unresolvedIssues": ["<issue, or leave this array empty>"]
+}
+<!-- HANDOFF:END -->
+
 - Date:
 - Task ID:
 - Requirement / acceptance-criterion IDs:
@@ -22,7 +45,7 @@ read-only review.
 ## Evidence
 
 | Command or check | Result: passed / failed / blocked / unexecuted | Evidence |
-| --- | --- | --- |
+| ---------------- | ---------------------------------------------- | -------- |
 
 ## Changes outside the owner's area
 

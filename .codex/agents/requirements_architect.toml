@@ -40,6 +40,7 @@ Commands/checks actually run with their actual outcomes; never claim an unexecut
 Numbered items with severity and the human decision needed.
 ## Next action
 One concrete coordinator or human-review step.
+End with exactly: Handoff evidence: workflow/handoffs/<your-file>.md
 """
 
 [features]

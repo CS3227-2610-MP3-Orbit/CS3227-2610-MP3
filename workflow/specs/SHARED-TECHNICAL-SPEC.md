@@ -124,6 +124,6 @@ documents differ, the difference must be resolved during human review before eit
 
 ## Change log
 
-| Date | Change | By |
-| --- | --- | --- |
+| Date       | Change                       | By      |
+| ---------- | ---------------------------- | ------- |
 | 2026-10-17 | First shared technical draft | analyst |

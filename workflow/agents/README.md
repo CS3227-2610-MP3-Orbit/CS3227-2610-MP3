@@ -7,12 +7,12 @@ explicitly assigns it a task.
 
 ## Agents
 
-| Agent | May change | Must not change |
-| --- | --- | --- |
-| `requirements_architect` | Coordinator-approved specs, plans, handoffs | Application code, tests, migrations, CI, approvals |
-| `developer` | Assigned implementation paths and relevant unit tests | Specs, independent acceptance tests, unrelated files |
-| `tester_verifier` | Assigned tests and handoff evidence | Application code, specs, migrations, CI/security settings |
-| `security_reviewer` | Nothing; report to coordinator | All repository files |
+| Agent                    | May change                                            | Must not change                                           |
+| ------------------------ | ----------------------------------------------------- | --------------------------------------------------------- |
+| `requirements_architect` | Coordinator-approved specs, plans, handoffs           | Application code, tests, migrations, CI, approvals        |
+| `developer`              | Assigned implementation paths and relevant unit tests | Specs, independent acceptance tests, unrelated files      |
+| `tester_verifier`        | Assigned tests and handoff evidence                   | Application code, specs, migrations, CI/security settings |
+| `security_reviewer`      | Nothing; report to coordinator                        | All repository files                                      |
 
 The allowed paths above are instruction-enforced. Custom-agent files cannot create path-specific
 filesystem permissions. All subagents inherit the parent session's sandbox, approval policy, model

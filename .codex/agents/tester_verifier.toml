@@ -46,6 +46,7 @@ Commands actually run and actual results.
 Coverage or environment limitations without fabricated conclusions.
 ## Next action
 One concrete coordinator action.
+End with exactly: Handoff evidence: workflow/handoffs/<your-file>.md
 """
 
 [features]

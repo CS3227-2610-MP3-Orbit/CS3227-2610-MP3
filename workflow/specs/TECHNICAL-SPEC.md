@@ -149,6 +149,6 @@ must be approved before implementation.
 
 ## Change log
 
-| Date | Change | By |
-| --- | --- | --- |
+| Date       | Change                | By      |
+| ---------- | --------------------- | ------- |
 | 2026-10-17 | First technical draft | analyst |

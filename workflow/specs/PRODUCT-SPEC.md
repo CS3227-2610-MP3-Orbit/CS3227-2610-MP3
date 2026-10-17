@@ -16,11 +16,11 @@ ordinary booking workflow must remain usable when the AI service is unavailable.
 
 ## Users and goals
 
-| Role | Primary goals |
-| --- | --- |
-| Student | Find a suitable slot, submit a useful request, and track or cancel personal bookings |
-| Lecturer | Publish availability, decide requests, prepare for upcoming sessions, and record completion |
-| Administrator | Manage accounts, courses, assignments, announcements, and aggregate activity |
+| Role          | Primary goals                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| Student       | Find a suitable slot, submit a useful request, and track or cancel personal bookings        |
+| Lecturer      | Publish availability, decide requests, prepare for upcoming sessions, and record completion |
+| Administrator | Manage accounts, courses, assignments, announcements, and aggregate activity                |
 
 ## Main workflow
 
@@ -163,6 +163,6 @@ Booking statuses are `pending`, `approved`, `rejected`, `cancelled`, and `comple
 
 ## Change log
 
-| Date | Change | By |
-| --- | --- | --- |
+| Date       | Change                                    | By      |
+| ---------- | ----------------------------------------- | ------- |
 | 2026-10-17 | First draft from the proposed feature set | analyst |
