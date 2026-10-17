@@ -1,0 +1,74 @@
+# develop → development environment (dev Supabase project, Vercel preview)
+# master  → production environment  (prod Supabase project, Vercel production)
+#
+# Secrets are stored per GitHub environment ("development", "production") under the same names,
+# so this file never chooses credentials itself. The production environment requires a human
+# reviewer to approve each deployment.
+
+name: Deploy
+
+on:
+  push:
+    branches: [develop, master]
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref_name == 'master' && 'production' || 'development' }}
+      url: ${{ steps.vercel.outputs.url }}
+    env:
+      VERCEL_ENV: ${{ github.ref_name == 'master' && 'production' || 'preview' }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.121.0
+
+      - name: Apply database migrations
+        run: |
+          supabase link --project-ref "$SUPABASE_PROJECT_REF"
+          supabase db push
+
+      - name: Build on GitHub Actions
+        run: |
+          npm install --global vercel@64.5.0
+          vercel pull --yes --environment="$VERCEL_ENV" --token="$VERCEL_TOKEN"
+          prod=(); if [ "$VERCEL_ENV" = production ]; then prod=(--prod); fi
+          vercel build "${prod[@]}" --token="$VERCEL_TOKEN"
+
+      - name: Deploy prebuilt output to Vercel
+        id: vercel
+        env:
+          # Optional stable address for the development environment, e.g. my-app-dev.vercel.app
+          DEV_ALIAS: ${{ github.ref_name == 'develop' && vars.VERCEL_DEV_ALIAS || '' }}
+        run: |
+          prod=(); if [ "$VERCEL_ENV" = production ]; then prod=(--prod); fi
+          url=$(vercel deploy --prebuilt "${prod[@]}" --token="$VERCEL_TOKEN")
+          if [ -n "$DEV_ALIAS" ]; then
+            vercel alias set "$url" "$DEV_ALIAS" --token="$VERCEL_TOKEN"
+            url="https://$DEV_ALIAS"
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed to $url" >> "$GITHUB_STEP_SUMMARY"

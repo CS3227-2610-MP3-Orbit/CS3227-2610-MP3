@@ -1,0 +1,29 @@
+# Free Supabase projects pause after a week without activity. This pings both projects every
+# three days so the app stays available to testers and graders.
+
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: "0 3 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    strategy:
+      matrix:
+        environment: [development, production]
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.environment }}
+    steps:
+      - name: Query the REST API
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          curl --fail --silent --show-error --output /dev/null \
+            "$SUPABASE_URL/rest/v1/profiles?select=id&limit=1" \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY"

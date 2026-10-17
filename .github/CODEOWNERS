@@ -1,0 +1,21 @@
+# Each path needs approval from its owner.
+
+*                           @JohannsenLum
+
+/src/app/student/           @josephkwok001
+/src/features/student/      @josephkwok001
+/workflow/specs/student/    @josephkwok001
+
+/src/app/lecturer/          @JordanGoh4
+/src/features/lecturer/     @JordanGoh4
+/workflow/specs/lecturer/   @JordanGoh4
+
+/src/app/admin/             @JohannsenLum
+/src/features/admin/        @JohannsenLum
+/workflow/specs/admin/      @JohannsenLum
+
+# Shared foundation: any owner may approve; branch protection requires two approvals.
+/src/lib/                   @JohannsenLum @josephkwok001 @JordanGoh4
+/supabase/                  @JohannsenLum @josephkwok001 @JordanGoh4
+/workflow/specs/shared/     @JohannsenLum @josephkwok001 @JordanGoh4
+/.github/                   @JohannsenLum

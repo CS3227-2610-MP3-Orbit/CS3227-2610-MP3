@@ -1,0 +1,1 @@
+-- Local development seed data. Applied by `npx supabase db reset`; never pushed to dev or prod.

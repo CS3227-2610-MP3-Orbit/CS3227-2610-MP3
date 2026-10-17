@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [develop, master]
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    name: Lint, types, unit tests, traceability, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run check:spec -- --markdown traceability.md
+      - name: Publish traceability matrix
+        run: cat traceability.md >> "$GITHUB_STEP_SUMMARY"
+      - run: npm run build
+        env:
+          # Placeholders: the build must not depend on real credentials.
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+
+  database:
+    name: Migrations and database rule tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.121.0
+      - run: supabase db start
+      - run: supabase db lint --level error
+      - run: supabase test db
