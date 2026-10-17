@@ -17,4 +17,5 @@ request → analyst → spec (draft) → human review → approved
 | `scripts/check-traceability.mjs`         | Links tests to acceptance criteria; run by CI                                  |
 | `scripts/setup-github.sh`                | Creates the GitHub environments and secrets (one-off setup)                    |
 | `scripts/setup-vercel-env.sh`            | Sets the Vercel Preview/Production variables (one-off setup)                   |
+| `scripts/create-user.mjs`                | Creates a confirmed user with a role in the dev or prod project                |
 | `notes/`                                 | Reference material, e.g. SoC LLM limits copied from the NUS-only documentation |

@@ -6,9 +6,34 @@
 
 ## Data model and access rules
 
+### Database migrations
+
+Every schema change is a new file in `supabase/migrations/`, created with
+`npx supabase migration new <name>` and reviewed in a pull request. The deploy workflow applies
+migrations to the development project when `develop` changes and to the production project when
+`master` changes, before the new code is deployed.
+
+Because migrations run first, the code that is still live meets the new schema for a few minutes,
+and for longer if the deployment then fails. Every migration must therefore keep working with the
+code that is currently deployed:
+
+- **Add first, remove later.** To rename or replace a column, add the new column in one release,
+  switch the code to it, and drop the old column in a later release.
+- **Never edit a migration that has been merged.** Write a new migration that changes it.
+- **Never change the schema through the Supabase dashboard** on development or production; the
+  pipeline would not know about the change.
+- **Every new table enables row-level security** and has policies that use `current_app_role()`;
+  `supabase/tests/rls_enabled.test.sql` fails otherwise.
+
 ## AI features and the SoC LLM gateway
 
 ## Security
+
+### Decisions
+
+| Decision                                                                             | Reason                                                                                                                                  | Trade-off                                                                                                              |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Vercel Deployment Protection is off, so preview (development) deployments are public | On the Hobby plan only one person can be in the Vercel team, so teammates could not open development deployments to test their features | Anyone with a preview link reaches the app's login page; development data is fake and the app requires its own sign-in |
 
 ## Spec-driven development
 

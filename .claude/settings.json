@@ -7,6 +7,7 @@
       "Read(./.env.development)",
       "Read(./.env.production)",
       "Read(./.env.secrets)",
+      "Read(./.env.test-accounts)",
       "Bash(cat .env:*)",
       "Bash(cat .env.secrets:*)",
       "Bash(vercel deploy:*)",
