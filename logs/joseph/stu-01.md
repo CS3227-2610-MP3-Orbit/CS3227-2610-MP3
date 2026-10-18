@@ -44,6 +44,27 @@ revised files. This clarification does not establish implementation compliance o
    `npm run check:spec` passed: 16 specs, 150 criteria, 53 covered; uncovered draft criteria remain
    warnings. No behavioral test pass is claimed for the clarified criteria.
 
+## CI formatting repair — 2026-10-18
+
+Task `TASK-STU-01-CI-FORMAT` inspected PR job `117638225150` in run `39114777731` and
+push job `117638216174` in run `39114774713`. Both Verify summaries showed formatting as
+the sole failure; the other eight checks passed. At baseline
+`7092cdfc7b31043e52ab72048e72294c0b71a04b`, the tester/verifier applied Prettier only to
+`src/features/student/slots/format.test.ts`, `src/features/student/slots/verification.test.ts`,
+and `tests/e2e/student-browse-available-slots.spec.ts`. Assertions and behavior were unchanged.
+
+The coordinator independently ran `npm run verify -- --profile=app` with the CI public
+Supabase URL and placeholder key: all nine stages passed, including formatting, lint,
+typecheck, workflow controls, sensitive-path classification, application tests (26 passed,
+4 todo), spec traceability, secret scanning, and the production build. Traceability reported
+53/150 criteria covered; uncovered draft requirements remain warnings. No spec status or
+CI enforcement was changed for this repair. The local build automatically loaded its local
+environment file; the agent did not inspect or print its contents.
+
+Evidence: `workflow/handoffs/stu-01/ci-format-fix.md`. No database/browser suite was rerun
+for this formatting-only change. GitHub has not tested the repaired working tree; a human
+must commit and push it to trigger fresh runs. No remote pass, merge, or deployment is claimed.
+
 ## Where to look
 
 - Current handoff: `workflow/handoffs/stu-01/latest.md`
