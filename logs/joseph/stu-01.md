@@ -19,9 +19,10 @@ The recorded post-fix results were:
 - Joseph subsequently reported that the persistent local migration was applied and
   `npm run test:db` works. That later run was not independently observed in the recorded agent check.
 
-This is not merge readiness. The canonical specifications are draft and the latest independent review
-still identifies four medium ambiguities: option-cap semantics, positive filter fixtures, stale cursor
-meaning, and filter-option interaction. Human review of the database migrations is also required.
+The four browse ambiguities have now been resolved in the draft following Joseph's request: independent
+200/200 option caps, positive and negative filter fixtures, eligibility/version-based cursor staleness
+without time expiry, and filter-independent option lists. Specs remain draft pending review of the
+revised files. This clarification does not establish implementation compliance or merge readiness.
 
 ## Timeline
 
@@ -34,6 +35,14 @@ meaning, and filter-option interaction. Human review of the database migrations 
    removed that policy, and the behavioral database suite passed 22/22 transactionally.
 6. Shared specifications were split and revised for traceability. Their exact-draft challenge left the
    four product/testability decisions listed above open, so those specs remain draft.
+7. Task `STU-01-CLARIFY-FOUR`: the requirements architect resolved those four points in STU-01, SH-02,
+   and SH-03. Impact and self-review are consolidated in
+   `workflow/reviews/stu-01/browse-clarifications.md`. SQL inspection found the cursor and unfiltered
+   option behavior already present, but option caps and fuller acceptance fixtures require follow-up.
+   No application code, tests, or migrations were changed in this task. This generated log entry awaits
+   human verification.
+   `npm run check:spec` passed: 16 specs, 150 criteria, 53 covered; uncovered draft criteria remain
+   warnings. No behavioral test pass is claimed for the clarified criteria.
 
 ## Where to look
 

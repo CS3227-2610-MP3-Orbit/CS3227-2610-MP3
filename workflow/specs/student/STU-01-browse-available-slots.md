@@ -9,7 +9,12 @@ status: draft
 
 ## Document control
 
-- Version: `0.2-draft`
+- Version: `0.3-draft`
+- Browse clarification record and bounded follow-up plan:
+  `workflow/reviews/stu-01/browse-clarifications.md` (`STU-01-CLARIFY-FOUR`).
+- Confirmed clarification source: Joseph requested applying the four preceding recommendations on
+  2026-10-18: independent option caps, non-vacuous filter tests, explicit stale cursors without expiry,
+  and filter-independent dropdowns. Exact revised-digest teammate approval remains pending.
 - Prior approval date: `2026-10-18`
 - Approval report: Joseph communicated in the project Codex conversation that the team approved this
   specification and named Jordan as its reviewer.
@@ -122,8 +127,17 @@ type BrowseAvailableSlotsInput = {
 - A date is converted to an inclusive start and exclusive end in `Asia/Singapore`, then to UTC for
   comparison: `starts_at >= dateStartUtc AND starts_at < nextDateStartUtc`.
 - Lecturer, course, and date filters may be supplied separately or together.
+- Course and Lecturer dropdowns come from all currently available slots under `SH-03-R6`, before
+  applying selected filters or pagination. Selecting a lecturer, course, date, or cursor never narrows
+  either dropdown. Each list independently returns all eligible distinct options up to its first 200
+  in the deterministic order in `SH-02-R6`. An empty filtered result may retain nonempty dropdowns.
 - The cursor encodes only stable ordering data, is validated, and cannot change the student role,
   page size, availability predicate, or other filters.
+- A cursor is stale when its anchor slot is no longer available under the bound filters and ordering
+  position (including deletion, reservation, lifecycle ineligibility, or a changed start time), or its
+  version is unsupported. There is no elapsed-time expiry: an older cursor remains valid while its
+  anchor/version/binding remains valid. Stale, altered, malformed, and wrong-filter cursors return no
+  partial results and offer a first-page restart retaining valid filters; see `SH-03-R12`.
 - Results are ordered and paginated as proposed in decision 5. The response does not disclose a
   total count if computing it would permit hidden-record enumeration.
 
@@ -152,16 +166,17 @@ with pgTAP tests in a new append-only migration.
 
 ### STU-01-R5 — Failure behavior
 
-| Condition                                        | Required outcome                                                                                 |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| Missing session                                  | Redirect to `/login`; no slot data is returned                                                   |
-| Wrong role or inactive account                   | Refuse/redirect under the shared auth contract; no slot data is returned                         |
-| Invalid UUID, date, cursor, or unknown input key | Return a field-level validation message and run no slot query                                    |
-| Well-formed inaccessible/nonexistent ID          | Show the normal empty-result state without confirming existence                                  |
-| No matching available slots                      | Show “No available slots match these filters” and allow filters to be cleared                    |
-| Database/query unavailable                       | Show a generic temporary-error state with retry; disclose no raw database error or stack trace   |
-| Slot changes after rendering                     | A later request may conflict; browsing performs no mutation and shows no false reservation claim |
-| Malicious stored display text                    | Render it as plain text; do not interpret HTML, script, URL, or instructions                     |
+| Condition                                                     | Required outcome                                                                                                |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Missing session                                               | Redirect to `/login`; no slot data is returned                                                                  |
+| Wrong role or inactive account                                | Refuse/redirect under the shared auth contract; no slot data is returned                                        |
+| Malformed UUID, date, cursor syntax, or unknown input key     | Return a field-level validation message before a slot query                                                     |
+| Structurally valid but stale, altered, or wrong-filter cursor | Validate at the trusted boundary; return no partial result and offer first-page restart retaining valid filters |
+| Well-formed inaccessible/nonexistent ID                       | Show the normal empty-result state without confirming existence                                                 |
+| No matching available slots                                   | Show “No available slots match these filters” and allow filters to be cleared                                   |
+| Database/query unavailable                                    | Show a generic temporary-error state with retry; disclose no raw database error or stack trace                  |
+| Slot changes after rendering                                  | A later request may conflict; browsing performs no mutation and shows no false reservation claim                |
+| Malicious stored display text                                 | Render it as plain text; do not interpret HTML, script, URL, or instructions                                    |
 
 Expected failures must be typed/handled. Server logs may record a request/correlation identifier and
 failure category, but not secrets or private booking content.
@@ -248,18 +263,26 @@ Tests must reference these IDs exactly. Each criterion states one primary observ
   eight fields `slotId`, `courseId`, `courseCode`, `courseName`, `lecturerId`, `lecturerName`,
   `startsAt`, and `endsAt`; both timestamps are ISO-8601 UTC instants ending in `Z`, and none of the
   prohibited fields in `STU-01-R4` is present.
-- **STU-01-AC9** Given a valid lecturer filter, when it is applied, then every returned slot belongs
-  to that lecturer.
-- **STU-01-AC10** Given a valid course filter, when it is applied, then every returned slot belongs
-  to that course.
-- **STU-01-AC11** Given a valid calendar-date filter, when it is applied, then every returned slot
-  starts within that date's inclusive-start/exclusive-end bounds in the authoritative timezone.
-- **STU-01-AC12** Given lecturer, course, and date filters together, when they are applied, then every
-  returned slot satisfies all three filters.
+- **STU-01-AC9** Given otherwise-available matching and different-Lecturer fixtures fitting one page,
+  applying the lecturer filter includes the known matching slot and excludes the nonmatching slot;
+  every returned slot belongs to that lecturer (pgTAP/integration).
+- **STU-01-AC10** Given otherwise-available matching and different-course fixtures fitting one page,
+  applying the course filter includes the known matching slot and excludes the nonmatching slot;
+  every returned slot belongs to that course (pgTAP/integration).
+- **STU-01-AC11** Given otherwise-available fixtures fitting one page at the selected Singapore day's
+  inclusive start, just before its start, and exclusive next-day start, applying the date filter
+  includes the matching start fixture and excludes both outside fixtures; every returned start falls
+  within the selected day (pgTAP/integration).
+- **STU-01-AC12** Given one fully matching available slot and three available fixtures differing only
+  in lecturer, course, or date, all fitting one page, applying all three filters includes the full
+  match and excludes each partial match; every returned slot satisfies all three (pgTAP/integration).
 - **STU-01-AC13** Given more than 20 matching slots with equal and differing start times, when pages
   are traversed using server cursors, then each page has at most 20 results in deterministic
   start-time/slot-ID order without duplication.
-- **STU-01-AC14** Given a malformed UUID, date, cursor, or unknown input key, when browsing is
+  With controlled between-page changes, an unavailable/changed anchor or unsupported version returns
+  no partial result and offers restart with valid filters retained. An otherwise-valid older cursor
+  is accepted without time-based expiry (`SH-03-AC22`; integration plus browser recovery test).
+- **STU-01-AC14** Given a malformed UUID, date, cursor syntax, or unknown input key, when browsing is
   requested, then a validation error is returned before a slot query runs.
 - **STU-01-AC15** Given a well-formed nonexistent or inaccessible filter identifier, when browsing is
   requested, then the normal empty-result shape does not reveal whether that record exists.
@@ -289,6 +312,9 @@ Tests must reference these IDs exactly. Each criterion states one primary observ
   course, inactive-lecturer, assignment, and direct-table abuse cases.
 - Playwright: authorized list/filter/clear/empty/error behavior, wrong-role direct navigation,
   keyboard/label behavior, and stored-script display as text.
+- pgTAP/contract under `SH-02-AC8` and `SH-03-AC30`: independent option caps including asymmetric
+  catalogues, plus identical dropdowns before/after filtering or pagination with availability held
+  fixed. Empty selected results must not imply empty global dropdowns.
 - Security review: ID substitution, hidden-record enumeration, query amplification, browser-clock
   manipulation, own-profile versus other-profile access, data-minimization, RLS/function safety, and
   confirmation that no AI path exists.
