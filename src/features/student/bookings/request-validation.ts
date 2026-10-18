@@ -67,8 +67,8 @@ export const slotSchema = z
     courseName: z.string(),
     lecturerId: uuid,
     lecturerName: z.string(),
-    startsAt: z.string().datetime({ offset: true }),
-    endsAt: z.string().datetime({ offset: true }),
+    startsAt: z.string().datetime(),
+    endsAt: z.string().datetime(),
     slotVersion: z.string().min(1).max(512),
   })
   .strict()

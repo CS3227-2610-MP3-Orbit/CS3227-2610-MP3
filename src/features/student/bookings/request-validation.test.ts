@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boundedInput, requestInputSchema } from "./request-validation";
+import { boundedInput, requestInputSchema, slotSchema } from "./request-validation";
 
 const input = {
   slotId: "11111111-1111-4111-8111-111111111111",
@@ -9,6 +9,26 @@ const input = {
   questions: " Why? ",
 };
 describe("request input normalization", () => {
+  it("[STU-02-AC19] accepts UTC-Z slot timestamps and rejects offset alternatives", () => {
+    const slot = {
+      slotId: input.slotId,
+      courseId: input.slotId,
+      courseCode: "CS3227",
+      courseName: "Security",
+      lecturerId: input.idempotencyKey,
+      lecturerName: "Lecturer",
+      slotVersion: "version",
+      startsAt: "2098-01-01T01:00:00.000000Z",
+      endsAt: "2098-01-01T02:00:00.000000Z",
+    };
+    expect(slotSchema.safeParse(slot).success).toBe(true);
+    expect(slotSchema.safeParse({ ...slot, startsAt: "2098-01-01T01:00:00+00:00" }).success).toBe(
+      false,
+    );
+    expect(slotSchema.safeParse({ ...slot, endsAt: "2098-01-01T10:00:00+08:00" }).success).toBe(
+      false,
+    );
+  });
   it("[STU-02-AC4] trims ECMAScript whitespace without changing interior text", () => {
     expect(requestInputSchema.parse({ ...input, topic: "\uFEFF\u2000a\n b\u00a0" }).topic).toBe(
       "a\n b",

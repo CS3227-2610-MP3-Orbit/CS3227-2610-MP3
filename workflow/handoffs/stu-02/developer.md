@@ -7,7 +7,7 @@
 "taskId": "STU-02-P2-P3",
 "requirementIds": ["STU-02-R1", "STU-02-R2", "STU-02-R3", "STU-02-R4", "STU-02-R5", "STU-02-R6", "STU-02-R7", "STU-02-R8", "STU-02-R9", "STU-02-R10"],
 "status": "incomplete",
-"changedFiles": ["src/app/student/slots/page.tsx", "src/app/student/slots/[slotId]/request/page.tsx", "src/app/student/slots/[slotId]/request/loading.tsx", "src/app/student/slots/[slotId]/request/actions.ts", "src/app/student/slots/[slotId]/request/request-form.tsx", "src/features/student/bookings/request-validation.ts", "src/features/student/bookings/request-validation.test.ts", "src/features/student/bookings/request-server.ts", "supabase/migrations/20261018020000_student_request_consultation.sql", "workflow/handoffs/stu-02/developer.md"],
+"changedFiles": ["src/app/student/slots/page.tsx", "src/app/student/slots/[slotId]/request/page.tsx", "src/app/student/slots/[slotId]/request/loading.tsx", "src/app/student/slots/[slotId]/request/actions.ts", "src/app/student/slots/[slotId]/request/request-form.tsx", "src/features/student/bookings/request-validation.ts", "src/features/student/bookings/request-validation.test.ts", "src/features/student/bookings/request-server.ts", "supabase/migrations/20261018020000_student_request_consultation.sql", "supabase/migrations/20261018021000_student_request_consultation_fixes.sql", "workflow/handoffs/stu-02/developer.md"],
 "verification": [
 {"check":"npm run typecheck", "result":"passed", "evidence":"Next type generation and tsc completed with exit 0."},
 {"check":"npm run lint", "result":"passed", "evidence":"eslint completed with exit 0."},
@@ -15,9 +15,10 @@
 {"check":"npm test", "result":"failed", "evidence":"3 verifier tests failed; 34 passed, 4 todo. Mock RPC lacks real builder abortSignal method; reported to coordinator for independent fixture validation, not edited by generator."},
 {"check":"npm run check:spec", "result":"passed", "evidence":"17 specs, 169 criteria, 72 covered by names; unrelated draft gaps warn. Not execution evidence."},
 {"check":"git diff --check", "result":"passed", "evidence":"No whitespace errors."},
+{"check":"Round 1: typecheck, lint, npm test -- src/features/student/bookings", "result":"passed", "evidence":"Typecheck/lint exit 0; 12 tests pass (5 developer, 7 verifier). Verifier independently repaired RPC builder mock."},
 {"check":"Database, E2E, build and independent security checks", "result":"not-run", "evidence":"Coordinator and verifiers own isolated test infrastructure and independent checks."}
 ],
-"unresolvedIssues": ["Independent verification pending.", "Verify effective database statement timeout: function SET is configured to 10 seconds but does not necessarily arm a top-level PostgreSQL statement timer; application HTTP abort is 10 seconds.", "Verifier test-double failures require fixture validation."]
+"unresolvedIssues": ["Independent recheck of round-1 fixes pending.", "Function statement timeout does not alone arm PostgreSQL top-level timer; coordinator reports authenticated/authenticator API deadline 8s and application HTTP abort is 10s. No global role defaults changed."]
 }
 
 <!-- HANDOFF:END -->
@@ -53,3 +54,26 @@ need teammate review before merge. No commits, push, deployment, or production a
 Coordinator freezes a review snapshot; functional and security verifiers independently validate
 fixtures/assertions and all ACs against that exact snapshot, then return confirmed findings. Keep the
 two-round review/fix limit. Coordinator owns Joseph's log and consolidation.
+
+## Round 1 fixes
+
+Independent review target: `afe888c`. Read both verifier regression assertions before fixing.
+
+- F-TV02-01 (high, AC15/16): native form submission used implicit GET and leaked topic/questions to
+  the URL. Added explicit POST and disabled controls/submit until hydration, with no-JavaScript
+  guidance. Existing same-intent action and uncertain recovery behavior remains.
+- F-TV02-02 (medium, AC19): lookup timestamps used PostgreSQL offset notation despite inherited
+  UTC-Z contract. Appended migration `20261018021000_student_request_consultation_fixes.sql` to
+  format both timestamps in UTC-Z; strict response validation rejects offset alternatives. Added
+  developer positive/negative schema test. Existing migration remains untouched.
+- Coordinator reports new migration applied to isolated API and pristine regression databases, now
+  frozen. Generator did not apply it. No additional implementation edits pending recheck.
+- Actual generator rechecks: typecheck passed, lint passed, booking unit suite 12/12 passed,
+  whitespace passed. Browser/database regressions belong to independent verifier; not claimed here.
+- Fixes currently uncommitted, coordinator to create review commit. Blob identities: form
+  `a4bab7b4e9b9dfa2fd602d05793033ae51d37996`, schema
+  `9ba1ae5e4a23c06305a6f7ffa25c5bfb34a36f36`, fix migration
+  `f41ad1692895ba8c1d41bb7466f7930a18c5c385`.
+
+Next action: verifier rechecks native submission privacy and UTC-Z responses on coordinator's fix
+commit, and reconciles final functional/security reports against it. One review/fix round used.

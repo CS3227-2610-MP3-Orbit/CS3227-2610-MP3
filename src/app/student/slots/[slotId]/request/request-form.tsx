@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { unstable_rethrow } from "next/navigation";
 import { formatSingaporeDateTime } from "@/features/student/slots/format";
 import {
@@ -19,8 +19,12 @@ const messages = {
 };
 const control =
   "mt-1 block w-full min-w-0 rounded border p-2 focus-visible:outline-2 focus-visible:outline-offset-2";
+const subscribe = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
 
 export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot }) {
+  const hydrated = useSyncExternalStore(subscribe, clientReady, serverReady);
   const [slot, setSlot] = useState(initialSlot);
   const [topic, setTopic] = useState("");
   const [questions, setQuestions] = useState("");
@@ -30,7 +34,7 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
   const [result, setResult] = useState<ReceiptResult | null>(null);
   const [needsReview, setNeedsReview] = useState(false);
   const [reviewReady, setReviewReady] = useState(false);
-  const locked = pending || attempt !== null;
+  const locked = !hydrated || pending || attempt !== null;
   const field = result?.kind === "validation_error" ? result.field : null;
 
   async function submit() {
@@ -118,6 +122,7 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
         </p>
       </section>
       <form
+        method="post"
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
@@ -126,6 +131,7 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
         className="space-y-4"
         aria-busy={pending}
       >
+        <noscript>Enable JavaScript to review and submit a consultation request.</noscript>
         <div>
           <label htmlFor="topic" className="font-medium">
             Consultation topic (required)
@@ -220,7 +226,7 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
         ) : (
           <button
             type="submit"
-            disabled={pending}
+            disabled={!hydrated || pending}
             className="rounded bg-black px-4 py-2 text-white disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {pending ? "Submitting…" : attempt ? "Retry same request" : "Submit request"}
