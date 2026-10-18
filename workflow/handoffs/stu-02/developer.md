@@ -77,3 +77,47 @@ Independent review target: `afe888c`. Read both verifier regression assertions b
 
 Next action: verifier rechecks native submission privacy and UTC-Z responses on coordinator's fix
 commit, and reconciles final functional/security reports against it. One review/fix round used.
+
+## Round 2: CI fixture target wiring
+
+Coordinator assigned only `.github/workflows/ci.yml`, `playwright.config.ts`, new
+`workflow/scripts/stu02-ci.mjs`, and this handoff. App baseline `2396f26`; no app, specification,
+migration, verifier test/helper, or dependency edits. Finding: ordinary Playwright discovery included
+STU-02 fixture writers whose default database differed from CI's app database.
+
+The E2E CI job now creates a fresh temporary Supabase project `stu02-ci-*`, copies only config,
+migrations and seed, and captures startup/status credentials without printing them. It explicitly
+passes all four fixture target overrides and matching app environment, runs real concurrent DB tests,
+then the entire default E2E suite. PostgreSQL global-count regression tests remain in their separate
+pristine job. The default Playwright config requires explicit disposable loopback targets, uses the
+configured localhost app and serial execution, and excludes/skips no test. The dedicated suite is
+unchanged. CI-only setup refuses ordinary local invocation before creating infrastructure.
+
+Actual checks:
+
+- Node syntax, typecheck, lint, formatting and whitespace: passed.
+- Default Playwright collection with explicit isolated overrides: 5 tests across all 3 files.
+- Default full Playwright execution on existing isolated `localhost:3102`: 4 passed, 1 failed.
+  The newly expanded verifier direct-action role assertion at line 275 expected redirect headers
+  but received neither header. Reported to coordinator/tester for fixture/status validation; generator
+  did not modify the assertion or application code. This is not yet a confirmed implementation defect.
+- CI runner local guard: expected exit 1, requires GitHub Actions CI; no resources created.
+- Hosted GitHub Actions setup and execution: not run; must be confirmed by CI.
+
+Next action: tester validates direct-action test setup/assertion and independently reviews CI wiring;
+coordinator reconciles final reports and records hosted execution as unrun. Two bounded rounds used.
+
+### Final round-2 recheck
+
+Tester corrected its redirect transport/header expectation after validating framework behavior;
+no application fix was needed. Reran the **default complete Playwright suite**, with explicit
+isolated four-variable overrides and matching public API URL: **5/5 passed in 20.1 seconds**.
+This includes auth/browse regressions and all STU-02 browser tests, with direct page/action checks
+for Lecturer, Administrator, inactive and signed-out actors. Owned-file formatting check passed.
+
+Inspected `workflow/scripts/verify.mjs`: `--profile=e2e` executes only `npm run test:e2e`, preceded by
+root-project Supabase status, Chromium-installed and public-environment prerequisite checks. The new
+runner preserves that test command, checks isolated startup/status and public environment, while the
+existing mandatory Chromium install step remains and missing-browser launch fails. It replaces the
+wrong root-project readiness target; it omits no application/security/database verification step.
+Separate Verify and Database rules jobs are unchanged. Hosted CI execution remains not run.

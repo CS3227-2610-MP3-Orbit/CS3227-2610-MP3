@@ -10,7 +10,7 @@ private production data, or unverified claims of human approval.
   consultation-system specifications, specialized-agent setup, specification-readiness review,
   first vertical-slice proposal, and development guardrails created or updated so far.
 - [`stu-01.md`](stu-01.md) — current consolidated status of the Student browse-and-filter feature.
-- [`stu-02.md`](stu-02.md) — request-consultation specification, proposed decisions, and review evidence.
+- [`stu-02.md`](stu-02.md) — request-consultation specification, implementation prompt, agent assignments, findings/fixes, and actual verification evidence.
 - [`archive/stu-01/`](archive/stu-01/) — original dated STU-01 implementation, verification, security
   fix, and specification-revision logs retained as audit evidence.
 
