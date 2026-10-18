@@ -151,10 +151,7 @@ describe("independent Student slot browse boundary verification", () => {
   });
 
   it("[STU-01-AC16] renders the approved neutral empty message with a clear-filters path", () => {
-    const pageSource = readFileSync(
-      join(process.cwd(), "src/app/student/slots/page.tsx"),
-      "utf8",
-    );
+    const pageSource = readFileSync(join(process.cwd(), "src/app/student/slots/page.tsx"), "utf8");
 
     expect(pageSource).toContain("No available slots match these filters.");
     expect(pageSource).toMatch(/href="\/student\/slots"[\s\S]*?Clear filters/);
@@ -202,10 +199,7 @@ describe("independent Student slot browse boundary verification", () => {
     });
     expect(mocks.generateText).not.toHaveBeenCalled();
 
-    const pageSource = readFileSync(
-      join(process.cwd(), "src/app/student/slots/page.tsx"),
-      "utf8",
-    );
+    const pageSource = readFileSync(join(process.cwd(), "src/app/student/slots/page.tsx"), "utf8");
     expect(pageSource).not.toContain("dangerouslySetInnerHTML");
   });
 });
