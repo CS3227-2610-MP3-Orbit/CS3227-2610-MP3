@@ -1,5 +1,39 @@
 # Handoff: AGENT-SETUP-01 — coordinator → human reviewers
 
+<!-- HANDOFF:BEGIN -->
+
+{
+"schemaVersion": 1,
+"taskId": "AGENT-SETUP-01",
+"requirementIds": ["VAL-01-AC1", "VAL-01-AC2"],
+"status": "incomplete",
+"changedFiles": [
+".codex/config.toml",
+".codex/agents/",
+"workflow/agents/",
+"workflow/evaluation/",
+"logs/agent-setup/2026-10-17-summary.md"
+],
+"verification": [
+{
+"check": "codex --strict-config doctor --summary",
+"result": "passed",
+"evidence": "21 checks passed and configuration loaded with one environment warning"
+},
+{
+"check": "native non-interactive agent run",
+"result": "blocked",
+"evidence": "nested session did not produce native role reports"
+}
+],
+"unresolvedIssues": [
+"Native custom-agent discovery still required interactive verification at this handoff.",
+"Path and child-delegation limits were instruction-only rather than sandbox-enforced."
+]
+}
+
+<!-- HANDOFF:END -->
+
 - Date: 2026-10-17
 - Task ID: AGENT-SETUP-01
 - Requirement IDs: specialized-agent setup request; fixture criteria VAL-01-AC1 and VAL-01-AC2

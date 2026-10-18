@@ -155,7 +155,7 @@ test("[WFG-03-AC3] a persistent structured handoff is accepted", () => {
   const decision = evaluateHandoff({
     cwd: process.cwd(),
     last_assistant_message:
-      "Handoff evidence: workflow/handoffs/2026-10-17-development-hooks-coordinator.md",
+      "Handoff evidence: workflow/handoffs/project-setup/2026-10-17-development-hooks-coordinator.md",
   });
   assert.equal(decision.result, "accept");
 });

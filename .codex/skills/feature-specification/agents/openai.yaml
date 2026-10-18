@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feature Specification"
+  short_description: "Draft and challenge implementation-ready specs"
+  default_prompt: "Use $feature-specification to draft or review a feature specification without starting implementation."

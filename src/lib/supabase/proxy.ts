@@ -33,8 +33,8 @@ export async function updateSession(request: NextRequest) {
   const isPublic = PUBLIC_PATHS.some((path) => request.nextUrl.pathname.startsWith(path));
 
   if (!isSignedIn && !isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    // Do not carry untrusted protected-route parameters onto the public login page.
+    const url = new URL("/login", request.url);
     return NextResponse.redirect(url);
   }
 

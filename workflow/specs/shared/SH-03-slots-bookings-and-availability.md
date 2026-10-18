@@ -1,423 +1,285 @@
 ---
 id: SH-03
-title: Slots, bookings, and availability
+title: Student available-slot read model and browse boundary
 owner: team
 status: draft
 ---
 
-# SH-03: Slots, bookings, and availability
+# SH-03: Student available-slot read model and browse boundary
 
 ## Document control
 
 - Spec owner: shared/team; changes require independent review under `.github/CODEOWNERS`.
-- Reviewed repository baseline: `9dae2a00342f159c4211c056ab297fae715451fb`.
-- Source feature spec: `workflow/specs/student/STU-01-browse-available-slots.md`, content digest
-  `13fb2e0693210f4a97e75b395b167d2cf3f3d4f8` (`draft`, not approved).
-- Prior approved commit or digest invalidated by this revision: none; this is a new draft.
-- Parent/shared requirements: `PRD-01`, `SHR-01`, `TEC-01`, `INT-01`, `SH-01`, and `SH-02`; none is
-  an approved implementation authority at this draft's creation.
-- Related plan and latest handoff: `workflow/specs/PLAN.md` task P2; this draft's handoff is
-  `workflow/handoffs/2026-10-17-sh-02-sh-03-requirements-architect.md`.
-- Confirmed requirements: user-provided booking rules and the accepted decisions recorded below.
-- Proposed assumptions requiring review: logical table shapes, opaque signed/versioned cursor approach,
-  slot edit/delete behavior from umbrella drafts, and typed response envelopes.
-- Unresolved decisions: slot duration/horizon; string bounds; retention; booked-consultation handling
-  after assignment/account removal; cancellation cutoff beyond “before start”; and exact rate limits.
+- Reviewed repository baseline: `e5893b28a6d898bdfb698dcb7f48e293ab373e7b` plus the uncommitted
+  STU-01 implementation identified in `workflow/handoffs/archive/stu-01/2026-10-18-stu-01-coordinator.md`.
+- Prior team-reported approved behavior digest invalidated by this revision:
+  `3bc3f5cd29ea26040e8cedd71df71fa1f68d51c8`; prior canonical metadata digest:
+  `2f704fe55f177fe8d9a8320dc5c5ea71c91e1680`.
+- Change-impact record: `workflow/reviews/stu-01/2026-10-18-shared-spec-traceability-impact.md`.
+- Parent/shared requirements: `SH-01`, revised draft `SH-02`, and `STU-01`.
+- Related future scope: draft `SH-05` owns slot and booking mutations, transitions, and concurrency.
+- Confirmed requirements: previously approved time, availability, Student browse, disclosure, failure,
+  accessibility, bounded-operation, and no-AI behavior retained below.
+- Confirmed revision decisions: course/Lecturer IDs are permitted in the exact slot allowlist; Student
+  staff discovery uses narrow RPC projections; the exact UTC slot wire shape and 200-per-type option
+  caps are normative.
+- Proposed assumptions requiring review: exact physical entity/function names and cursor encoding.
+- Unresolved decisions: rate/latency targets and cursor time expiry; they do not authorize broader
+  inputs or results.
 
-No source specification is approved. This specification remains `draft`; accepting selected decisions
-does not approve this complete contract.
+This material revision preserves the approved Student browse/read behavior while moving future slot and
+booking mutations to `SH-05`. The status is reset to `draft`; prior approval and review evidence are
+stale until a teammate reviews the exact revised digest.
 
 ## Product and feature description
 
-This shared contract defines consultation slots, booking state/integrity rules, availability, and the
-read-only database boundary used by Students to browse slots. It is shared by Student request/manage,
-Lecturer availability/decision, and Administrator reporting features.
-
-## Confirmed, proposed, and unresolved inputs
-
-### Confirmed
-
-- Store timestamps as PostgreSQL `timestamptz` in UTC. Display and calendar filtering use
-  `Asia/Singapore`; a selected date matches the slot's start time in that calendar day.
-- A Student-visible slot starts strictly after server/database time, belongs to an active course and
-  active lecturer with a current assignment, and is not reserved by a pending/approved booking.
-- Pending and approved bookings reserve a slot. Rejected/cancelled bookings release a still-future slot.
-  Completed bookings never release their historical slot, and completion is allowed only at/after end.
-- Availability is permitted disclosure. The reason for unavailability and booking identity, content,
-  exact status, and history are prohibited disclosures.
-- Assignment removal blocks new slots and hides future unbooked slots while preserving records and
-  existing pending/approved bookings.
-- A lecturer cannot create overlapping slots. A Student cannot hold overlapping active bookings. Only
-  one active booking may reserve a slot, including under simultaneous requests.
-- Student browsing uses an active-Student-only fixed-`search_path` function/RPC and safe projection;
-  direct underlying table reads and ordinary use of a service/admin client are prohibited.
-- Pages contain 20 rows in `(starts_at, slot_id)` keyset order. Each page is a point-in-time read, not a
-  frozen snapshot. Cursors are bound to the exact filter set and support safe restart if stale/invalid.
-- Cursor length is at most 512 characters; total encoded query/filter input is at most 2,048 characters.
-  Repeated scalar/array/unknown fields and impossible dates are rejected.
-- No AI participates in deterministic slot, booking, availability, or browse operations.
-
-### Proposed
-
-- Logical entities are named `consultation_slots` and `bookings`, and the Student database function is
-  named `browse_available_slots`.
-- A cursor is opaque, integrity-protected/versioned, and contains only ordering/filter-binding data.
-- A Lecturer may edit/delete an unbooked slot but not one with a pending, approved, or completed booking.
-- Typed results follow `success`, `validation_error`, `forbidden_or_not_found`, `conflict`, and
-  `temporarily_unavailable` categories.
-
-### Unresolved
-
-- Minimum/maximum slot duration and how far in advance slots may be created.
-- Topic, questions, and rejection-reason bounds and whether questions are one text value or structured.
-- Whether cancellation has a notice period stricter than “strictly before start.”
-- Retention/deletion periods for terminal bookings and past slots.
-- Operational handling of pending/approved bookings after assignment removal, course deactivation, or
-  lecturer deactivation.
-- Exact rate limits/capacity and whether cursors expire by time as well as becoming stale by data state.
+This contract defines the point-in-time Student-visible availability predicate and the read-only,
+bounded, protected database boundary used by `STU-01`. It defines how stored booking states affect
+visibility, but not how those states are created or changed.
 
 ## Scope, non-goals, and dependencies
 
 ### In scope
 
-- Slot identity, ownership, course relationship, times, overlap, and lifecycle constraints.
-- Booking identity, ownership, statuses, transitions, reservation semantics, and concurrency.
-- Shared definition of Student-visible availability.
-- Student browse filter, cursor, safe projection, permission, disclosure, and error contracts.
-- Cross-role database boundaries relevant to these entities.
+- Authoritative time and the minimum stored slot facts consumed by browse.
+- Read-side interpretation of booking status and lifecycle state.
+- Available-slot predicate, filters, projection, pagination, failures, accessibility, and no-AI rules.
+- Student authorization, direct-table denial, disclosure, and resource bounds.
 
 ### Non-goals
 
-- Role-specific page layout, request forms, dashboards, or detailed mutation APIs.
-- Resolving/reassigning bookings after a lecturer/course/assignment becomes inactive.
-- Notifications, recurring/group slots, waitlists, calendars, video calls, attendance, or location.
-- Student enrolment restrictions.
-- AI ranking, natural-language filtering, booking decisions, or automatic state changes.
+- Slot creation, overlap prevention, editing, deletion, archival, or Lecturer mutation APIs.
+- Booking requests, ownership mutation, approval/rejection/cancellation/completion transitions, and
+  reservation concurrency.
+- Operational handling of booked consultations after course/assignment/account deactivation.
+
+Those behaviors moved to draft `SH-05` without changing their prior intent.
 
 ### Dependencies
 
-- `SH-01` supplies active authenticated profiles and trusted roles.
-- `SH-02` supplies active courses and current lecturer-course assignments.
-- `STU-01` owns Student browse UI behavior and must be revised to reference this contract.
-- Later Student/Lecturer/Admin specs own mutation workflows and must not weaken these shared invariants.
+- `SH-01` supplies authenticated active profiles and trusted roles.
+- `SH-02` supplies active-course and current-assignment read facts.
+- `STU-01` owns Student page behavior and UI states.
 
-## Observed implementation at the reviewed baseline
+## Observed implementation
 
-This is current-state evidence, not a confirmed business rule. The initial migration contains only the
-profile/role and AI-usage foundation; there is no slot table, booking table, availability function,
-cursor implementation, booking state machine, or related RLS/concurrency constraint. The Student page is
-a placeholder, and existing tests cover foundation authentication/RLS rather than this contract. All
-behavior in this specification is planned.
+Current-state evidence, not authority: the uncommitted STU-01 migration defines slot/booking tables and
+`browse_available_slots`; server validation and UI consume it. Existing tests reference retained
+`SH-03-AC10`, AC16–AC22, AC24–AC27, AC29, and AC30. Other retained criteria require real test additions
+after renewed approval. The implementation remains incomplete under the latest coordinator handoff.
 
 ## Users, roles, and permissions
 
-| Actor                       | Allowed actions/data                                                                      | Refused actions/data                                                                         |
-| --------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Signed-out or inactive user | None                                                                                      | All browse, slot, and booking access                                                         |
-| Active Student              | Safe available-slot projection; later own-booking operations under approved role specs    | Direct slot/booking tables; others' booking data; lecturer/admin mutations                   |
-| Active Lecturer             | Later manage own eligible slots and own-slot bookings under approved role specs           | Other lecturers' slots/bookings; arbitrary Student browse function use; cross-owner mutation |
-| Active Administrator        | Later approved aggregate/report operations; no default need for private consultation text | Ordinary access to private booking descriptions unless separately justified and approved     |
-| Server service/admin client | Only a documented server operation after explicit authorization                           | Ordinary Student browsing or unguarded general table access                                  |
+| Actor                       | Allowed actions/data                              | Refused actions/data                                                                 |
+| --------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Signed-out or inactive user | None                                              | All Student browse and underlying-table access                                       |
+| Active Student              | Safe available-slot and filter-option projection  | Direct feature tables, booking data, unavailability reasons, contacts, and mutations |
+| Lecturer or Administrator   | Nothing through this Student-only browse boundary | Invoking the Student function based on another role's future permissions             |
+| Server service/admin client | No role in ordinary Student browsing              | Unguarded protected reads or authorization bypass                                    |
 
 ## Functional requirements
 
 ### SH-03-R1 — Authoritative time and serialization
 
 - Classification: `confirmed`.
-- Source: accepted user decision.
+- Source: prior team-reported approval.
 
-Persist slot and booking timestamps as `timestamptz` values representing UTC instants. Database/server
-time, never a client clock, decides future/past status and transition eligibility. Human display and
-calendar-date bounds use `Asia/Singapore`. A date filter selects `starts_at` within that Singapore date's
-inclusive start and exclusive next-day start, converted to UTC for querying.
+Slot/booking timestamps are PostgreSQL `timestamptz` instants. Database/server time, never a browser
+clock, determines future status. Display and calendar bounds use `Asia/Singapore`; a date matches
+`starts_at` from the inclusive Singapore day start to the exclusive next-day start, converted to UTC.
 
-### SH-03-R2 — Slot integrity
+### SH-03-R2 — Read-side slot integrity
 
-- Classification: `confirmed` for valid/future/non-overlap rules; `unresolved` for duration/horizon.
-- Source: user-provided booking rules and accepted decisions.
+- Classification: `confirmed` for the browse invariant.
+- Source: prior team-reported approval.
 
-A slot has an opaque ID, owning lecturer profile, course, `starts_at`, `ends_at`, and audit timestamps.
-On creation, the lecturer and course must be active and currently assigned, `starts_at` must be strictly
-future by database time, and `ends_at` must be strictly after `starts_at`. Slots owned by the same
-lecturer must not overlap, including under concurrent writes. Exact duration and advance horizon remain
-unresolved.
+A browseable slot has opaque ID, lecturer ID, course ID, `starts_at`, and `ends_at`; `ends_at` is strictly
+after `starts_at`. Browse fails closed for invalid stored ranges. Slot creation-time, horizon, duration,
+and lecturer-overlap rules moved to `SH-05`.
 
-### SH-03-R3 — Booking identity and ownership
+### SH-03-R5 — Read-side booking-state semantics
 
 - Classification: `confirmed`.
-- Source: user-provided main workflow and security requirements.
+- Source: prior team-reported approval.
 
-A booking has an opaque ID, one slot, the authenticated Student owner derived from trusted identity,
-status, consultation topic/questions, optional rejection reason where allowed, and audit timestamps. No
-client-supplied Student, Lecturer, or role field determines ownership or permission. Each new request
-creates a new booking; rejected/cancelled history is not overwritten when a slot is requested again.
-
-### SH-03-R4 — Booking statuses and transition protocol
-
-- Classification: `confirmed` except where field bounds remain unresolved.
-- Source: user-provided main workflow and accepted completed-booking decision.
-
-The only statuses are `pending`, `approved`, `rejected`, `cancelled`, and `completed`. Allowed transitions
-are:
-
-```text
-available slot -> pending
-pending        -> approved | rejected | cancelled
-approved       -> completed | cancelled
-rejected       -> terminal
-cancelled      -> terminal
-completed      -> terminal
-```
-
-Approval/rejection is performed only by the lecturer owning the slot. Rejection requires a bounded
-non-blank reason. Cancellation is performed only by the booking's Student and succeeds only strictly
-before slot start unless a later approved spec establishes a stricter notice period. Completion is
-performed only by the slot's Lecturer, from `approved`, at or after `ends_at`. Every transition is an
-atomic conditional update on authorized owner and expected current state; stale operations conflict.
-
-### SH-03-R5 — Reservation and historical-slot semantics
-
-- Classification: `confirmed`.
-- Source: accepted user decision.
-
-`pending` and `approved` reserve a slot. `rejected` and `cancelled` release it only while the slot is
-still future and all other availability conditions hold. A `completed` booking permanently marks that
-slot historical/non-reusable even though it is not active. Completion before `ends_at` is forbidden; if
-impossible/legacy data contains a completed future booking, Student browsing must fail closed for that
-slot and not return it.
+Stored `pending` and `approved` bookings reserve a slot; stored `rejected` and `cancelled` history does
+not hide a still-future otherwise-eligible slot. Any `completed` booking permanently makes its slot
+unavailable, including impossible legacy future-completed data. State transitions and rebooking writes
+belong to `SH-05`.
 
 ### SH-03-R6 — Shared available-slot predicate
 
 - Classification: `confirmed`.
-- Source: accepted user decision and STU-01 challenge findings 3–5 disposition.
+- Source: prior team-reported approval and STU-01 challenge disposition.
 
-At a single query's database-time point, a Student-visible available slot must satisfy all conditions:
+At one query's database-time point, every returned slot has a future start, valid range, active course,
+active lecturer profile with trusted `lecturer` role, current lecturer-course assignment, and no
+`pending`, `approved`, or `completed` booking. The response reveals no failed condition for hidden slots.
 
-1. `starts_at` is strictly after database time;
-2. `ends_at` is after `starts_at`;
-3. the course is active;
-4. the lecturer profile is active and has trusted `lecturer` role;
-5. the lecturer-course assignment is current;
-6. no booking for the slot is `pending` or `approved`; and
-7. no booking for the slot is `completed`.
+### SH-03-R7 — Lifecycle visibility effects
 
-The query may disclose availability and safe public fields but must not disclose which failed condition
-made another slot unavailable.
+- Classification: `confirmed` for read behavior and preservation.
+- Source: prior team-reported approval.
 
-### SH-03-R7 — Assignment/account lifecycle effects
+A non-current assignment, inactive course, inactive lecturer, or loss of lecturer role hides future
+unbooked slots. Existing records and pending/approved bookings remain stored and are not automatically
+transitioned by browse. Lifecycle mutation workflows remain outside this read contract.
 
-- Classification: `confirmed` for browse/new-slot effects and preservation; `unresolved` for booked-case
-  resolution.
-- Source: accepted user decision.
-
-Assignment removal, course deactivation, lecturer deactivation, or loss of lecturer role prevents new
-slots and hides future unbooked slots. It preserves existing records and does not automatically transition
-pending/approved bookings. The later operational workflow for affected booked consultations must be
-approved before those mutations are implemented.
-
-### SH-03-R8 — One reservation per slot and Student conflict prevention
+### SH-03-R10 — Student browse input contract
 
 - Classification: `confirmed`.
-- Source: user-provided conflict-prevention rules.
+- Source: prior team-reported approval.
 
-Database-level concurrency controls ensure at most one `pending` or `approved` booking reserves a slot.
-Database-level controls also refuse overlapping active bookings for the same Student, using slot time
-ranges. Simultaneous requests that conflict yield one committed winner and typed conflict outcomes for
-losers; they never create two successful active reservations.
+The boundary accepts at most one optional canonical lecturer UUID, course UUID, strict real
+`YYYY-MM-DD` date, and opaque cursor. Filters combine with AND. Unknown/repeated/array fields, impossible
+dates, invalid UUIDs, cursor values over 512 characters, and total encoded input over 2,048 characters
+are rejected before querying. Callers cannot select fields, limits, sort, identity, role, or predicates.
 
-### SH-03-R9 — Proposed slot editing/deletion constraints
-
-- Classification: `proposed`.
-- Source: `PRD-01` and `TEC-01` drafts.
-
-Only the owning active Lecturer may edit or delete a slot, and only while no `pending`, `approved`, or
-`completed` booking exists. An edit must revalidate future time, course assignment, and overlap. Terminal
-rejected/cancelled history is preserved even if the slot is not reused. Whether deletion becomes archival
-after any booking history exists must be resolved with retention rules.
-
-### SH-03-R10 — Student browse filter contract
+### SH-03-R11 — Student projection and database authorization
 
 - Classification: `confirmed`.
-- Source: accepted user decision.
+- Source: prior team-reported approval and STU-01 challenge disposition.
 
-The browse boundary accepts at most one optional canonical lecturer UUID, one optional canonical course
-UUID, one optional strict calendar date (`YYYY-MM-DD`, including real calendar validation), and one
-optional opaque cursor. Lecturer, course, and date filters combine with AND semantics. Date matching uses
-`SH-03-R1`. Unknown keys, repeated scalar keys, arrays, impossible dates, invalid UUIDs, cursor values
-over 512 characters, and total encoded query/filter input over 2,048 characters are rejected before the
-slot query. Callers cannot select fields, limits, sort order, user identity, role, or availability rules.
+Students browse through a security-definer RPC that checks an active Student, fixes `search_path`,
+schema-qualifies objects, is granted only to the intended database role, and performs no mutation.
+Students have no direct course, assignment, slot, or booking table access, and may directly read only
+their own profile row under `SH-01`. All other Lecturer/staff discovery occurs through the narrow RPC.
+Browsing does not use a service/admin client.
 
-### SH-03-R11 — Student browse projection and database authorization
+Each slot uses exactly this wire shape and no additional field:
 
-- Classification: `confirmed`.
-- Source: accepted user decision and STU-01 challenge finding 2 disposition.
+```ts
+type AvailableSlot = {
+  slotId: string; // canonical opaque UUID
+  courseId: string; // canonical opaque UUID
+  courseCode: string;
+  courseName: string;
+  lecturerId: string; // canonical opaque UUID
+  lecturerName: string;
+  startsAt: string; // ISO-8601 UTC instant ending in Z
+  endsAt: string; // ISO-8601 UTC instant ending in Z
+};
+```
 
-Students browse only through a narrow security-definer database function/RPC. It explicitly checks that
-the database caller maps to an active Student, has fixed empty or explicit safe `search_path`, schema-
-qualifies objects, is executable only by the intended authenticated role, and performs no mutation.
-Normal Student credentials have no direct `SELECT`/mutation access to underlying slot, booking, course,
-assignment, or unrelated profile rows. Ordinary browsing must not use a service/admin client.
+The timestamp strings represent the stored `timestamptz` instants normalized to UTC, never locale-
+dependent display text. Course/Lecturer IDs are approved filter and future request references; they do
+not authorize direct table access or disclose a profile beyond this exact projection.
 
-Each result contains only opaque slot ID, course ID/code/name, lecturer ID/display name, `starts_at`, and
-`ends_at`. It contains no booking ID, Student identity, booking content, exact status/history,
-unavailability reason, contact data, audit/internal fields, or counts.
+The same successful response carries the `CourseFilterOption` and `LecturerFilterOption` projections
+defined in `SH-02`, independently capped at 200 each under `SH-02-R6`. Options beyond a cap are omitted
+without a count, truncation/existence indicator, or different error.
 
 ### SH-03-R12 — Pagination and cursor behavior
 
 - Classification: `confirmed`.
-- Source: accepted user decision and STU-01 challenge findings 6–7 disposition.
+- Source: prior team-reported approval.
 
-Each page returns at most 20 rows ordered ascending by `(starts_at, slot_id)`. A continuation cursor is
-opaque, integrity protected, versioned, bound to the exact normalized lecturer/course/date filters and
-ordering, and contains no authorization grant or private data. Changing filters starts at page one.
-Pages are independent point-in-time reads: concurrent inserts, reservations, cancellation, assignment
-changes, or time passage may cause omissions, and no frozen-snapshot completeness guarantee is made.
-Rows must not duplicate solely because equal start times cross a page boundary.
+Pages contain at most 20 rows in ascending `(starts_at, slot_id)` keyset order. Cursors are opaque,
+integrity protected, versioned, bound to normalized filters/order, and carry no authorization grant or
+private data. Pages are independent point-in-time reads, not frozen snapshots. Altered, wrong-filter,
+unsupported, malformed, or stale cursors return a safe restart outcome and no partial result.
 
-An altered, wrong-filter, unsupported-version, malformed, or stale cursor returns a safe validation/
-restart outcome and no partial result. The role UI offers restart from page one; a later booking mutation
-must always recheck availability.
-
-### SH-03-R13 — Authorization and transport-specific failures
+### SH-03-R13 — Authorization and transport failures
 
 - Classification: `confirmed`.
-- Source: accepted user decision.
+- Source: prior team-reported approval.
 
-A signed-out Student page visit redirects to `/login`; a signed-in wrong-role page visit redirects to
-that role's own dashboard. Direct database/server boundary calls by signed-out, inactive, or wrong-role
-actors return typed `forbidden_or_not_found` and no data. Inaccessible and nonexistent identifiers do not
-produce distinguishable payloads. Authorization occurs before any service/admin client or protected data
-query.
+Signed-out page visits redirect to `/login`; wrong-role visits redirect to that role's dashboard.
+Signed-out, inactive, or wrong-role direct boundary calls return `forbidden_or_not_found` and no data.
+Unavailable and nonexistent identifiers are indistinguishable. Authorization precedes protected data
+queries or any service/admin client.
 
 ### SH-03-R14 — Dependency failure and safe logging
 
 - Classification: `confirmed`.
-- Source: accepted user decision and STU-01 challenge finding 12 disposition.
+- Source: prior team-reported approval.
 
-On browse database failure, return a generic `temporarily_unavailable` result with correlation ID,
-preserve validated filter selections at the UI boundary, clear potentially stale result rows, and let
-retry issue the same validated filters from page one or the still-valid requested page as specified by
-the role UI. Return no partial protected rows, raw error, stack, SQL, schema, or infrastructure detail.
-Logs contain only bounded operation/failure category, correlation ID, and safe timing metadata—not raw
-filter/cursor values, display text, booking content, credentials, or database messages.
+Database failure returns `temporarily_unavailable` with correlation ID, retains validated filters,
+clears stale results, and permits a safe retry. No partial row, raw error, stack, SQL, schema, credential,
+or infrastructure detail is returned/logged; logs contain bounded operation/failure/timing metadata.
 
-### SH-03-R15 — Accessibility and browser contract for browse consumers
+### SH-03-R15 — Accessibility and browser contract
 
 - Classification: `confirmed`.
-- Source: accepted user decision.
+- Source: prior team-reported approval.
 
-Role UIs consuming this browse contract target WCAG 2.1 AA, full keyboard operation, visible focus,
-programmatic filter labels, and programmatically exposed text status for loading, validation, empty,
-error, and pagination changes. They remain usable at 320 CSS pixels and 200% zoom in current major Chrome,
-Firefox, Safari, and Edge. Chromium automation covers deterministic paths; keyboard, responsive/zoom,
-and cross-browser behavior require manual verification unless additional browser automation is added.
+Browse consumers target WCAG 2.1 AA, keyboard operation, visible focus, programmatic labels, text status
+for loading/validation/empty/error/pagination, 320 CSS pixels, 200% zoom, and current major Chrome,
+Firefox, Safari, and Edge. Chromium automation is not evidence for the required manual/cross-browser
+checks.
 
 ### SH-03-R16 — No-AI boundary
 
 - Classification: `confirmed`.
-- Source: accepted user decision.
+- Source: prior team-reported approval.
 
-Slot, booking, availability, filtering, pagination, authorization, and state transitions are
-deterministic. They must not call an LLM, treat model output as authority, write AI usage, or send any
-slot, course, lecturer, booking, filter, cursor, or session data to a model.
+Browse is deterministic and makes no model call, prompt, AI-usage write, or model-authorized decision;
+no slot, course, lecturer, booking, filter, cursor, or session data goes to an LLM.
 
 ## Non-functional requirements
 
 ### SH-03-R17 — Bounded operation and reliability
 
-- Classification: `confirmed` for fixed browse bounds; `proposed` for indexing approach; exact rate/
-  latency targets are `unresolved`.
-- Source: accepted user decision and `SHR-01` draft.
+- Classification: `confirmed` for fixed bounds; `proposed` for exact indexing.
+- Source: prior team-reported approval.
 
-Browse performs one bounded 20-row page query plus bounded option retrieval and must be indexed for the
-availability predicate, time/order, active booking lookup, assignment join, and role filters. Inputs are
-limited by `SH-03-R10`. Rapid cursor walking cannot enlarge an individual response or expose additional
-fields; exact per-user request limits and measurable latency/capacity thresholds require human approval.
+Browse performs a bounded 20-row page query plus at most 200 course and 200 Lecturer options and uses indexes for
+availability, time/order, booking lookup, assignment, and roles. Rapid traversal does not enlarge an
+individual response or field set. Exact request-rate, catalogue-capacity, and latency targets remain
+unresolved.
 
 ## UI description
 
-Shared UI requirements are limited to `SH-03-R13`–`R15`. `STU-01` owns `/student/slots`, filters,
-explicit “Load more,” loading/empty/error states, focus behavior, and retry presentation. Lecturer and
-Administrator specs own their interfaces. This shared contract does not prescribe visual layout.
+`STU-01` owns `/student/slots`, filters, “Load more,” loading/empty/error states, focus, and retry. This
+contract supplies only the shared authorization, response, and accessibility requirements.
 
 ## Use cases
 
 ### UC1 — Student browses an available page
 
 - Actors: active Student.
-- Preconditions: authenticated active Student; valid filters.
-- Trigger: initial browse or explicit “Load more.”
-- Main flow: authorize in the database boundary, validate filters/cursor, compute database time and
-  Singapore date bounds, apply the availability predicate, return at most 20 safe rows and a bound cursor.
-- Alternative and failure flows: empty result, invalid/stale cursor restart, authorization refusal, or
-  generic dependency failure.
-- Postconditions and invariants: no data mutation; safe projection only; result is point-in-time.
-
-### UC2 — Two Students request one slot concurrently
-
-- Actors: two active Students.
-- Preconditions: the slot is available to both before either transaction commits.
-- Trigger: simultaneous booking requests in the later Student booking feature.
-- Main flow: database concurrency control commits exactly one `pending` booking.
-- Alternative flow: the loser receives a typed conflict and current availability is rechecked.
-- Postconditions and invariants: at most one active reservation; no partial or duplicate success.
-
-### UC3 — Lecturer completes a consultation
-
-- Actors: active Lecturer owning the slot.
-- Preconditions: booking is `approved`; database time is at/after `ends_at`.
-- Trigger: completion action in the later Lecturer feature.
-- Main flow: conditional transition changes `approved` to `completed`.
-- Alternative flows: early, stale, wrong-owner, or wrong-state request is refused/conflicts.
-- Postconditions and invariants: completed is terminal and its slot can never be reused.
+- Preconditions: authenticated active Student and valid filters.
+- Trigger: initial browse or “Load more.”
+- Main flow: authorize, validate, compute database time/date bounds, apply availability, and return at
+  most 20 safe rows plus a bound continuation cursor.
+- Alternative and failure flows: empty result, safe cursor restart, authorization refusal, or generic
+  dependency failure.
+- Postconditions and invariants: no mutation; safe point-in-time projection only.
 
 ## Technical constraints and proposals
 
-- Fixed constraints: PostgreSQL/Supabase, append-only migrations, database-level concurrency/RLS,
-  server-derived identity/time, UTC instants, Singapore presentation/date semantics, and no direct
-  Student table access.
-- Proposed entities/functions: `consultation_slots`, `bookings`, and `browse_available_slots`.
-- Proposed cursor implementation: authenticated/versioned opaque encoding of normalized filter digest,
-  last `starts_at`, and last slot ID. It must not be an authorization token.
-- The existing `workflow/specs/PLAN.md` P2 remains the plan. Detailed migration/API tasks must wait for
-  approval and a bounded implementation plan.
+PostgreSQL/Supabase, append-only migrations, database RLS/concurrency, server-derived identity/time,
+Singapore date semantics, and no direct Student table access are fixed. The observed
+`browse_available_slots` name and cursor encoding are implementation details, not authorization to
+expand the contract.
 
 ## Data model and integrity rules
 
-| Logical entity    | Required information                                                                   | Required invariants                                                                                              | Classification/source                 |
-| ----------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| Consultation slot | Opaque ID, lecturer ID, course ID, start/end instants, audit times                     | Valid range, future on creation, current assignment, no lecturer overlap                                         | Confirmed behavior; proposed shape    |
-| Booking           | Opaque ID, slot ID, Student ID, topic/questions, status, rejection reason, audit times | Valid status/transition; one active reservation per slot; no Student active overlap; immutable history semantics | Confirmed behavior; bounds unresolved |
+| Read model        | Required browse information                           | Read invariant                                                        |
+| ----------------- | ----------------------------------------------------- | --------------------------------------------------------------------- |
+| Consultation slot | ID, lecturer/course IDs, start/end instants           | Future valid range and active/current endpoints                       |
+| Booking marker    | Slot relation and one of the five known status values | Pending/approved/completed hide; rejected/cancelled alone do not hide |
 
-Database constraints or equivalent transactional database mechanisms—not browser/application prechecks
-alone—must protect concurrent invariants. Foreign keys prevent orphans. New schema uses an append-only
-migration; no existing migration is edited. Retention and physical deletion remain unresolved.
+Mutation ownership, transition, concurrency, and retention rules are in draft `SH-05`.
 
 ## API and boundary contracts
-
-Proposed logical browse contract:
 
 ```ts
 type BrowseAvailableSlotsInput = {
   lecturerId?: string;
   courseId?: string;
-  date?: string; // strict YYYY-MM-DD in Asia/Singapore
-  cursor?: string; // opaque, <= 512 characters
-};
-
-type AvailableSlot = {
-  slotId: string;
-  courseId: string;
-  courseCode: string;
-  courseName: string;
-  lecturerId: string;
-  lecturerDisplayName: string;
-  startsAt: string; // ISO 8601 instant
-  endsAt: string; // ISO 8601 instant
+  date?: string;
+  cursor?: string;
 };
 
 type BrowseAvailableSlotsResult =
-  | { ok: true; slots: AvailableSlot[]; nextCursor: string | null }
+  | {
+      ok: true;
+      slots: AvailableSlot[];
+      courses: CourseFilterOption[];
+      lecturers: LecturerFilterOption[];
+      nextCursor: string | null;
+    }
   | {
       ok: false;
       reason: "validation_error" | "forbidden_or_not_found" | "temporarily_unavailable";
@@ -426,170 +288,111 @@ type BrowseAvailableSlotsResult =
     };
 ```
 
-No public third-party API is introduced. Mutation contracts are logical invariants here; later role specs
-must define exact validated inputs, idempotency expectations, and UI outcomes without changing this state
-machine.
+The exact TypeScript/SQL names are proposals; the observable input, projection, authorization, and
+failure constraints are normative.
 
 ## Security requirements
 
-- Entry points: role layouts/server operations call `requireRole`; database functions and table
-  grants/RLS independently authorize access.
-- Authorization order: authenticate, resolve active trusted role/owner, validate bounded input,
-  authorize, then query/mutate conditionally. Service/admin clients are not ordinary browse tools.
-- Trusted values: authenticated profile ID/role, database time, stored foreign keys/current state.
-- Untrusted values: every client filter/cursor/identifier and all stored display/topic/question/reason
-  text.
-- Input/output validation: strict allowlist/bounds and exact output projection; all text rendered as text,
-  never HTML.
-- Disclosure: availability and safe projected fields are allowed. Unavailability reason, booking owner/
-  content/exact status/history, contact details, counts, and internal fields are prohibited.
-- Resource abuse: oversized/repeated inputs, cursor tampering/cross-filter replay, rapid traversal, direct
-  table calls, ID/role substitution, concurrent reservations, stored script/instruction text, and
-  existence enumeration.
-- Sensitive actions: migrations, functions, RLS/grants, state transitions, and retention changes require
-  approved specs and independent human review.
-- Failure/logging: typed safe outcomes and bounded metadata only under `SH-03-R14`.
+- Authenticate and resolve trusted active role before protected data access.
+- Treat client filters/cursors and stored display text as untrusted.
+- Strictly validate input and exact output projection; render text as text, never HTML.
+- Permit availability and allowlisted fields only; prohibit booking owner/content/status/history,
+  unavailability reason, contacts, counts, and audit fields.
+- Address direct-table calls, ID/role substitution, cursor replay/tampering, oversized/repeated input,
+  scraping, stored scripts/instructions, and existence enumeration.
+- Require independent review for migrations, functions, RLS, grants, and projection changes.
 
 ## AI behavior
 
-No AI is used. There are no permitted model inputs, capabilities, or side effects for this shared
-contract. The LLM provider being unavailable must not affect any slot, booking, or browse operation.
+No AI is used or permitted; provider availability cannot change browse outcomes.
 
 ## Edge cases and failure paths
 
-| Condition                                                       | Required observable outcome                                | Invariant preserved              |
-| --------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------- |
-| Slot start equals database time                                 | Not available; new booking refused                         | Strictly future rule             |
-| Singapore date spans a UTC-date boundary                        | Start instant is matched using Singapore day bounds        | Authoritative date semantics     |
-| Equal-start slots cross a page                                  | Slot-ID tie-break yields no duplicate solely from ordering | Deterministic keyset order       |
-| Slot changes between pages                                      | Later page reflects current state; no snapshot guarantee   | Point-in-time truth              |
-| Cursor is changed/replayed with different filters/stale         | Validation/restart outcome; no partial data                | Cursor binding and disclosure    |
-| Rejected/cancelled history only, future slot otherwise eligible | Slot may become available again via a new booking          | History preserved                |
-| Completed booking on any slot, including corrupt future state   | Slot never returned/reused                                 | Completed historical finality    |
-| Concurrent same-slot requests                                   | One success; others conflict                               | One active reservation           |
-| Concurrent overlapping Student requests                         | At most one conflicting active interval commits            | No Student active overlap        |
-| Assignment/course/lecturer becomes inactive                     | Future unbooked slot hidden; booked record preserved       | No implicit transition/data loss |
-| Stored text contains HTML/script/instructions                   | Safe plain-text output only; no execution/model use        | Untrusted-data boundary          |
-| Database fails after filters applied                            | Filters retained, stale rows cleared, safe retry/failure   | No stale/partial disclosure      |
+| Condition                                       | Required observable outcome                      | Invariant preserved         |
+| ----------------------------------------------- | ------------------------------------------------ | --------------------------- |
+| Slot starts at database time                    | Not returned                                     | Strict future rule          |
+| Singapore date crosses a UTC boundary           | Singapore inclusive/exclusive bounds apply       | Date semantics              |
+| Equal-start rows cross a page                   | Slot-ID tie-break avoids ordering duplicates     | Deterministic pagination    |
+| Availability changes between pages              | Each page reflects its own query time            | No snapshot claim           |
+| Cursor altered/replayed for other filters/stale | Safe validation/restart, no partial rows         | Cursor binding              |
+| Rejected/cancelled history only                 | Otherwise eligible future slot may appear        | Read-side status semantics  |
+| Any completed history                           | Slot does not appear                             | Historical finality         |
+| Stored text contains markup/instructions        | Plain-text output only                           | No execution/model use      |
+| Dependency fails after validation               | Safe error, filters retained, stale rows cleared | No stale/partial disclosure |
 
 ## Acceptance criteria and verification
 
-These are planned checks, not results. Automated test names must reference the exact AC ID.
+These planned checks are not results. The retained IDs remain stable for unchanged read concepts.
 
-- **SH-03-AC1** (`SH-03-R1`; unit plus pgTAP integration; deterministic mock/local database): Given
-  instants around a Singapore day boundary, when date filtering runs, then exactly starts within that
-  inclusive/exclusive Singapore day are eligible.
-- **SH-03-AC2** (`SH-03-R1`; integration; deterministic local database): Given a manipulated browser
-  clock, when future/transition rules run, then database/server time alone controls outcomes.
-- **SH-03-AC3** (`SH-03-R2`; pgTAP integration; deterministic local database): Given invalid ranges,
-  past/equal starts, invalid assignment endpoints, and a valid slot, when created, then only the valid
-  slot succeeds.
-- **SH-03-AC4** (`SH-03-R2`; pgTAP concurrency integration; deterministic local database): Given
-  overlapping/non-overlapping slots including concurrent writes, when committed for one lecturer, then
-  overlaps are refused and non-overlaps succeed.
-- **SH-03-AC5** (`SH-03-R3`; integration; deterministic local database): Given a Student submits another
-  owner ID, when requesting later, then trusted identity owns the booking and client ownership cannot
-  expand access.
-- **SH-03-AC6** (`SH-03-R4`; pgTAP state-table integration; deterministic local database): Given each
-  status, actor, and expected current state, when transitions are attempted, then only the documented
-  actor/state transitions succeed.
-- **SH-03-AC7** (`SH-03-R4`; unit plus pgTAP integration; deterministic mock/local database): Given blank
-  rejection and early completion, when attempted, then both are refused without changing status.
-- **SH-03-AC8** (`SH-03-R5`; pgTAP integration; deterministic local database): Given rejected/cancelled
-  history on a future otherwise-eligible slot, when browsed/rebooked, then it is eligible and a new record
-  preserves history.
-- **SH-03-AC9** (`SH-03-R5`; pgTAP security/integrity; deterministic local database): Given completed
-  history, including an impossible future-state fixture, when browsed/rebooked, then the slot is never
-  returned or reserved.
-- **SH-03-AC10** (`SH-03-R6`; pgTAP integration; deterministic local database): Given fixtures each
-  failing one availability condition, when browsed, then none appears; a fixture satisfying all
-  conditions appears.
-- **SH-03-AC11** (`SH-03-R6`; integration/security contract; deterministic local database): Given an
-  unavailable identifier, when filters/browse respond, then no reason, booking identity/content/status/
-  history, or distinct existence detail is returned.
-- **SH-03-AC12** (`SH-03-R7`; pgTAP integration; deterministic local database): Given an assignment,
-  account, or course lifecycle change, when applied, then new/unbooked visibility is removed while
-  pending/approved records remain unchanged.
-- **SH-03-AC13** (`SH-03-R8`; database concurrency integration; deterministic local database): Given
-  simultaneous same-slot requests, when both finish, then exactly one active booking commits and each
-  loser gets conflict.
-- **SH-03-AC14** (`SH-03-R8`; database concurrency integration; deterministic local database): Given
-  simultaneous overlapping Student requests on different slots, when both commit, then at most one
-  overlapping active booking succeeds.
-- **SH-03-AC15** (`SH-03-R9`; pgTAP integration; deterministic local database): Given wrong-owner,
-  active-booked, completed, stale, overlapping, and valid unbooked slot edits/deletes, then only the valid
-  owning-Lecturer operation succeeds.
-- **SH-03-AC16** (`SH-03-R10`; unit plus query-spy integration; deterministic mock): Given each malformed
-  UUID/date/cursor, repeated/array/unknown key, >512 cursor, or >2,048 query, when parsed, then validation
-  fails before the slot query.
-- **SH-03-AC17** (`SH-03-R10`; integration; deterministic local database): Given lecturer, course, and
-  date filters alone and combined, when browsed, then every result satisfies all supplied filters and
-  omitted filters do not narrow results.
-- **SH-03-AC18** (`SH-03-R11`; pgTAP projection/before-after; deterministic local database): Given an
-  active Student calls the browse function, then only the allowlisted fields appear and no row is mutated.
-- **SH-03-AC19** (`SH-03-R11`; pgTAP security integration; deterministic local database): Given a Student
-  directly accesses underlying tables or requests extra columns, then database access is refused; wrong
-  roles cannot call the function.
-- **SH-03-AC20** (`SH-03-R11`; pgTAP schema/security inspection; deterministic local database): Given
-  function metadata inspection, then active-Student authorization and fixed safe `search_path`/object
-  qualification are present.
-- **SH-03-AC21** (`SH-03-R12`; integration; deterministic local database): Given more than 20 equal and
-  different-start slots, when static pages are traversed, then pages contain no more than 20 rows in
-  `(starts_at, slot_id)` order without duplicate IDs.
-- **SH-03-AC22** (`SH-03-R12`; unit/integration; deterministic mock/local database): Given a cursor is
-  altered, unsupported, used with changed filters, or made stale, then no partial rows return and
-  restart-from-first-page is offered.
-- **SH-03-AC23** (`SH-03-R12`; integration; deterministic controlled local database): Given availability
-  changes between pages, then each response reflects its own query time without claiming snapshot
-  completeness.
-- **SH-03-AC24** (`SH-03-R13`; Playwright e2e; deterministic local app/database): Given signed-out and
-  wrong-role page visits, then they redirect respectively to `/login` and their own dashboard without
-  slot data.
-- **SH-03-AC25** (`SH-03-R13`; unit plus pgTAP integration; deterministic mock/local database): Given
-  signed-out, inactive, or wrong-role direct boundary calls, then typed `forbidden_or_not_found` returns
-  with no data/mutation.
-- **SH-03-AC26** (`SH-03-R14`; unit plus Playwright e2e; deterministic injected failure): Given a browse
-  database failure, then results are cleared, validated filters retained, retry is safe, and no partial or
-  raw infrastructure detail appears.
-- **SH-03-AC27** (`SH-03-R14`; unit; deterministic mock): Given failure logs are captured, then they
-  contain bounded metadata/correlation ID and exclude raw filters, cursors, text, booking content, and
-  database errors.
-- **SH-03-AC28** (`SH-03-R15`; Chromium e2e plus manual accessibility/cross-browser review;
-  deterministic local app plus N/A manual): Given keyboard use, loading/error/empty/load-more changes,
-  320px width, and 200% zoom, then controls, focus, labels, and text status remain operable and perceivable.
-- **SH-03-AC29** (`SH-03-R16`; unit plus pgTAP before/after; deterministic mock/local database): Given
-  browse and state operations, then no model/provider call, prompt, or `ai_usage` mutation occurs and
-  provider outage changes no outcome.
-- **SH-03-AC30** (`SH-03-R17`; unit/integration; deterministic mock/local database): Given rapid or
-  oversized traversal attempts, then every accepted response stays within 20 rows/safe fields and
-  rejected inputs run no slot query.
+- **SH-03-AC1** (`SH-03-R1`; unit plus pgTAP): Singapore boundary fixtures include exactly starts in the
+  selected inclusive/exclusive day.
+- **SH-03-AC2** (`SH-03-R1`; integration): browser-clock manipulation cannot alter database/server-time
+  eligibility.
+- **SH-03-AC3** (`SH-03-R2`; pgTAP): a stored slot with `ends_at <= starts_at` is excluded from the
+  browse projection; slot-creation validation formerly included in this criterion moves to `SH-05-AC1`.
+- **SH-03-AC8** (`SH-03-R5`; pgTAP): rejected/cancelled history alone does not hide an otherwise
+  eligible future slot.
+- **SH-03-AC9** (`SH-03-R5`; pgTAP): completed history, including impossible future data, always hides
+  its slot.
+- **SH-03-AC10** (`SH-03-R6`; pgTAP): each failed predicate fixture is absent and a fully eligible slot
+  appears.
+- **SH-03-AC11** (`SH-03-R6`; integration/security): unavailable results reveal no condition, booking
+  data/status/history, or existence distinction.
+- **SH-03-AC12** (`SH-03-R7`; pgTAP): lifecycle-state fixtures hide new/unbooked visibility while
+  existing pending/approved records remain unchanged.
+- **SH-03-AC16** (`SH-03-R10`; unit/query spy): malformed, repeated, array, unknown, and oversized input
+  fails before a slot query.
+- **SH-03-AC17** (`SH-03-R10`; integration): lecturer/course/date filters alone and together constrain
+  every result with AND semantics.
+- **SH-03-AC18** (`SH-03-R11`; contract plus pgTAP): active Student browse returns exactly the eight
+  allowlisted slot fields, canonical UUIDs, ISO-8601 UTC `startsAt`/`endsAt` strings ending in `Z`, and
+  the safe option projections; it returns no additional field and changes no row.
+- **SH-03-AC19** (`SH-03-R11`; pgTAP): direct course/assignment/slot/booking access and direct reads of
+  another user's profile row are refused, own-profile access remains available, and wrong roles cannot
+  call the Student function.
+- **SH-03-AC20** (`SH-03-R11`; pgTAP metadata): active-Student authorization, grants, fixed safe
+  `search_path`, and object qualification are present.
+- **SH-03-AC21** (`SH-03-R12`; integration): over 20 equal/different-start slots traverse in bounded
+  deterministic order without duplicate IDs.
+- **SH-03-AC22** (`SH-03-R12`; unit/integration): altered, unsupported, changed-filter, or stale cursor
+  yields no partial rows and offers restart.
+- **SH-03-AC23** (`SH-03-R12`; integration): controlled between-page changes demonstrate point-in-time
+  responses without a snapshot-completeness claim.
+- **SH-03-AC24** (`SH-03-R13`; Playwright): signed-out and wrong-role page visits redirect without slot
+  data.
+- **SH-03-AC25** (`SH-03-R13`; unit plus pgTAP): signed-out, inactive, and wrong-role direct calls return
+  `forbidden_or_not_found` without data or mutation.
+- **SH-03-AC26** (`SH-03-R14`; unit plus Playwright): injected database failure clears rows, retains
+  valid filters, offers retry, and exposes no raw detail.
+- **SH-03-AC27** (`SH-03-R14`; unit): logs contain bounded metadata/correlation ID and no raw input,
+  stored text, booking content, or database error.
+- **SH-03-AC28** (`SH-03-R15`; Chromium plus manual/cross-browser): keyboard, states, 320px, 200% zoom,
+  and supported browsers remain operable and perceivable.
+- **SH-03-AC29** (`SH-03-R16`; unit plus pgTAP): browse creates no model/provider call, prompt, or
+  AI-usage mutation and is unchanged by provider outage.
+- **SH-03-AC30** (`SH-03-R17`; unit/integration): every accepted response stays within 20 slots, 200
+  course options, 200 Lecturer options, and the safe field allowlists; represented options beyond a cap
+  disclose no count/existence indicator, and rejected oversized input runs no query.
 
 ## Review evidence
 
-- Challenge record: required after this draft; none yet.
-- Review type: no independent review completed.
-- Open findings and disposition: accepted user decisions address the five high STU-01 challenge findings
-  and pagination/input/failure/accessibility findings at the shared-contract level; exact role UI and
-  revised STU-01 traceability remain outstanding.
-- Human input required: decide the open matters below and independently review the eventual digest.
+- Challenge record: `workflow/reviews/stu-01/2026-10-18-shared-spec-traceability-challenge.md`.
+- Finding disposition: `workflow/reviews/stu-01/2026-10-18-shared-spec-traceability-disposition.md`.
+- Review type: revised after independent challenge and Joseph's product decisions; exact-diff teammate
+  review remains pending.
+- Human input required: approve or reject the exact revised digest before tests, RLS, or implementation
+  are changed.
 
 ## Open questions blocking approval
 
-1. What minimum/maximum slot duration and maximum advance-booking horizon apply?
-2. What exact topic, questions, and rejection-reason bounds and representation apply?
-3. Is Student cancellation allowed until the exact start instant, or is a stricter notice period required?
-4. What retention/archive/deletion rules apply to past slots and terminal bookings?
-5. What authorized workflow handles pending/approved bookings after assignment removal, course
-   deactivation, or lecturer deactivation? This draft intentionally performs no automatic transition.
-6. May a slot with only rejected/cancelled history be physically deleted, or must all such slots be
-   archived permanently?
-7. What per-user/global non-AI browse rate limits, target catalogue capacity, and measurable latency
-   thresholds apply?
-8. Should cursors have a fixed time expiry? Filter/data mismatch already produces safe restart behavior,
-   but no expiry interval is approved.
+1. Does the exact revised digest faithfully encode the eight confirmed decisions without expanding the
+   Student data surface?
 
 ## Change log
 
-| Date       | Change and reason                                                    | IDs affected                 | Evidence invalidated | By                     |
-| ---------- | -------------------------------------------------------------------- | ---------------------------- | -------------------- | ---------------------- |
-| 2026-10-17 | Initial draft recording accepted slot/booking/availability decisions | SH-03-R1–R17, SH-03-AC1–AC30 | None; new draft      | requirements_architect |
+| Date       | Change and reason                                                       | IDs affected                                         | Evidence invalidated                     | By                     |
+| ---------- | ----------------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------- | ---------------------- |
+| 2026-10-17 | Initial broad slot/booking/availability specification                   | SH-03-R1–R17, SH-03-AC1–AC30                         | None; new draft                          | requirements_architect |
+| 2026-10-18 | Recorded team-reported approval                                         | Document control                                     | None at that time                        | requirements_architect |
+| 2026-10-18 | Split Student read model from future mutations; reset status to `draft` | Retained R1/R2/R5–R7/R10–R17 and listed retained ACs | Prior SH-03 approval and review evidence | requirements_architect |
+| 2026-10-18 | Defined exact slot wire/profile boundary and bounded option envelope    | R11/R17; AC18/AC19/AC30                              | Prior split-draft challenge conclusions  | requirements_architect |

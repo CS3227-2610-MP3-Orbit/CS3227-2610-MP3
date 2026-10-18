@@ -9,15 +9,24 @@ status: draft
 
 ## Document control
 
-- Version: `0.1-draft`
-- Human approver: none recorded
-- Reviewed commit or digest: none; this draft must not be used as implementation approval
+- Version: `0.2-draft`
+- Prior approval date: `2026-10-18`
+- Approval report: Joseph communicated in the project Codex conversation that the team approved this
+  specification and named Jordan as its reviewer.
+- Team-reported reviewed content digest: `13fb2e0693210f4a97e75b395b167d2cf3f3d4f8`.
+- Prior canonical metadata digest: `17248e77c0b9801810c3c190e925bfec62ab03b9`.
+- External evidence limitation: no GitHub review, protected-PR URL, or independently verified reviewer
+  identity was supplied. This repository record documents Joseph's report only.
 - Parent requirements: `PRD-01` student browse behavior and `PRD-01-AC10`; `TEC-01` slot
   discovery; `INT-01` Browse slots contract, `INT-01-AC3`, `INT-01-AC5`, and `INT-01-AC6`;
   `SHR-01-AC1`, `SHR-01-AC2`, and `SHR-01-AC3`; `PLN-01/P3` and `PLN-01-AC1`
-- Dependencies: an approved shared course/lecturer specification (`SH-02`, planned), an approved
-  shared slot/booking/RLS specification (`SH-03`, planned), and an approved authentication
-  foundation (`SH-01`, currently draft)
+- Dependencies: draft shared course/lecturer specification (`SH-02`), draft shared
+  slot/booking/RLS specification (`SH-03`), and draft authentication foundation (`SH-01`).
+- Material revision: Joseph confirmed on `2026-10-18` that the exact per-slot projection permits opaque
+  `courseId` and `lecturerId` in addition to the previously listed fields. This data-contract change
+  resets the canonical specification to `draft`; the prior approval is stale until a teammate reviews
+  the exact revised digest.
+- Change-impact record: `workflow/reviews/stu-01/2026-10-18-shared-spec-traceability-impact.md`.
 
 ## Context
 
@@ -25,15 +34,16 @@ A signed-in student needs to find a future consultation slot before requesting a
 feature provides a read-only, bounded list of slots and optional lecturer, course, and calendar-date
 filters. It does not reserve a slot or create, edit, or disclose any booking.
 
-Repository inspection on 2026-10-17 found only the protected `/student` placeholder dashboard,
-shared profile/authentication scaffolding, and the initial `profiles` and `ai_usage` migration.
-Courses, lecturer assignments, consultation slots, bookings, browsing queries, and their RLS
-policies are planned work and are not currently implemented.
+Current-state evidence on 2026-10-18, not product authority: the working tree contains a `/student/slots`
+page, server validation, a browse RPC, new feature tables, RLS/grants, and unit/pgTAP/Playwright tests.
+The implementation is uncommitted and incomplete: its option lists are not capped at 200 and the
+existing broad staff-profile RLS policy conflicts with the revised Student profile boundary.
 
-## Proposed decisions requiring human approval
+## Reviewed decisions and implementation constraints
 
-The requirements below are precise enough to review and test, but they are proposals until a human
-approves this spec.
+Joseph reported team approval of the prior specification on 2026-10-18 and later confirmed the material
+cross-spec decisions recorded in the impact record. The requirements below are the resulting draft;
+exact-digest review is still required.
 
 1. The authoritative display and date-filter timezone is `Asia/Singapore`; timestamps remain stored
    as PostgreSQL `timestamptz` values and are serialized in ISO 8601 form.
@@ -63,11 +73,11 @@ requires spec revision before tests or code change.
 1. A signed-in, active student can open `/student/slots` from the Student dashboard.
 2. The initial view lists the first page of available slots using server/database time as the
    authority for whether a slot is in the future.
-3. Each result displays only:
-   - course code and course name;
-   - lecturer display name;
-   - start and end date/time labelled in the authoritative display timezone; and
-   - an opaque slot identifier used by the later request-consultation feature.
+3. Each result's data contains only the exact `AvailableSlot` fields in `SH-03-R11`. The UI displays the
+   course code/name, Lecturer display name, and start/end date and time labelled in the authoritative
+   timezone. The opaque slot, course, and Lecturer IDs are machine references for approved filters and
+   the later request-consultation feature; the UI need not show their raw UUID text. No additional slot
+   field is permitted.
 4. The page provides optional lecturer, course, and single-date filters. An omitted filter means
    “all” for that dimension.
 5. Applying multiple filters uses intersection semantics: every supplied filter must match.
@@ -87,7 +97,7 @@ A returned slot must satisfy all of these conditions at query time:
 - the referenced course is active;
 - the referenced profile is active and has role `lecturer`;
 - the lecturer is currently assigned to the slot's course; and
-- no related booking has status `pending` or `approved`.
+- no related booking has status `pending`, `approved`, or `completed`.
 
 Rejected or cancelled booking rows remain historical and do not by themselves hide the slot. The
 query must evaluate availability in trusted application/database code, not from browser-supplied
@@ -130,11 +140,15 @@ type BrowseAvailableSlotsInput = {
 - Students may read the available-slot projection described in `STU-01-R1`. They may not receive:
   student identities, booking IDs, booking status/history, topics, questions, rejection reasons,
   lecturer email/contact data, inactive profiles/courses, internal audit fields, or AI usage data.
+- Students may directly read only their own profile row. Lecturer discovery, including names and opaque
+  lecturer IDs, occurs through the narrow browse RPC; Student credentials cannot directly select other
+  Lecturer or Administrator profile rows.
 - Inaccessible and nonexistent filter identifiers use the same observable response shape.
 - The student's identity and role come from the validated server session, never request parameters.
 
-The approved shared data specification must choose the physical RLS/function design and prove it
-with pgTAP tests before a migration is written.
+The shared data specifications define the authorization and projection behavior. After their exact
+digests are approved, an implementation may choose the physical RLS/function design and must prove it
+with pgTAP tests in a new append-only migration.
 
 ### STU-01-R5 — Failure behavior
 
@@ -157,8 +171,9 @@ failure category, but not secrets or private booking content.
 - Filter controls have programmatic labels, are keyboard operable, and expose loading, validation,
   empty, and error states through text rather than colour alone.
 - Course and lecturer names and slot times remain understandable at supported viewport sizes.
-- Each request returns at most 20 results. The server rejects malformed cursors and does not accept
-  caller-selected limits, SQL fragments, sort expressions, arbitrary date ranges, or wildcard
+- Each request returns at most 20 slot results, 200 course options, and 200 Lecturer options under the
+  deterministic/non-disclosing rules in `SH-02-R6`. The server rejects malformed cursors and does not
+  accept caller-selected limits, SQL fragments, sort expressions, arbitrary date ranges, or wildcard
   searches.
 - Repeated refreshes remain read-only. General infrastructure protections may rate-limit abusive
   traffic, but no feature-specific rate threshold is proposed by this draft.
@@ -194,10 +209,10 @@ records, or return raw infrastructure details.
 
 ## Data and dependency contract
 
-STU-01 reads but does not create or update the planned `courses`, `course_lecturers`,
-`consultation_slots`, and `bookings` entities, plus the existing `profiles` entity. The shared specs
-must define their exact columns, constraints, indexes, RLS policies, assignment lifecycle, and
-active-booking representation before implementation.
+STU-01 reads but does not create or update `courses`, `course_lecturers`, `consultation_slots`, and
+`bookings`, plus its narrow dependency on `profiles`. The shared specs define the normative constraints,
+RLS boundaries, assignment eligibility, and booking-state representation; physical schema details not
+fixed by those behaviors remain implementation proposals.
 
 At minimum, the approved shared contract must support:
 
@@ -230,7 +245,9 @@ Tests must reference these IDs exactly. Each criterion states one primary observ
 - **STU-01-AC7** Given a future slot whose only bookings are rejected or cancelled, when the list is
   queried, then the slot is eligible to appear.
 - **STU-01-AC8** Given an available slot, when it is returned, then its projection contains only the
-  fields allowed by `STU-01-R1` and none of the prohibited fields in `STU-01-R4`.
+  eight fields `slotId`, `courseId`, `courseCode`, `courseName`, `lecturerId`, `lecturerName`,
+  `startsAt`, and `endsAt`; both timestamps are ISO-8601 UTC instants ending in `Z`, and none of the
+  prohibited fields in `STU-01-R4` is present.
 - **STU-01-AC9** Given a valid lecturer filter, when it is applied, then every returned slot belongs
   to that lecturer.
 - **STU-01-AC10** Given a valid course filter, when it is applied, then every returned slot belongs
@@ -265,15 +282,16 @@ Tests must reference these IDs exactly. Each criterion states one primary observ
 
 ## Required future validation
 
-- Unit/Vitest: strict filter parsing, date-bound conversion, cursor validation, deterministic
-  ordering helpers, and typed result mapping.
+- Unit/Vitest: strict filter parsing, date-bound conversion, cursor validation, deterministic ordering,
+  20/200/200 response caps, exact UTC wire parsing, and typed result mapping.
 - pgTAP: RLS enabled; active students can read only the allowed projection; signed-out, inactive,
   lecturer, and administrator actors cannot use the Student boundary; active-booking, inactive-
   course, inactive-lecturer, assignment, and direct-table abuse cases.
 - Playwright: authorized list/filter/clear/empty/error behavior, wrong-role direct navigation,
   keyboard/label behavior, and stored-script display as text.
 - Security review: ID substitution, hidden-record enumeration, query amplification, browser-clock
-  manipulation, data-minimization, RLS/function safety, and confirmation that no AI path exists.
+  manipulation, own-profile versus other-profile access, data-minimization, RLS/function safety, and
+  confirmation that no AI path exists.
 
 Future implementation ownership, after dependency approval, is expected to be:
 
@@ -292,25 +310,22 @@ Future implementation ownership, after dependency approval, is expected to be:
 - Any AI-generated recommendation, ranking, summarization, or natural-language filtering.
 - Final visual design beyond the stated accessibility and state requirements.
 
-## Open questions blocking approval
+## Confirmed decisions in this revision
 
-1. Confirm `Asia/Singapore` as the authoritative display and calendar-filter timezone.
-2. Confirm whether inactive courses, inactive lecturers, and removed lecturer-course assignments
-   hide existing future slots exactly as proposed.
-3. Confirm that a completed booking can never make a future slot reusable, with the shared state
-   rules preventing completion before the slot ends.
-4. Confirm start-time date matching rather than any-overlap date matching.
-5. Confirm 20-result cursor pagination and whether the initial release needs a “next page” control
-   or automatic incremental loading.
-6. Decide whether lecturer/course filter choices show all active catalogue entries or only entries
-   represented in the currently available result set. This must not change the result authorization
-   boundary.
-7. Confirm whether students may browse every active course or whether course enrolment will restrict
-   visibility. If enrolment is required, that model and its RLS rules are a new dependency.
-8. Confirm the exact supported-browser/accessibility target inherited from the shared requirements.
+The eight decisions previously listed here were confirmed before implementation and are now normative
+in `STU-01` and its shared dependencies: Singapore time; derived active endpoint eligibility; completed
+history finality; start-time date matching; 20-row cursor pagination with “Load more”; represented-only
+filter options capped by the shared contract; catalogue-wide Student eligibility; and the accessibility
+target in `SH-03-R15`.
+
+No unresolved STU-01 product decision remains in this document. Exact-digest review, real acceptance
+tests, shared RLS migration review, and manual/cross-browser verification remain required evidence, not
+product choices.
 
 ## Change log
 
-| Date       | Change                                                                    | By                     |
-| ---------- | ------------------------------------------------------------------------- | ---------------------- |
-| 2026-10-17 | Initial requirements draft for human review; no implementation authorized | requirements_architect |
+| Date       | Change                                                                      | By                     |
+| ---------- | --------------------------------------------------------------------------- | ---------------------- |
+| 2026-10-17 | Initial requirements draft for human review; no implementation authorized   | requirements_architect |
+| 2026-10-18 | Recorded team-reported approval; retained unresolved implementation limits  | requirements_architect |
+| 2026-10-18 | Added approved per-slot IDs and exact wire allowlist; reset status to draft | requirements_architect |
