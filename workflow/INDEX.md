@@ -11,6 +11,17 @@ feature and archive directories.
 
 ## Directory convention
 
+### Student request consultations
+
+- Draft: `workflow/specs/student/STU-02-request-consultation.md`.
+- Bounded plan: `workflow/plans/stu-02-request-consultation.md`.
+- Current handoff: `workflow/handoffs/stu-02/latest.md`.
+- Review: `workflow/reviews/stu-02/specification-challenge.md`.
+- Joseph's log: `logs/joseph/stu-02.md`.
+- Scope: create a pending request only; listing, editing, cancellation, and AI assistance are deferred.
+
+### File locations
+
 - Current feature status: `workflow/handoffs/<feature-id>/latest.md`
 - Detailed active reviews: `workflow/reviews/<feature-id>/`
 - Superseded handoffs: `workflow/handoffs/archive/<feature-id>/`
