@@ -272,6 +272,62 @@ Planned verification only; no test result is claimed.
    not in the confirmed list/detail allowlist.
 3. Identify the approved Lecturer transition endpoint/fixture for real race verification.
 
+# Reflection: Orchestrator–Subagent Generator–Verifier Workflow
+
+## What went well
+
+The workflow successfully separated implementation from verification. The developer generated the feature, while the tester and security reviewer independently checked it against the approved STU-04 specification rather than relying on the developer’s claims.
+The strongest result was the discovery of SEC-04-01. The security reviewer found that, after a lost server response, the interface discarded the original idempotency key. A retry could therefore produce a conflict instead of recovering the original edit or cancellation result. The developer fixed this in the first review round, and the security reviewer independently confirmed that the original key, version, and payload are now retained and replayed.
+The workflow also handled verification evidence honestly:
+
+- The tester stopped when the supposed disposable database reset targeted the normal local Supabase stack.
+- Results from that unsafe setup were excluded.
+- A separately identified temporary Supabase project was later created and validated before fixtures were inserted.
+- Database tests passed 8/8 on that isolated environment.
+- Missing browser, concurrency, timeout, and Lecturer-transition coverage was recorded instead of being presented as successful.
+  Traceability worked as intended. STU-04’s 12 acceptance criteria were connected to tests, while full-project coverage was reported separately as 84 of 181 criteria referenced.
+  The two-round limit was respected. Only one confirmed finding required a fix round, so the workflow did not enter an endless review loop.
+
+## What could be improved
+
+The test environment should have been designed and validated before any database reset. The first tester command reset the normal local database because the Supabase CLI did not retain the intended named database target. Future workflows should require these checks before any destructive database command:
+
+1. Verify the temporary project ID.
+2. Verify the exact Docker container name.
+3. Verify unique API and database ports.
+4. Query a harmless marker from the target.
+5. Refuse the reset if any value matches the normal development stack.
+   The browser-test setup should also have been planned earlier. The STU-04 browser tests were written, but the available dedicated Playwright configuration collected only STU-02. This left important scenarios unexecuted, including accessibility, cross-origin rejection, GET mutation protection, and automated lost-response recovery. Each feature plan should include its test-runner wiring as an explicit task before verification begins.
+   The pre-code database tests were too shallow initially. They mainly checked that RPC functions existed and that direct table access remained denied. They did not initially prove ownership, state transitions, time boundaries, response allowlists, or idempotent replay. Acceptance tests should test behavior rather than mostly testing interface existence.
+   The feature depended on a Lecturer-transition race that could not be fully tested because the Lecturer decision feature does not yet exist. This dependency should have been identified as a staged acceptance criterion:
+
+- Verify the Student-side conditional transition now.
+- Mark the real cross-role race as deferred.
+- Activate the full criterion when the Lecturer transition endpoint exists.
+  Coordination was slower and more token-intensive than necessary. Several agents spent too long reading broad repository context or waiting. Future assignments should include:
+- A short source list instead of the entire conversation history.
+- Exact file ownership.
+- The approved spec digest.
+- Only the relevant requirement IDs.
+- A strict output format.
+- A request to report quickly if blocked rather than continuing repository exploration.
+  The handoff format also caught a documentation defect late: the tester used an unsupported result value instead of passed, failed, blocked, or not-run. Running handoff validation immediately when each agent finishes would catch this earlier.
+  Finally, the sensitive-change classifier did not detect the untracked migration. The classifier should inspect untracked sensitive files or the orchestrator should explicitly enumerate migrations and authorization changes before accepting its result.
+
+## Recommended workflow for the next feature
+
+1. Freeze the approved spec digest and acceptance criteria.
+2. Create and validate an isolated test environment before implementation.
+3. Add behavioral acceptance tests and confirm the test runner collects them.
+4. Give the developer a small, exact file scope.
+5. Freeze an implementation commit or reproducible content fingerprint.
+6. Run tester and security reviews independently against that version.
+7. Route only confirmed findings to the developer.
+8. Recheck affected behavior after each fix.
+9. Validate every handoff immediately.
+10. Finish only when executed coverage, deferred coverage, and human review gates are clearly separated.
+    Overall, the workflow improved security and prevented an idempotency defect from reaching review, but environment preparation and browser-test integration should move much earlier in the process.
+
 ## Change log
 
 | Date       | Change and reason                                                            | IDs affected            | Evidence invalidated             | By                     |

@@ -304,6 +304,23 @@ whole-team approval of the following choices. Independent pre-implementation con
 3. Approve the narrow API/projection, accessible UI and 16 KiB/5s/10s bounds; accept no new booking-rate
    quota for this slice or specify one. Reconcile the relevant draft shared requirements for creation.
 
+# Reflection
+
+## What went well
+
+The spec-driven development process gave us a clear definition of the Student consultation request feature before implementation began. The specification documented expected behaviour, authorization rules, failure cases, security requirements, and acceptance criteria. Linking tests to requirement IDs also made it easier to determine which parts of the feature had been verified.
+The generator–verifier workflow was useful. The developer agent implemented the feature, while the tester and security reviewer independently examined it. This separation helped uncover two genuine issues: consultation text could appear in the URL through the form’s native fallback behaviour, and timestamps were not returned in the required UTC Z format. Both problems were fixed and rechecked.
+Testing against a disposable Supabase database worked well for validating database rules, concurrent requests, authorization, retry behaviour, and transaction rollback without affecting production data. The final automated checks covered unit tests, database tests, real concurrency tests, and browser tests. We also verified that unauthorized users could not access the request operations and that failed requests did not leave partial bookings.
+The implementation handled important security concerns, including server-side role checks, restricted database functions, prevention of overlapping bookings, idempotent retries, safe rendering of user input, and keeping consultation text out of URLs and logs. The feature also remained usable when the AI service was unavailable because consultation booking does not depend on AI.
+
+## What did not go as expected
+
+The workflow became more complicated and time-consuming than expected. A large number of handoff, review, test, and log files were created, which made it harder to understand the current status of the feature. The long conversation context and repeated verification also consumed more tokens than necessary. Future features should use shorter, feature-specific conversations and one consolidated current handoff, while keeping older details in an archive.
+Several initial test failures were caused by test setup problems rather than application defects. Examples included an incomplete Supabase mock, using the wrong browser hostname, an incorrect assumption about redirect headers, retained test fixtures affecting global database counts, and a mismatch between the new browser tests and the database used by GitHub Actions. These problems showed that verifier agents must validate their fixtures and assertions before reporting an implementation bug.
+The local database setup also caused unexpected disruption. Resetting Supabase correctly installed the migrations, but it deleted the existing local users and data. The first version of the demo-user seed also omitted a required Auth field, which temporarily caused login requests to fail with a server error. The seed was corrected and login was verified, but the reset should have been explained before it was performed, and existing local data should have been backed up or explicitly confirmed as disposable.
+The difference between the normal development database and the disposable verification database was initially confusing. Some tests passed in the disposable environment while the application still failed locally because the normal database did not have the required migrations or fixtures. Future work should establish the intended database target at the beginning and provide one documented setup command for developers.
+Although the local automated tests passed, hosted GitHub Actions and the manual 200% zoom, focus, and readability checks were not completed during the workflow. Therefore, local success should not be presented as final merge approval. Database migrations and CI changes still require independent teammate or CODEOWNER review before merging.
+
 ## Change log
 
 | Date       | Change                                                                       | IDs              | Evidence invalidated    | By                     |

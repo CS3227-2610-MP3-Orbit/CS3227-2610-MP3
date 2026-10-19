@@ -1,21 +1,22 @@
 # STU-04 tester verification
 
 <!-- HANDOFF:BEGIN -->
+
 {
-  "schemaVersion": 1,
-  "taskId": "STU-04-P4",
-  "requirementIds": ["STU-04-R1", "STU-04-R2", "STU-04-R3", "STU-04-R4", "STU-04-R5", "STU-04-R6", "STU-04-R7", "STU-04-R8", "STU-04-R9", "STU-04-R10"],
-  "status": "incomplete",
-  "changedFiles": ["workflow/handoffs/stu-04/tester.md"],
-  "verification": [
-    {"check":"npm run check:spec","result":"passed","evidence":"84 criteria referenced; existing draft-spec warnings only."},
-    {"check":"npm test -- --run src/features/student/bookings/manage-validation.test.ts","result":"passed","evidence":"2/2 unit tests passed."},
-    {"check":"npm run lint","result":"passed","evidence":"No errors; existing verifier-owned STU-04 E2E file has unused appUrl warning."},
-    {"check":"npm run typecheck","result":"passed","evidence":"next typegen and tsc --noEmit completed."},
-    {"check":"npx supabase test db --workdir /tmp/stu04-verify.w2LB3N <STU-04 test path>","result":"passed","evidence":"8/8 pgTAP assertions passed on an isolated temporary project."},
-    {"check":"direct authenticated fixture RPC matrix","result":"passed","evidence":"Verified five-status owned list, foreign/missing equivalence, inactive refusal, bounded edit, stale conflict, pre-start cancellation, past-start refusal, and exact same-payload/key replay."}
-  ],
-  "unresolvedIssues": ["No simulated lost-response automated test was run; same-key replay was verified directly at the database and retry-key retention was reviewed statically in the UI.", "STU-04 browser acceptance test remains unexecuted because it imports the STU-02-only fixture helper and is not selected by that dedicated config.", "AC8 requires a future Lecturer transition implementation for a genuine Student-versus-Lecturer race; not a confirmed STU-04 application defect."]
+"schemaVersion": 1,
+"taskId": "STU-04-P4",
+"requirementIds": ["STU-04-R1", "STU-04-R2", "STU-04-R3", "STU-04-R4", "STU-04-R5", "STU-04-R6", "STU-04-R7", "STU-04-R8", "STU-04-R9", "STU-04-R10"],
+"status": "incomplete",
+"changedFiles": ["tests/e2e/student-manage-bookings.spec.ts", "workflow/handoffs/stu-04/tester.md", "logs/joseph/stu-04.md"],
+"verification": [
+{"check":"npm run check:spec","result":"passed","evidence":"84 criteria referenced; existing draft-spec warnings only."},
+{"check":"npm test -- --run src/features/student/bookings/manage-validation.test.ts","result":"passed","evidence":"2/2 unit tests passed."},
+{"check":"npm run lint","result":"passed","evidence":"No errors; existing verifier-owned STU-04 E2E file has unused appUrl warning."},
+{"check":"npm run typecheck","result":"passed","evidence":"next typegen and tsc --noEmit completed."},
+{"check":"npx supabase test db --workdir /tmp/stu04-verify.w2LB3N <STU-04 test path>","result":"passed","evidence":"8/8 pgTAP assertions passed on an isolated temporary project."},
+{"check":"direct authenticated fixture RPC matrix","result":"passed","evidence":"Verified five-status owned list, foreign/missing equivalence, inactive refusal, bounded edit, stale conflict, pre-start cancellation, past-start refusal, and exact same-payload/key replay."}
+],
+"unresolvedIssues": ["No simulated lost-response automated test was run; same-key replay was verified directly at the database and retry-key retention was reviewed statically in the UI.", "STU-04 browser acceptance test remains unexecuted because it imports the STU-02-only fixture helper and is not selected by that dedicated config.", "AC8 requires a future Lecturer transition implementation for a genuine Student-versus-Lecturer race; not a confirmed STU-04 application defect."]
 }
 <!-- HANDOFF:END -->
 
@@ -33,25 +34,31 @@ fingerprinted individually with SHA-256; their recorded values are in the comman
 
 ## Test matrix
 
-| Requirement | Check | Result | Evidence |
-| --- | --- | --- | --- |
-| R1/R2/R6/R9 | Static review: protected page/action and narrow RPC boundaries | passed (static only) | `requireRole("student")` occurs in each protected page/action and migration exposes only authenticated RPC execution. |
-| R3/R4/R7 | Unit validation boundaries | passed (limited) | Focused Vitest: 2/2. It proves trimming and forged/duplicate client input rejection only. |
-| R5/R6/R7/R9 | Database state/time/ownership/idempotency and direct-table checks | passed (targeted) | Isolated `stu04-verify-w2lb3n`: pgTAP 8/8 and verified fictional fixture matrix. |
-| R4/R10 | Same-key recovery and no-AI behavior | passed (mixed evidence) | Database exact-payload/key update and cancellation replays returned the stored success. UI statically retains the original attempt/key after unknown outcome; no simulated lost-response automation was run. |
-| R8 | Browser keyboard/narrow/zoom and feedback | blocked | Existing STU-04 E2E file is not collected by the STU-02-only dedicated config. |
-| R10 | Static no-AI path and literal React rendering | passed (static only) | No AI imports/calls in STU-04 code; topic/questions interpolate as React text. |
-| AC8 | Student cancellation versus real Lecturer transition | unexecuted | Lecturer transition is outside current implementation; cannot simulate it as evidence. |
+| Requirement | Check                                                             | Result                  | Evidence                                                                                                                                                                                                                                 |
+| ----------- | ----------------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1/R2/R6/R9 | Static review: protected page/action and narrow RPC boundaries    | passed (static only)    | `requireRole("student")` occurs in each protected page/action and migration exposes only authenticated RPC execution.                                                                                                                    |
+| R3/R4/R7    | Unit validation boundaries                                        | passed (limited)        | Focused Vitest: 2/2. It proves trimming and forged/duplicate client input rejection only.                                                                                                                                                |
+| R5/R6/R7/R9 | Database state/time/ownership/idempotency and direct-table checks | passed (targeted)       | Isolated `stu04-verify-w2lb3n`: pgTAP 8/8 and verified fictional fixture matrix.                                                                                                                                                         |
+| R4/R10      | Same-key recovery and no-AI behavior                              | passed (mixed evidence) | Database exact-payload/key update and cancellation replays returned the stored success. UI statically retains the original attempt/key after unknown outcome; no simulated lost-response automation was run.                             |
+| R3/R5/R8    | Browser successful edit/cancel and live detail feedback           | unexecuted              | Corrected the acceptance assertion: an owned future pending booking must update, then cancel successfully, and its detail card must show the committed values/status. No verified disposable browser target was available for execution. |
+| R8          | Browser keyboard/narrow/zoom and feedback                         | blocked                 | Existing STU-04 E2E file is not collected by the STU-02-only dedicated config.                                                                                                                                                           |
+| R10         | Static no-AI path and literal React rendering                     | passed (static only)    | No AI imports/calls in STU-04 code; topic/questions interpolate as React text.                                                                                                                                                           |
+| AC8         | Student cancellation versus real Lecturer transition              | unexecuted              | Lecturer transition is outside current implementation; cannot simulate it as evidence.                                                                                                                                                   |
 
 ## Defects
 
-No confirmed application defect. An earlier unsafe-target attempt was discarded. A separate project was then
+No confirmed application defect. Test defect `TEST-04-01` was corrected: the prior browser acceptance test
+incorrectly expected a safe changed/refresh conflict after cancelling an owned future pending booking.
+STU-04-R5 requires that cancellation to succeed. The corrected test first saves new content and verifies
+the live detail card, then verifies successful cancellation, retained content, and `cancelled` status.
+The browser test itself remains unexecuted pending a dedicated verified fixture/configuration. An earlier unsafe-target attempt was discarded. A separate project was then
 validated by its `project_id=stu04-verify-w2lb3n`, container prefix
 `supabase_db_stu04-verify-w2lb3n`, and exclusive API/DB ports `56321/56322` before fixture creation.
 
 ## Changes
 
-- `workflow/handoffs/stu-04/tester.md`: this verification record only.
+- `tests/e2e/student-manage-bookings.spec.ts`: corrected `TEST-04-01`; removed its unused fixture-helper import.
+- `workflow/handoffs/stu-04/tester.md`: this verification record and correction evidence.
 
 ## Commands
 
@@ -62,6 +69,8 @@ validated by its `project_id=stu04-verify-w2lb3n`, container prefix
 - `npx supabase test db --workdir /tmp/stu04-verify.w2LB3N <STU-04 test path>`: passed (8/8).
 - Direct PSQL fixture matrix on `supabase_db_stu04-verify-w2lb3n`: passed; it exercised five owned statuses, projection allowlisting, foreign/missing equality, inactive refusal, edit trim/stale conflict/exact replay, pre-start cancellation/exact replay, and past-start cancellation refusal.
 - `npx playwright test tests/e2e/student-manage-bookings.spec.ts --list`: blocked by the STU-02-only explicit-target guard; no STU-04 browser run was claimed.
+- `npx prettier --check tests/e2e/student-manage-bookings.spec.ts`: passed.
+- `git diff --check`: found a pre-existing trailing blank line in the specification outside this tester's allowed scope; no change was made to it.
 
 ## Gaps and unresolved questions
 
@@ -73,7 +82,8 @@ coverage/configuration gap, not a reason to weaken or skip it.
 
 ## Next action
 
-Coordinator: arrange an STU-04 dedicated browser fixture/configuration and rerun the remaining concurrency,
-cross-origin/GET, timeout, response-loss, and browser checks before acceptance.
+Coordinator: arrange an STU-04 dedicated browser fixture/configuration, then execute the corrected
+successful edit/cancel live-detail check and rerun the remaining concurrency, cross-origin/GET, timeout,
+response-loss, and browser checks before acceptance.
 
 Handoff evidence: workflow/handoffs/stu-04/tester.md

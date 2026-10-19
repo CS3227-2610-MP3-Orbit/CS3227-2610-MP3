@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { apiUrl, appUrl, quote, sql, workdir } from "../integration/stu02-test-helpers.mjs";
+import { apiUrl, quote, sql, workdir } from "../integration/stu02-test-helpers.mjs";
 
-// These are intentionally red acceptance tests: STU-04 UI/routes do not exist
-// yet. They describe externally observable behaviour and must not be skipped.
+// These acceptance tests describe externally observable STU-04 behaviour.
 async function createOwnedBookingFixture() {
   const status = JSON.parse(
     execFileSync("npx", ["supabase", "status", "--workdir", workdir, "-o", "json"], {
@@ -103,6 +102,15 @@ test("[STU-04-AC4] [STU-04-AC5] [STU-04-AC6] [STU-04-AC7] [STU-04-AC8] [STU-04-A
   await page.getByRole("button", { name: /edit/i }).click();
   await expect(page.getByLabel(/topic/i)).toBeVisible();
   await expect(page.getByLabel(/questions/i)).toBeVisible();
+  await page.getByLabel(/topic/i).fill("Updated STU04 topic");
+  await page.getByLabel(/questions/i).fill("Updated STU04 questions");
+  await page.getByRole("button", { name: /save changes/i }).click();
+  await expect(page.getByRole("status")).toHaveText("Booking updated.");
+  await expect(page.getByText("Topic: Updated STU04 topic")).toBeVisible();
+  await expect(page.getByText("Questions: Updated STU04 questions")).toBeVisible();
   await page.getByRole("button", { name: /cancel booking/i }).click();
-  await expect(page.getByText(/changed.*refresh/i)).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText("Booking cancelled.");
+  await expect(page.getByText("Status: cancelled")).toBeVisible();
+  await expect(page.getByText("Topic: Updated STU04 topic")).toBeVisible();
+  await expect(page.getByText("Questions: Updated STU04 questions")).toBeVisible();
 });

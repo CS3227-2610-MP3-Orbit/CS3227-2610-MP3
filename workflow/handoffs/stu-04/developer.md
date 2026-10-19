@@ -100,8 +100,35 @@ Apply this append-only migration only to a disposable local test database, then 
   on a route refresh. The server page still performs its existing role check and owned lookup before
   passing the serializable initial booking to the client boundary.
 - Checks: targeted Prettier check and `git diff --check` passed; `npm run typecheck` passed; `npm run
-  lint` completed with zero errors and one unrelated existing verifier-owned unused `appUrl` warning in
+lint` completed with zero errors and one unrelated existing verifier-owned unused `appUrl` warning in
   `tests/e2e/student-manage-bookings.spec.ts`.
 - Not run: browser confirmation and a component test. The allowed scope contains no established
   client-component test harness, and an independent browser verifier should confirm a successful edit
   visibly replaces the detail-card topic/questions without navigation.
+
+## CI-STU04 — 2026-10-19
+
+- Task: `CI-STU04`; CI wiring review for the approved STU-04 specification digest
+  `9eafaec3a8a4a83ebd11beca09ecfd88ca7463b2`, specifically its browser acceptance criteria
+  `STU-04-AC1`, `AC4`–`AC6`, and `AC8`–`AC12`. No product requirement or application behavior changed.
+- Reviewed `.github/workflows/ci.yml`, `workflow/scripts/verify.mjs`,
+  `workflow/scripts/stu02-ci.mjs`, `playwright.config.ts`, the STU-02/STU-04 verifier handoffs, and
+  installed Next documentation before deciding whether a change was necessary.
+- Result: no CI configuration edit was necessary. The End-to-end job invokes the CI-only runner, which
+  creates a unique, temporary `stu02-ci-*` Supabase project, copies the migrations and local seed,
+  supplies explicit matching disposable fixture and app targets, then runs the real request concurrency
+  suite followed by the default `npm run test:e2e`. The default Playwright configuration's `testDir`
+  is `tests/e2e`, so it collects every current browser suite rather than only STU-02.
+- Evidence: with explicit safe dummy loopback/disposable-target variables, `npx playwright test --list`
+  listed nine tests in four files: the existing auth and Student browse tests plus STU-02 and all four
+  STU-04 tests. `node --check workflow/scripts/stu02-ci.mjs` passed. Running that script with
+  `GITHUB_ACTIONS=false CI=false` failed before creating any resources with its expected CI-only guard.
+- No normal local Supabase stack was reset, started, stopped, or written. The runner itself was not
+  executed with CI markers locally because that would start a stack on CI's fixed local ports. Hosted
+  GitHub Actions execution remains not-run and needs a PR run.
+- The worktree already contains independent, uncommitted STU-04 test/spec edits. They were preserved.
+  A full formatting check is presently failed by pre-existing formatting in those independent files and
+  handoffs; this task did not reformat or alter them.
+- Sensitive CI/test-fixture configuration still requires an independent teammate/CODEOWNER review before
+  merge. The legacy STU-02 names are operationally misleading but are not a functional exclusion: both
+  feature suites receive the same explicitly isolated CI target.

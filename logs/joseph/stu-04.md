@@ -97,3 +97,16 @@ Generated summary awaiting human verification.
 - Unexecuted: automated response-loss UI test, dedicated STU-04 browser execution/accessibility,
   GET/cross-origin and timeout paths, real multi-connection mutation races, and the future Lecturer
   transition race. Hosted CI and human sensitive-change/CODEOWNER review are also unverified.
+
+## Browser-test correction — 2026-10-19
+
+- Independent tester correction `TEST-04-01`: the STU-04 browser test had incorrectly expected a
+  changed/refresh conflict after cancelling an owned future pending booking. The approved STU-04-R5
+  requires that cancellation to succeed.
+- The corrected acceptance path saves changed topic/questions, checks that the live detail card immediately
+  shows those committed values, then cancels and checks `Booking cancelled.`, `Status: cancelled`, and
+  preserved committed content. It retains the existing STU-04 acceptance labels.
+- `npx prettier --check tests/e2e/student-manage-bookings.spec.ts` passed. Browser execution remains
+  unperformed because the existing dedicated configuration does not collect STU-04; no passing browser
+  result is claimed. `git diff --check` reports a pre-existing trailing blank line in the STU-04 spec,
+  outside the tester's permitted scope.
