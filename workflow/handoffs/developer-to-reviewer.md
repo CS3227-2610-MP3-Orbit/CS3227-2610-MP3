@@ -10,17 +10,17 @@
 ## Files changed
 
 | File | Purpose | Security-sensitive? |
-| --- | --- | --- |
+| ---- | ------- | ------------------- |
 
 ## Tests executed
 
 | Command | Result | Evidence |
-| --- | --- | --- |
+| ------- | ------ | -------- |
 
 ## Acceptance criteria coverage
 
 | Criterion | Test reference | Result |
-| --- | --- | --- |
+| --------- | -------------- | ------ |
 
 ## Known limitations
 

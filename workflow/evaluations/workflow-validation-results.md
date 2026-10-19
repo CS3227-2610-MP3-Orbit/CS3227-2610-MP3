@@ -9,14 +9,14 @@ workflows. The repository traceability check was also run locally. No applicatio
 
 ## Results
 
-| Area | Result | Evidence |
-| --- | --- | --- |
-| General analyst agent definition | Pass | `workflow/agents/analyst.md` supports general feature requests, specifications, criteria, open questions, and handoffs. |
-| General developer agent definition | Pass with gaps | Approval and scope gates exist, but the exact approval reference and general ownership rules should be made more explicit. |
-| Tester/security agent definition | Pass with gaps | RBAC, prompt injection, secrets, AI failures, and independent review are covered at a high level. |
-| Combined skills for general project use | Fail | `consultation-spec`, `consultation-implement`, and `consultation-verify` are intentionally Lecturer-specific. They should not be used for unrelated project features. |
-| Skill approval gate | Pass | The implementation skill requires an approved specification before coding. |
-| Traceability checker | Pass with expected warnings | `npm.cmd run check:spec` completed; draft Lecturer criteria without tests were reported. |
+| Area                                    | Result                      | Evidence                                                                                                                                                              |
+| --------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| General analyst agent definition        | Pass                        | `workflow/agents/analyst.md` supports general feature requests, specifications, criteria, open questions, and handoffs.                                               |
+| General developer agent definition      | Pass with gaps              | Approval and scope gates exist, but the exact approval reference and general ownership rules should be made more explicit.                                            |
+| Tester/security agent definition        | Pass with gaps              | RBAC, prompt injection, secrets, AI failures, and independent review are covered at a high level.                                                                     |
+| Combined skills for general project use | Fail                        | `consultation-spec`, `consultation-implement`, and `consultation-verify` are intentionally Lecturer-specific. They should not be used for unrelated project features. |
+| Skill approval gate                     | Pass                        | The implementation skill requires an approved specification before coding.                                                                                            |
+| Traceability checker                    | Pass with expected warnings | `npm.cmd run check:spec` completed; draft Lecturer criteria without tests were reported.                                                                              |
 
 ## Findings and improvements
 

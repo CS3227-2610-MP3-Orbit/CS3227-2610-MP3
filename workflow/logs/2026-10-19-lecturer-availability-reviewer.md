@@ -11,12 +11,12 @@ The approved specification was read before the implementation. The developer han
 
 ## Commands
 
-| Command | Result |
-| --- | --- |
-| `npm.cmd test` | Blocked: Vitest executable unavailable |
+| Command                  | Result                                                                                          |
+| ------------------------ | ----------------------------------------------------------------------------------------------- |
+| `npm.cmd test`           | Blocked: Vitest executable unavailable                                                          |
 | `npm.cmd run check:spec` | Failed: approved LEC-01 criteria lack coverage; pre-existing missing front matter also reported |
-| `npm.cmd run lint` | Blocked: ESLint executable unavailable |
-| `npm.cmd run typecheck` | Blocked: Next executable unavailable |
+| `npm.cmd run lint`       | Blocked: ESLint executable unavailable                                                          |
+| `npm.cmd run typecheck`  | Blocked: Next executable unavailable                                                            |
 
 ## Scope limitations
 

@@ -189,15 +189,15 @@ The migration must enable RLS and provide policies consistent with this specific
 ## Open questions
 
 1. May a lecturer edit the course as well as the date/time when a slot has active bookings, subject to confirmation?
-5. What exact user-visible messages/status mapping should represent authorization, duplicate, conflict,
+2. What exact user-visible messages/status mapping should represent authorization, duplicate, conflict,
    not-found, and database failures?
-6. What administrator audit trail is required when an administrator manages a Lecturer slot?
-7. What are the concrete course-assignment tables and policies for “a course the lecturer is part of”?
-8. Should overlapping slots be checked only for the same lecturer, as requested, or also within a
+3. What administrator audit trail is required when an administrator manages a Lecturer slot?
+4. What are the concrete course-assignment tables and policies for “a course the lecturer is part of”?
+5. Should overlapping slots be checked only for the same lecturer, as requested, or also within a
    course/resource?
 
 ## Change log
 
-| Date | Change | By |
-| --- | --- | --- |
+| Date       | Change                                                                                | By                   |
+| ---------- | ------------------------------------------------------------------------------------- | -------------------- |
 | 2026-10-19 | Replaced prior general availability draft with repository-grounded slot specification | Requirements Analyst |

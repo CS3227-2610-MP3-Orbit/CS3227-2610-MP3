@@ -22,12 +22,12 @@ None. No application code, tests, migrations, CI, agent definitions, skills, or 
 
 ## Findings and open questions
 
-| # | Severity | Finding | Status |
-| --- | --- | --- | --- |
-| 1 | High | Course and booking schemas are absent; implementation must add a migration using `courses` and `course_lecturers`. | Decision recorded |
-| 2 | High | Singapore timezone and adjacent-slot boundary semantics are decided. | Decision recorded |
-| 3 | High | The slot operation route/action and UI placement do not exist. | Open |
-| 4 | Medium | Administrator management, hard deletion, confirmation/notifications for active bookings, and audit records are decided. Exact error contract remains open. | Partially resolved |
+| #   | Severity | Finding                                                                                                                                                    | Status             |
+| --- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| 1   | High     | Course and booking schemas are absent; implementation must add a migration using `courses` and `course_lecturers`.                                         | Decision recorded  |
+| 2   | High     | Singapore timezone and adjacent-slot boundary semantics are decided.                                                                                       | Decision recorded  |
+| 3   | High     | The slot operation route/action and UI placement do not exist.                                                                                             | Open               |
+| 4   | Medium   | Administrator management, hard deletion, confirmation/notifications for active bookings, and audit records are decided. Exact error contract remains open. | Partially resolved |
 
 ## Human review
 

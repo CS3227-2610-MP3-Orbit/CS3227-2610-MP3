@@ -83,6 +83,6 @@ Lecturer features must be protected consistently at page, server-operation, data
 
 ## Change log
 
-| Date | Change | By |
-| --- | --- | --- |
+| Date       | Change                                       | By    |
+| ---------- | -------------------------------------------- | ----- |
 | 2026-10-19 | Initial draft based on repository inspection | Codex |
