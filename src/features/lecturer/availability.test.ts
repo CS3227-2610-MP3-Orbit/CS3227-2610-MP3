@@ -13,7 +13,9 @@ describe("Lecturer availability validation", () => {
     ).toMatchObject({ ok: true });
   });
   it("[LEC-01-AC2] [LEC-01-AC3] [LEC-01-AC6] [LEC-01-AC7] [LEC-01-AC10] [LEC-01-AC11] [LEC-01-AC12] keeps protected cases outside client validation", () => {
-    expect(validateSlotInput({ courseId, date: "2030-01-01", startTime: "10:00", endTime: "11:00" }).ok).toBe(true);
+    expect(
+      validateSlotInput({ courseId, date: "2030-01-01", startTime: "10:00", endTime: "11:00" }).ok,
+    ).toBe(true);
   });
   it("[LEC-01-AC4] accepts valid edit values", () => {
     expect(

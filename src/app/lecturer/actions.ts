@@ -42,14 +42,12 @@ export async function createSlot(formData: FormData): Promise<ActionResult> {
     .limit(1)
     .maybeSingle();
   if (overlap) return { ok: false, message: "This slot overlaps one of your existing slots." };
-  const { error } = await supabase
-    .from("consultation_slots")
-    .insert({
-      lecturer_id: user.id,
-      course_id: input.courseId,
-      starts_at: validation.start.toISOString(),
-      ends_at: validation.end.toISOString(),
-    });
+  const { error } = await supabase.from("consultation_slots").insert({
+    lecturer_id: user.id,
+    course_id: input.courseId,
+    starts_at: validation.start.toISOString(),
+    ends_at: validation.end.toISOString(),
+  });
   if (error)
     return {
       ok: false,
@@ -121,16 +119,14 @@ export async function updateSlot(formData: FormData): Promise<ActionResult> {
     .from("consultation_audit_log")
     .insert({ actor_id: user.id, slot_id: slotId.data, action: "updated", outcome: "success" });
   if (bookings?.length)
-    await supabase
-      .from("consultation_notifications")
-      .insert(
-        bookings.map((booking) => ({
-          recipient_id: booking.student_id,
-          slot_id: slotId.data,
-          kind: "slot_updated",
-          message: "A consultation slot you booked has been updated.",
-        })),
-      );
+    await supabase.from("consultation_notifications").insert(
+      bookings.map((booking) => ({
+        recipient_id: booking.student_id,
+        slot_id: slotId.data,
+        kind: "slot_updated",
+        message: "A consultation slot you booked has been updated.",
+      })),
+    );
   revalidatePath("/lecturer");
   return { ok: true, message: "Consultation slot updated." };
 }
@@ -162,16 +158,14 @@ export async function deleteSlot(formData: FormData): Promise<ActionResult> {
     .from("consultation_audit_log")
     .insert({ actor_id: user.id, slot_id: slotId.data, action: "deleted", outcome: "success" });
   if (bookings?.length)
-    await supabase
-      .from("consultation_notifications")
-      .insert(
-        bookings.map((booking) => ({
-          recipient_id: booking.student_id,
-          slot_id: slotId.data,
-          kind: "slot_deleted",
-          message: "A consultation slot you booked has been deleted.",
-        })),
-      );
+    await supabase.from("consultation_notifications").insert(
+      bookings.map((booking) => ({
+        recipient_id: booking.student_id,
+        slot_id: slotId.data,
+        kind: "slot_deleted",
+        message: "A consultation slot you booked has been deleted.",
+      })),
+    );
   revalidatePath("/lecturer");
   return { ok: true, message: "Consultation slot deleted." };
 }
