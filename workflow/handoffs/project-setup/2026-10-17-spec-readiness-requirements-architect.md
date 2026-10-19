@@ -1,12 +1,51 @@
 # Handoff: SPEC-READINESS-01 — requirements_architect → coordinator and human reviewers
 
+<!-- HANDOFF:BEGIN -->
+
+{
+"schemaVersion": 1,
+"taskId": "SPEC-READINESS-01",
+"requirementIds": [
+"PRD-01",
+"TEC-01",
+"SHR-01",
+"INT-01",
+"PLN-01",
+"SH-01"
+],
+"status": "passed",
+"changedFiles": [
+"workflow/reviews/project-setup/2026-10-17-spec-readiness-review.md",
+"workflow/plans/2026-10-17-first-vertical-slice.md",
+"workflow/handoffs/project-setup/2026-10-17-spec-readiness-requirements-architect.md"
+],
+"verification": [
+{
+"check": "npm run check:spec",
+"result": "passed",
+"evidence": "6 specs, 41 criteria, and 5 covered; 36 uncovered draft criteria were warnings"
+},
+{
+"check": "npm test and npm run lint",
+"result": "blocked",
+"evidence": "dependencies were not installed in that checkout"
+}
+],
+"unresolvedIssues": [
+"The reviewed specification set was not ready for implementation and remained draft.",
+"Human product decisions and approval were still required."
+]
+}
+
+<!-- HANDOFF:END -->
+
 - Date: 2026-10-17
 - Task ID: `SPEC-READINESS-01`
 - Requirement / acceptance-criterion IDs: `PRD-01`, `TEC-01`, `SHR-01`, `INT-01`, `PLN-01`, `SH-01`; proposed first slice links `PRD-01-AC10`, `INT-01-AC3/AC5/AC6`, `SHR-01-AC1/AC2/AC3`, and `PLN-01-AC1/AC3`
 - Specification version: repository commit `87a8951` on `AI-workflow-initalization`
 - Specification status and human approver: all inspected specs are `draft`; no approver recorded
 - Relevant context: all files under `workflow/specs/`, current `src/`, tests, migrations, workflow rules, CODEOWNERS, CI/deployment workflows, and project documentation
-- Allowed edit scope: this handoff, `workflow/reviews/2026-10-17-spec-readiness-review.md`, and `workflow/plans/2026-10-17-first-vertical-slice.md`
+- Allowed edit scope: this handoff, `workflow/reviews/project-setup/2026-10-17-spec-readiness-review.md`, and `workflow/plans/2026-10-17-first-vertical-slice.md`
 - Agent session log: not provided in the assignment
 
 ## Status
@@ -55,12 +94,12 @@ No application code, test, migration, CI, deployment, or existing specification 
 
 ## Artifacts
 
-- `workflow/reviews/2026-10-17-spec-readiness-review.md` — evidence-based readiness assessment,
+- `workflow/reviews/project-setup/2026-10-17-spec-readiness-review.md` — evidence-based readiness assessment,
   mismatches, missing requirements, ambiguities, and proposed first slice.
 - `workflow/plans/2026-10-17-first-vertical-slice.md` — bounded spec-first implementation and
   validation plan, requirement links, boundaries, sequencing, test matrix, dependencies, and exact
   future agent edit paths.
-- `workflow/handoffs/2026-10-17-spec-readiness-requirements-architect.md` — this role handoff.
+- `workflow/handoffs/project-setup/2026-10-17-spec-readiness-requirements-architect.md` — this role handoff.
 
 ## Evidence
 

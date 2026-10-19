@@ -7,6 +7,22 @@ status: draft
 
 # SH-01: Foundation
 
+## Document control
+
+- Prior approval date: `2026-10-18`.
+- Approval report: Joseph communicated in the project Codex conversation that the team approved this
+  specification and named Johansen as its reviewer.
+- Team-reported reviewed content digest: `ba6eff99926a74423b8b41f58a7815cacab2a4a1`.
+- Prior canonical metadata digest: `451469df2a1f39233656b1c25d8aedccbd71702e`.
+- External evidence limitation: no GitHub review, protected-PR URL, or independently verified reviewer
+  identity was supplied. This repository record documents Joseph's report; it does not authenticate an
+  external approval or establish that the reviewer differs from the spec author.
+- Material revision: Joseph confirmed on `2026-10-18` that Students retain direct access only to their
+  own profile row and discover staff through narrow feature RPC projections, not full staff rows. This
+  changes the prior profile authorization contract, resets this canonical specification to `draft`, and
+  makes the prior approval stale until a teammate reviews the exact revised digest.
+- Change-impact record: `workflow/reviews/stu-01/2026-10-18-shared-spec-traceability-impact.md`.
+
 ## Context
 
 All three roles share sign-in, the role model, the database access rules and the gateway to the
@@ -27,6 +43,15 @@ SoC LLM. These parts are fixed first so each role can be built in parallel again
 - Every page layout, Server Action and Route Handler checks the role with `requireRole` on the server.
 - The database enforces the same rules with row-level security, so a bug in the app cannot expose
   another user's data.
+- An authenticated Student may read their own profile row for session identity, role, active-state, and
+  own-account display needs. A Student may not directly read any other profile row, including a
+  Lecturer or Administrator row.
+- Student discovery of lecturer/staff data is available only through a feature-specific, narrow RPC
+  projection that authorizes an active Student and allowlists the minimum fields approved by that
+  feature. It never grants direct `profiles` table access or returns contact, role-management, active-
+  state, audit, or other full-profile fields.
+- This Student restriction does not decide the direct profile visibility needed by future Lecturer or
+  Administrator features; those role contracts require separate specifications.
 
 ## Data
 
@@ -60,18 +85,34 @@ such as slots and bookings are defined by their own specs and added by later mig
 - **SH-01-AC5** Given user-written text, when it is wrapped for the model, then it sits inside exactly one untrusted-data block that the text cannot close early.
 - **SH-01-AC6** Given recent AI usage counts, when any of the per-user-minute, per-user-day or global-minute limits is reached, then the call is refused with a reason and a retry time.
 - **SH-01-AC7** Given the SoC LLM times out, rate-limits or errors, when a feature calls `generateText`, then it receives a typed failure and no exception.
+- **SH-01-AC8** Given an authenticated Student, when database permissions are exercised directly, then
+  the Student can read their own profile row but cannot read any other profile row; an approved narrow
+  feature RPC may return only its allowlisted staff projection after independently checking the active
+  Student role.
 
 ## Out of scope
 
 Feature-specific rules (booking transitions, slot editing, reports) belong to each role's specs.
 
-## Open questions
+## Required implementation and test impact
+
+- Replace the broad Student-readable staff-profile policy through a new append-only migration; do not
+  edit the existing migration. The migration must preserve own-profile access required by session/role
+  resolution and must not broaden Lecturer or Administrator access without an approved role spec.
+- Add pgTAP/security tests for `SH-01-AC8`, including own-row success, other-profile denial, direct audit
+  and active-state field denial, and successful narrow feature projection only for an active Student.
+- Re-run all profile-dependent authentication and feature tests. The existing failing STU-01 profile
+  assertion is evidence of the required change, not approval to patch RLS before this draft is approved.
+
+## Unresolved implementation decisions
 
 - Exact quota numbers: to be derived from the SoC LLM documentation (NUS network only).
 - Self sign-up for students, or accounts created only by administrators?
 
 ## Change log
 
-| Date       | Change      | By        |
-| ---------- | ----------- | --------- |
-| 2026-10-17 | First draft | johannsen |
+| Date       | Change                                                                        | By                     |
+| ---------- | ----------------------------------------------------------------------------- | ---------------------- |
+| 2026-10-17 | First draft                                                                   | johannsen              |
+| 2026-10-18 | Recorded team-reported approval and retained unresolved implementation limits | requirements_architect |
+| 2026-10-18 | Restricted Student staff discovery to narrow RPC projections; reset to draft  | requirements_architect |

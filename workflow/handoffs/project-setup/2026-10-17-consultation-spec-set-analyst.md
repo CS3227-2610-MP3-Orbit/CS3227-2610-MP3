@@ -1,5 +1,34 @@
 # Handoff: PRD-01/TEC-01/SHR-01/INT-01/PLN-01 — analyst → human reviewers
 
+<!-- HANDOFF:BEGIN -->
+
+{
+"schemaVersion": 1,
+"taskId": "CONSULTATION-SPEC-SET-01",
+"requirementIds": ["PRD-01", "TEC-01", "SHR-01", "INT-01", "PLN-01"],
+"status": "incomplete",
+"changedFiles": [
+"workflow/specs/PRODUCT-SPEC.md",
+"workflow/specs/TECHNICAL-SPEC.md",
+"workflow/specs/SHARED-TECHNICAL-SPEC.md",
+"workflow/specs/INTEGRATION-SPEC.md",
+"workflow/specs/PLAN.md"
+],
+"verification": [
+{
+"check": "npm run check:spec",
+"result": "passed",
+"evidence": "6 specs, 41 criteria, and 5 covered; uncovered draft criteria were warnings"
+}
+],
+"unresolvedIssues": [
+"The five specifications remained draft and required human decisions and approval.",
+"The agent session log had not been recorded at this handoff."
+]
+}
+
+<!-- HANDOFF:END -->
+
 - Date: 2026-10-17
 - Specs: `workflow/specs/{PRODUCT-SPEC,TECHNICAL-SPEC,SHARED-TECHNICAL-SPEC,INTEGRATION-SPEC,PLAN}.md`
   (status at handoff: draft)

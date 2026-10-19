@@ -10,7 +10,7 @@
 "changedFiles": [
 "logs/joseph/README.md",
 "logs/joseph/2026-10-17-project-work-log.md",
-"workflow/handoffs/2026-10-17-joseph-project-log.md"
+"workflow/handoffs/project-setup/2026-10-17-joseph-project-log.md"
 ],
 "verification": [
 {

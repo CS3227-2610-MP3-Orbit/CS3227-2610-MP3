@@ -35,7 +35,7 @@ initial traceability result was 6 specs, 41 criteria, and 5 covered criteria, wi
 criteria correctly reported as warnings.
 
 The analyst handoff was recorded in
-`workflow/handoffs/2026-10-17-consultation-spec-set-analyst.md`. It preserved material unresolved
+`workflow/handoffs/project-setup/2026-10-17-consultation-spec-set-analyst.md`. It preserved material unresolved
 decisions instead of silently choosing them, including account provisioning, course eligibility,
 timezone and cancellation rules, field limits, invitation/deactivation behavior, retention,
 accessibility, scale, and browser support.
@@ -68,7 +68,7 @@ The setup evidence was recorded in:
 
 - `workflow/evaluation/README.md`
 - `workflow/evaluation/RESULTS.md`
-- `workflow/handoffs/2026-10-17-agent-setup-coordinator.md`
+- `workflow/handoffs/project-setup/2026-10-17-agent-setup-coordinator.md`
 - `logs/agent-setup/2026-10-17-summary.md`
 
 Observed tooling was `codex-cli 0.154.0-alpha.6.2`. Strict project configuration diagnostics loaded
@@ -82,9 +82,9 @@ The requirements architect inspected the existing specifications, source, tests,
 deployment definitions, ownership rules, and documentation without implementing an application
 feature. The work produced:
 
-- `workflow/reviews/2026-10-17-spec-readiness-review.md`
+- `workflow/reviews/project-setup/2026-10-17-spec-readiness-review.md`
 - `workflow/plans/2026-10-17-first-vertical-slice.md`
-- `workflow/handoffs/2026-10-17-spec-readiness-requirements-architect.md`
+- `workflow/handoffs/project-setup/2026-10-17-spec-readiness-requirements-architect.md`
 
 The review distinguished the existing foundation from planned work:
 
@@ -217,8 +217,8 @@ Created or updated:
 - `workflow/evaluation/hook-policy-injection/FIXTURE.md`
 - `workflow/evaluation/hook-policy-injection/README.md`
 - `workflow/evaluation/hook-policy-injection/RESULTS.md`
-- `workflow/handoffs/2026-10-17-development-hooks-coordinator.md`
-- `workflow/handoffs/2026-10-17-workflow-guardrails-coordinator.md`
+- `workflow/handoffs/project-setup/2026-10-17-development-hooks-coordinator.md`
+- `workflow/handoffs/project-setup/2026-10-17-workflow-guardrails-coordinator.md`
 - `logs/workflow-guardrails/2026-10-17-summary.md`
 
 The requirements audit identified the WFG requirements and initially found missing hook registration,
@@ -272,12 +272,12 @@ medium-severity defect in its focused scope.
 
 This consolidation is based on the repository artifacts named above and these primary records:
 
-- `workflow/handoffs/2026-10-17-consultation-spec-set-analyst.md`
-- `workflow/handoffs/2026-10-17-agent-setup-coordinator.md`
-- `workflow/handoffs/2026-10-17-spec-readiness-requirements-architect.md`
-- `workflow/handoffs/2026-10-17-development-hooks-coordinator.md`
-- `workflow/handoffs/2026-10-17-workflow-guardrails-coordinator.md`
-- `workflow/reviews/2026-10-17-spec-readiness-review.md`
+- `workflow/handoffs/project-setup/2026-10-17-consultation-spec-set-analyst.md`
+- `workflow/handoffs/project-setup/2026-10-17-agent-setup-coordinator.md`
+- `workflow/handoffs/project-setup/2026-10-17-spec-readiness-requirements-architect.md`
+- `workflow/handoffs/project-setup/2026-10-17-development-hooks-coordinator.md`
+- `workflow/handoffs/project-setup/2026-10-17-workflow-guardrails-coordinator.md`
+- `workflow/reviews/project-setup/2026-10-17-spec-readiness-review.md`
 - `workflow/plans/2026-10-17-first-vertical-slice.md`
 - `logs/agent-setup/2026-10-17-summary.md`
 - `logs/workflow-guardrails/2026-10-17-summary.md`
