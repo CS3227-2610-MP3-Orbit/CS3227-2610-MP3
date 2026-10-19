@@ -15,6 +15,8 @@ request → analyst → spec (draft) → human review → approved
 | `agents/`                                | Definitions of the analyst, developer and tester-security agents               |
 | `handoffs/`                              | One note per agent handoff, ending with a human review                         |
 | `scripts/check-traceability.mjs`         | Links tests to acceptance criteria; run by CI                                  |
+| `guardrails.md`                          | Development-agent and Lecturer AI guardrails, with enforcement limits          |
+| `evaluations/`                           | Skill, workflow, and security evaluation cases and evidence status              |
 | `scripts/setup-github.sh`                | Creates the GitHub environments and secrets (one-off setup)                    |
 | `scripts/setup-vercel-env.sh`            | Sets the Vercel Preview/Production variables (one-off setup)                   |
 | `scripts/create-user.mjs`                | Creates a confirmed user with a role in the dev or prod project                |
@@ -26,9 +28,9 @@ The three role definitions in `agents/` are intentionally separate responsibilit
 
 | Agent | Definition | May modify application code? |
 | --- | --- | --- |
-| Requirements Analyst | `agents/analyst.md` | No |
-| Implementation Developer | `agents/developer.md` | Yes, only for an approved spec |
-| Tester and Security Reviewer | `agents/tester-security.md` | No |
+| Analyst | `agents/analyst.md` | No |
+| Developer | `agents/developer.md` | Yes, only for an approved spec |
+| Tester/Security Reviewer | `agents/tester-security.md` | No |
 
 Use them in separate agent sessions or supported subagent contexts, passing only the relevant
 specification and handoff to the next role. A skill file does not by itself create an independent
