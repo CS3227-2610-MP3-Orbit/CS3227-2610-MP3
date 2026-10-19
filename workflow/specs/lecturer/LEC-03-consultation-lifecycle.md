@@ -80,6 +80,6 @@ Lecturers need a reliable view of upcoming consultations and a way to mark compl
 
 ## Change log
 
-| Date | Change | By |
-| --- | --- | --- |
+| Date       | Change                                       | By    |
+| ---------- | -------------------------------------------- | ----- |
 | 2026-10-19 | Initial draft based on repository inspection | Codex |

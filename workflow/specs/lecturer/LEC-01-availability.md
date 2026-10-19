@@ -87,6 +87,6 @@ Define the lecturer workflow for creating, viewing, editing, and withdrawing ava
 
 ## Change log
 
-| Date | Change | By |
-| --- | --- | --- |
+| Date       | Change                                       | By    |
+| ---------- | -------------------------------------------- | ----- |
 | 2026-10-19 | Initial draft based on repository inspection | Codex |

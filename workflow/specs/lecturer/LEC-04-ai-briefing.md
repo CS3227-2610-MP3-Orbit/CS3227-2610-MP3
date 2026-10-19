@@ -87,6 +87,6 @@ Lecturers should be able to request an AI-generated briefing for an authorized c
 
 ## Change log
 
-| Date | Change | By |
-| --- | --- | --- |
+| Date       | Change                                       | By    |
+| ---------- | -------------------------------------------- | ----- |
 | 2026-10-19 | Initial draft based on repository inspection | Codex |

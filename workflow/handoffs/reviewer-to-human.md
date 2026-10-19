@@ -7,13 +7,13 @@
 
 ## Findings
 
-| ID | Severity | Finding | File/evidence | Status |
-| --- | --- | --- | --- | --- |
+| ID  | Severity | Finding | File/evidence | Status |
+| --- | -------- | ------- | ------------- | ------ |
 
 ## Acceptance criteria coverage
 
 | Criterion | Evidence | Result |
-| --- | --- | --- |
+| --------- | -------- | ------ |
 
 ## Test evidence
 

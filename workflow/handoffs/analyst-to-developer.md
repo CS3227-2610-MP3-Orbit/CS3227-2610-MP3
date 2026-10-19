@@ -10,8 +10,8 @@
 
 ## Acceptance criteria
 
-| ID | Criterion | Test reference |
-| --- | --- | --- |
+| ID  | Criterion | Test reference |
+| --- | --------- | -------------- |
 
 ## Assumptions
 

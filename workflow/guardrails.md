@@ -8,17 +8,17 @@ oversight and evaluation.
 
 ## Development-agent guardrails
 
-| Guardrail | Technical enforcement | Process or prompt enforcement |
-| --- | --- | --- |
-| Least privilege | Workspace sandbox and repository ownership boundaries | Agent role scope |
-| Reviewer read-only behavior | Reviewer instructions restrict changes to tests and handoffs | Separate reviewer session and human review |
-| Approved-spec gate | Developer instructions require `status: approved` | Human approval recorded in handoff |
-| No secrets | `.claude/settings.json` denies common secret reads; agents are told not to read env files | Human audit of commands and outputs |
-| No deploy/push | `.claude/settings.json` denies deploy, database push, and Git push commands | Human approval for release actions |
-| No destructive commands | Workspace policy and approval controls | Stop and escalate when target is unclear |
-| No unrelated changes | Git diff and ownership review | Agent instructions and reviewer checks |
-| No weakened tests | Reviewer compares test history and criteria coverage | Human review of security-sensitive tests |
-| Traceability | `npm run check:spec` checks criterion-to-test references | Handoff records explain exceptions |
+| Guardrail                   | Technical enforcement                                                                     | Process or prompt enforcement              |
+| --------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Least privilege             | Workspace sandbox and repository ownership boundaries                                     | Agent role scope                           |
+| Reviewer read-only behavior | Reviewer instructions restrict changes to tests and handoffs                              | Separate reviewer session and human review |
+| Approved-spec gate          | Developer instructions require `status: approved`                                         | Human approval recorded in handoff         |
+| No secrets                  | `.claude/settings.json` denies common secret reads; agents are told not to read env files | Human audit of commands and outputs        |
+| No deploy/push              | `.claude/settings.json` denies deploy, database push, and Git push commands               | Human approval for release actions         |
+| No destructive commands     | Workspace policy and approval controls                                                    | Stop and escalate when target is unclear   |
+| No unrelated changes        | Git diff and ownership review                                                             | Agent instructions and reviewer checks     |
+| No weakened tests           | Reviewer compares test history and criteria coverage                                      | Human review of security-sensitive tests   |
+| Traceability                | `npm run check:spec` checks criterion-to-test references                                  | Handoff records explain exceptions         |
 
 Controls listed as process or prompt enforcement are not security boundaries by themselves. They
 must be supported by review evidence.
