@@ -6,7 +6,10 @@ import { createSlot } from "./actions";
 const initial = { ok: false, message: "" };
 
 export function SlotForm({ courses }: { courses: { id: string; code: string; name: string }[] }) {
-  const [state, action, pending] = useActionState(createSlot, initial);
+  const [state, action, pending] = useActionState(
+    (_previousState: typeof initial, formData: FormData) => createSlot(formData),
+    initial,
+  );
   return (
     <form
       action={action}

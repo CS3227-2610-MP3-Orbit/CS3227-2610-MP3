@@ -39,7 +39,11 @@ export default async function LecturerDashboardPage() {
                     minute: "2-digit",
                   })}
                 </span>
-                <form action={deleteSlot}>
+                <form
+                  action={async (formData) => {
+                    await deleteSlot(formData);
+                  }}
+                >
                   <input type="hidden" name="slotId" value={slot.id} />
                   <button className="text-red-700 underline" type="submit">
                     Delete
