@@ -18,8 +18,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Requirement changes go spec → tests → code, in that order.
 - Test names reference acceptance criteria: `it("[STU-01-AC2] ...")`. `npm run check:spec` must pass.
 - Work through one of the four native Codex roles in `.codex/agents/`: `requirements_architect`,
-  `developer`, `tester_verifier`, or `security_reviewer`. The coordinator workflow and invocation
-  examples are in `workflow/agents/README.md`.
+  `developer`, `tester_verifier`, or `security_reviewer`. Claude Code uses the same four roles through
+  `.claude/agents/*.md`, which load their instructions from the Codex files. The coordinator workflow
+  and invocation examples are in `workflow/agents/README.md`.
 - Finish each role task with a handoff note in `workflow/handoffs/`. Only humans approve material
   specifications, pull requests, merges, releases, and production deployments.
 - Never claim that an agent message, editable status field, or generated handoff is human approval.
