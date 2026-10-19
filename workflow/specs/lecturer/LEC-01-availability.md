@@ -2,7 +2,7 @@
 id: LEC-01
 title: Lecturer consultation availability
 owner: lecturer
-status: draft
+status: approved
 ---
 
 # LEC-01: Lecturer consultation availability
@@ -95,7 +95,7 @@ The migration must enable RLS and provide policies consistent with this specific
 - Missing course, date, start time, or end time: reject without writing.
 - Unknown or unauthorized course reference: reject without writing; do not reveal data the lecturer cannot access.
 - Start time equal to or after end time: reject without writing.
-- Date/time value in the past according to the approved authoritative timezone: reject without writing.
+- A slot is considered past/unavailable when its one-hour-before-start deadline has passed without a student booking; reject creation or edits that fall after this deadline.
 - Overlap with an existing slot owned by the same lecturer: reject without changing either slot.
 - Overlap with a different lecturer's slot: not restricted by this feature unless a separate approved
   course/resource rule requires it.
@@ -114,9 +114,9 @@ The migration must enable RLS and provide policies consistent with this specific
 - Enforce the same ownership boundary with Supabase RLS and appropriate database predicates/constraints.
 - Do not use a privileged/admin Supabase client before authorization. If one is required for a narrowly scoped operation, authorization must be checked first and the operation must remain ownership-scoped.
 - Do not trust hidden form fields, route parameters, or client state for lecturer identity, role, booking state, or ownership.
-- Treat database errors and authorization failures as safe, normal user-facing error messages without
-  leaking another lecturer's slot, course, booking, or internal details. Exact message text/status
-  mapping remains an implementation decision for approval.
+- Treat database errors and authorization failures as clear user-facing messages without leaking
+  another lecturer's slot, course, booking, or internal details. The UI may use ordinary user-facing
+  validation, conflict, authorization, not-found, and failure messages; provider/SQL details remain internal.
 - Slot operations do not use the SoC LLM. No user text should be sent to an AI provider for this feature.
 
 ## Acceptance criteria
@@ -188,10 +188,7 @@ The migration must enable RLS and provide policies consistent with this specific
 
 ## Open questions
 
-1. Does “past” mean the date is today with a past start time, or must a minimum lead time also be enforced?
-2. Does “past” mean the date is today with a past start time, or must a minimum lead time also be enforced?
-3. What exact user-visible messages/status mapping should represent authorization, duplicate, conflict, not-found, and database failures?
-4. May a lecturer edit the course as well as the date/time when a slot has active bookings, subject to confirmation?
+1. May a lecturer edit the course as well as the date/time when a slot has active bookings, subject to confirmation?
 5. What exact user-visible messages/status mapping should represent authorization, duplicate, conflict,
    not-found, and database failures?
 6. What administrator audit trail is required when an administrator manages a Lecturer slot?

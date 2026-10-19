@@ -1,7 +1,7 @@
 # Handoff: LEC-01 — analyst → developer
 
 - Date: 2026-10-19
-- Spec: `workflow/specs/lecturer/LEC-01-availability.md` (status at handoff: draft)
+- Spec: `workflow/specs/lecturer/LEC-01-availability.md` (status at handoff: approved)
 - Agent session log: `workflow/logs/2026-10-19-lecturer-availability-analyst.md`
 
 ## What was done
@@ -31,6 +31,6 @@ None. No application code, tests, migrations, CI, agent definitions, skills, or 
 
 ## Human review
 
-- Reviewed by: pending
-- Decision: pending
-- Notes: Human approval is required before the specification can move beyond `draft` or implementation can begin.
+- Reviewed by: Human stakeholder
+- Decision: approved on 2026-10-19
+- Notes: The stakeholder approved the specification after resolving the one-hour booking deadline and user-facing error requirement. Developer implementation may begin.

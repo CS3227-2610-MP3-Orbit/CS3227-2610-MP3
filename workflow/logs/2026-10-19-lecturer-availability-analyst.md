@@ -50,7 +50,7 @@ The draft requires server-side `requireRole("lecturer")`, authenticated-owner sc
   add a migration using `courses` and `course_lecturers`, and administrator changes require an audit
   record containing actor, action, slot, timestamp, and outcome. Exact error/status mapping and the
   definition of “past” remain unresolved.
-- The specification remains draft and must not be implemented until a human resolves the relevant questions and records approval.
+- The specification was approved by the human stakeholder after the remaining decisions were recorded.
 
 ## Human decision
 
@@ -59,5 +59,5 @@ course assignment to lecturers; hard deletion; duplicate submissions notify the 
 deduplication; Lecturer UI under the existing `src/app/lecturer/` and related feature folders; and
 normal safe user-facing errors.
 
-Pending. Next action: resolve the remaining open questions, then record the approval decision before
-Developer handoff. No application code, migration, commit, or push has been performed.
+Human approval recorded. Next action: invoke the Developer Agent for implementation. No application
+code or migration has been created yet.
