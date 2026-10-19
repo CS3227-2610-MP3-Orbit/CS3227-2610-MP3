@@ -1,0 +1,12 @@
+# Project-scoped Codex configuration. Codex loads this only when the project is trusted.
+# Two threads allow tester_verifier and security_reviewer to run independently in parallel.
+web_search = "disabled"
+allow_login_shell = false
+
+[features]
+hooks = true
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 2
+interrupt_message = true

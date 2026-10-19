@@ -30,14 +30,6 @@ jobs:
     environment:
       name: ${{ github.ref_name == 'master' && 'production' || 'development' }}
       url: ${{ steps.vercel.outputs.url }}
-    env:
-      VERCEL_ENV: ${{ github.ref_name == 'master' && 'production' || 'preview' }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
@@ -49,20 +41,40 @@ jobs:
           version: 2.121.0
 
       - name: Apply database migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
         run: |
           supabase link --project-ref "$SUPABASE_PROJECT_REF"
           supabase db push
 
-      - name: Build on GitHub Actions
+      - name: Install pinned Vercel CLI
+        run: npm install --global vercel@64.5.0
+
+      - name: Pull Vercel project settings
+        env:
+          VERCEL_ENV: ${{ github.ref_name == 'master' && 'production' || 'preview' }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          npm install --global vercel@64.5.0
           vercel pull --yes --environment="$VERCEL_ENV" --token="$VERCEL_TOKEN"
+
+      - name: Build on GitHub Actions without deployment credentials
+        env:
+          VERCEL_ENV: ${{ github.ref_name == 'master' && 'production' || 'preview' }}
+        run: |
           prod=(); if [ "$VERCEL_ENV" = production ]; then prod=(--prod); fi
-          vercel build "${prod[@]}" --token="$VERCEL_TOKEN"
+          vercel build "${prod[@]}"
 
       - name: Deploy prebuilt output to Vercel
         id: vercel
         env:
+          VERCEL_ENV: ${{ github.ref_name == 'master' && 'production' || 'preview' }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           # Optional stable address for the development environment, e.g. my-app-dev.vercel.app
           DEV_ALIAS: ${{ github.ref_name == 'develop' && vars.VERCEL_DEV_ALIAS || '' }}
         run: |

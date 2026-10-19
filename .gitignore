@@ -33,6 +33,7 @@ yarn-error.log*
 # env files (secrets never committed; the example is)
 .env*
 !.env.example
+*.env.secrets
 
 # vercel
 .vercel
@@ -50,3 +51,6 @@ supabase/.branches
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local hook evidence is intentionally not committed.
+/workflow/logs/hooks/*.jsonl

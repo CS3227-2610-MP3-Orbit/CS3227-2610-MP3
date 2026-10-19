@@ -14,8 +14,17 @@
 /src/features/admin/        @JohannsenLum
 /workflow/specs/admin/      @JohannsenLum
 
-# Shared foundation: any owner may approve; branch protection requires two approvals.
+# Shared foundation: an independent listed owner may approve; remote rules set the approval count.
 /src/lib/                   @JohannsenLum @josephkwok001 @JordanGoh4
 /supabase/                  @JohannsenLum @josephkwok001 @JordanGoh4
 /workflow/specs/shared/     @JohannsenLum @josephkwok001 @JordanGoh4
-/.github/                   @JohannsenLum
+
+# Development and deployment controls are security-sensitive. Any listed teammate may review, but
+# the author cannot count as the independent approval required by branch protection.
+/AGENTS.md                  @JohannsenLum @josephkwok001 @JordanGoh4
+/.codex/                    @JohannsenLum @josephkwok001 @JordanGoh4
+/workflow/agents/           @JohannsenLum @josephkwok001 @JordanGoh4
+/workflow/hooks/            @JohannsenLum @josephkwok001 @JordanGoh4
+/workflow/policies/         @JohannsenLum @josephkwok001 @JordanGoh4
+/workflow/scripts/          @JohannsenLum @josephkwok001 @JordanGoh4
+/.github/                   @JohannsenLum @josephkwok001 @JordanGoh4

@@ -9,7 +9,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 const SPEC_DIR = "workflow/specs";
-const TEST_DIRS = ["src", "tests", "supabase/tests"];
+const TEST_DIRS = ["src", "tests", "supabase/tests", "workflow"];
 const TEST_FILE = /\.(test|spec)\.(ts|tsx|mjs)$|\.test\.sql$/;
 const ENFORCED_STATUSES = new Set(["approved", "implemented"]);
 const AC_ID = /[A-Z]{2,3}-\d{2}-AC\d+/;
@@ -94,7 +94,9 @@ function main() {
   const parsed = specFiles.map((file) => parseSpec(readFileSync(file, "utf8"), file));
   const specs = parsed.filter((spec) => !spec.error);
   const references = TEST_DIRS.flatMap((dir) => listFiles(dir, TEST_FILE)).flatMap((file) =>
-    findReferences(readFileSync(file, "utf8"), file),
+    path.basename(file) === "check-traceability.test.mjs" || file.startsWith("workflow/evaluation/")
+      ? []
+      : findReferences(readFileSync(file, "utf8"), file),
   );
 
   const { errors, warnings, rows } = checkTraceability(specs, references);
