@@ -98,10 +98,10 @@ export async function updateSlot(formData: FormData): Promise<ActionResult> {
     .maybeSingle();
   if (overlap) return { ok: false, message: "This slot overlaps one of your existing slots." };
   const { data: bookings } = await supabase
-    .from("consultation_bookings")
+    .from("bookings")
     .select("student_id")
     .eq("slot_id", slotId.data)
-    .eq("status", "booked");
+    .in("status", ["pending", "approved"]);
   if (bookings?.length && formData.get("confirm") !== "on")
     return {
       ok: false,
@@ -141,10 +141,10 @@ export async function deleteSlot(formData: FormData): Promise<ActionResult> {
   if (!slotId.success) return { ok: false, message: "The selected slot was not found." };
   const supabase = await createClient();
   const { data: bookings } = await supabase
-    .from("consultation_bookings")
+    .from("bookings")
     .select("student_id")
     .eq("slot_id", slotId.data)
-    .eq("status", "booked");
+    .in("status", ["pending", "approved"]);
   if (bookings?.length && formData.get("confirm") !== "on")
     return {
       ok: false,
