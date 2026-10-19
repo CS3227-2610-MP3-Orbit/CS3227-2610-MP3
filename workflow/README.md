@@ -19,3 +19,29 @@ request → analyst → spec (draft) → human review → approved
 | `scripts/setup-vercel-env.sh`            | Sets the Vercel Preview/Production variables (one-off setup)                   |
 | `scripts/create-user.mjs`                | Creates a confirmed user with a role in the dev or prod project                |
 | `notes/`                                 | Reference material, e.g. SoC LLM limits copied from the NUS-only documentation |
+
+## Specialized agents and skills
+
+The three role definitions in `agents/` are intentionally separate responsibilities:
+
+| Agent | Definition | May modify application code? |
+| --- | --- | --- |
+| Requirements Analyst | `agents/analyst.md` | No |
+| Implementation Developer | `agents/developer.md` | Yes, only for an approved spec |
+| Tester and Security Reviewer | `agents/tester-security.md` | No |
+
+Use them in separate agent sessions or supported subagent contexts, passing only the relevant
+specification and handoff to the next role. A skill file does not by itself create an independent
+agent or approval authority.
+
+Project-local Codex skills are under `.codex/skills/`:
+
+- `consultation-spec` — draft and review Lecturer specifications.
+- `consultation-implement` — implement an approved Lecturer specification.
+- `consultation-verify` — independently verify implementation and security.
+
+The older `lecturer-*` skill names are retained as compatibility aliases. They do not replace the
+agent definitions.
+
+Human approval is required before a specification becomes `approved`, before implementation starts,
+and before commit, merge, push, or deployment. The reviewer cannot approve its own findings.
