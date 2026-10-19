@@ -191,6 +191,12 @@ export default async function StudentSlotsPage({
                   <p className="mt-2 break-all text-xs text-gray-600">
                     Slot reference: {slot.slotId}
                   </p>
+                  <Link
+                    href={`/student/slots/${slot.slotId}/request`}
+                    className="mt-3 inline-block underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  >
+                    Request consultation
+                  </Link>
                 </li>
               ))}
             </ul>

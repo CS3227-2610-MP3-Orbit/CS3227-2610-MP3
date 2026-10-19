@@ -58,9 +58,5 @@ jobs:
           version: 2.121.0
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: supabase start
-      - name: Run browser tests with local-only credentials
-        run: |
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$(supabase status -o json | jq -r '.ANON_KEY')" \
-          NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321" \
-          npm run verify -- --profile=e2e
+      - name: Run concurrency and all browser tests against a disposable stack
+        run: node workflow/scripts/stu02-ci.mjs
