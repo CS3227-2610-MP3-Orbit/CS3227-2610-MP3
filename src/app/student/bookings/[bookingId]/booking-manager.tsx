@@ -103,6 +103,9 @@ export default function BookingManager({ booking: initial }: { booking: Booking 
         <p>Status: {booking.status}</p>
         <p className="mt-3 whitespace-pre-wrap">Topic: {booking.topic}</p>
         <p className="whitespace-pre-wrap">Questions: {booking.questions}</p>
+        {booking.rejectionReason && (
+          <p className="whitespace-pre-wrap">Rejection reason: {booking.rejectionReason}</p>
+        )}
       </section>
       <div role="status" aria-live="polite">
         {message}

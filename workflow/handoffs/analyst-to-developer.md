@@ -2,8 +2,8 @@
 
 ## Status
 
-Draft only; human approval has not been granted. Implementation is blocked pending the open questions in
-`workflow/specs/lecturer/LEC-02-request-decisions.md`.
+Human approval has been recorded for the primary LEC-02 behavior. Implementation may begin within the
+approved scope; remaining wording and schema details must not change the approved behavior.
 
 ## Scope
 
@@ -35,9 +35,10 @@ Draft only; human approval has not been granted. Implementation is blocked pendi
 
 ## Unresolved decisions
 
-Rejection reason and visibility, decision cutoff, administrator access/audit, notification delivery and
-failure semantics, duplicate retry/idempotency, error mapping, and list/detail privacy projection are
-blocking. Do not invent answers in implementation.
+Rejection reasons are required and visible to students; decisions are allowed until consultation start;
+administrators may manage requests; notifications are minimal in-app records; notification failure must
+not falsely roll back a committed decision; each slot supports multiple students; and lecturers may view
+all currently stored request fields subject to privacy and least-data rules.
 
 ## Evidence
 
@@ -48,7 +49,6 @@ blocking. Do not invent answers in implementation.
 
 ## Next action
 
-Human reviews the draft, resolves the open questions, and explicitly approves the specification before a
-Developer Agent is assigned.
+Human approval recorded on 2026-10-19. Developer Agent may be assigned for the approved scope.
 
 Handoff evidence: workflow/handoffs/analyst-to-developer.md

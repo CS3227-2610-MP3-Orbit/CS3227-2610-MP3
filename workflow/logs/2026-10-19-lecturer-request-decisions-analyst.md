@@ -4,7 +4,7 @@
 - Branch: `feature/lecturer-request-decisions`
 - Base: `develop` at `3c8ba194d06439183318b66ba4824e8dc0521c1f`
 - Role: Requirements Analyst / requirements architect
-- Status: draft; awaiting human decisions and approval
+- Status: approved; human decisions recorded on 2026-10-19
 
 ## Files inspected
 
@@ -43,7 +43,13 @@
 - `npm run check:spec`: not run; draft artifact was created after inspection and the required skill junction
   was unavailable. No test, lint, typecheck, build, migration, commit, push, merge, or deployment was run.
 
-## Human review required
+## Human decision
 
-Resolve the seven open questions in `LEC-02-request-decisions.md`. The spec remains draft and must not be
-treated as implementation authorization.
+The stakeholder decided that rejection requires a controlled dropdown reason visible to students;
+decisions are allowed until consultation start; administrators may view and manage requests; audit
+records should remain minimal; notifications should be minimal in-app records; notification failure
+must not falsely roll back a committed decision; each slot supports multiple students; and lecturers
+may view all currently stored request fields subject to privacy and least-data rules.
+
+Approval recorded. Remaining questions are limited to exact dropdown options, minimal audit fields,
+and exact user-facing wording.

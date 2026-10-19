@@ -2,7 +2,7 @@
 id: LEC-02
 title: Lecturer consultation request decisions
 owner: lecturer
-status: draft
+status: approved
 ---
 
 # LEC-02: Lecturer consultation request decisions
@@ -18,8 +18,10 @@ status: draft
   `pending`, `approved`, `rejected`, `cancelled`, and `completed`; terminal history is retained.
 - Proposed assumptions requiring review: exact Lecturer page path, rejection-reason bounds, notification
   transport, and whether administrators may view or decide private request content.
-- Unresolved decisions: administrator permissions, exact decision deadline, notification delivery contract,
-  and whether a rejection requires a reason.
+- Human decisions recorded: rejection reasons are required and selected from a controlled dropdown;
+  students can see the selected reason; decisions are allowed until the consultation starts;
+  administrators may view and manage requests; audit records remain minimal; notifications are
+  in-app only; and lecturers may view all currently stored request fields subject to privacy rules.
 
 ## Product and feature description
 
@@ -55,12 +57,12 @@ database state; client-supplied lecturer, student, slot, course, or status value
 
 ## Users, roles, and permissions
 
-| Actor | Responsibility or goal | Allowed actions/data | Refused actions/data |
-| --- | --- | --- | --- |
-| Active Lecturer | Review and decide own requests | Own pending requests and allowlisted topic/questions; approve/reject own requests | Other lecturers' requests, supplied identity/status, terminal or non-pending transitions |
-| Active Student | Receive outcome | Own status/notification and any safe rejection reason if approved | Lecturer decision, other students' requests, private Lecturer data |
-| Administrator | Administrative oversight | Unresolved; no access is granted by this draft | Private request content or decisions unless separately approved |
-| Signed-out/inactive/wrong-role user | None | Login/role-safe refusal only | Any request listing, detail, or mutation |
+| Actor                               | Responsibility or goal         | Allowed actions/data                                                              | Refused actions/data                                                                     |
+| ----------------------------------- | ------------------------------ | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Active Lecturer                     | Review and decide own requests | Own pending requests and allowlisted topic/questions; approve/reject own requests | Other lecturers' requests, supplied identity/status, terminal or non-pending transitions |
+| Active Student                      | Receive outcome                | Own status/notification and any safe rejection reason if approved                 | Lecturer decision, other students' requests, private Lecturer data                       |
+| Administrator                       | Administrative oversight       | Unresolved; no access is granted by this draft                                    | Private request content or decisions unless separately approved                          |
+| Signed-out/inactive/wrong-role user | None                           | Login/role-safe refusal only                                                      | Any request listing, detail, or mutation                                                 |
 
 Identity, active state, role, slot ownership, course assignment, booking status, and time come from
 trusted server/database state. UI hiding is not authorization.
@@ -222,39 +224,39 @@ approval/rejection may occur. Provider availability must not affect decision out
 
 ## Edge cases and failure paths
 
-| Condition | Required observable outcome | Invariant preserved |
-| --- | --- | --- |
-| Signed out, inactive, wrong role | Redirect/refusal with no data | Authorization |
-| Foreign/missing booking | Same safe result; no enumeration | Privacy |
-| Non-pending status | Typed conflict; no mutation | State machine |
-| Two simultaneous decisions | One winner, one conflict | Atomicity |
-| Duplicate retry | No duplicate transition/side effects; exact replay TBD | Idempotency |
-| Invalid/oversized reason | Safe validation failure | Input bounds |
-| Notification failure | Truthful committed-vs-delivery state; retry policy TBD | No false success |
-| Database timeout/error | Safe retry or outcome-unknown result | No partial mutation |
-| Malicious text | Literal text only; no code/model effect | Injection resistance |
+| Condition                        | Required observable outcome                            | Invariant preserved  |
+| -------------------------------- | ------------------------------------------------------ | -------------------- |
+| Signed out, inactive, wrong role | Redirect/refusal with no data                          | Authorization        |
+| Foreign/missing booking          | Same safe result; no enumeration                       | Privacy              |
+| Non-pending status               | Typed conflict; no mutation                            | State machine        |
+| Two simultaneous decisions       | One winner, one conflict                               | Atomicity            |
+| Duplicate retry                  | No duplicate transition/side effects; exact replay TBD | Idempotency          |
+| Invalid/oversized reason         | Safe validation failure                                | Input bounds         |
+| Notification failure             | Truthful committed-vs-delivery state; retry policy TBD | No false success     |
+| Database timeout/error           | Safe retry or outcome-unknown result                   | No partial mutation  |
+| Malicious text                   | Literal text only; no code/model effect                | Injection resistance |
 
 ## Acceptance criteria and verification
 
-| ID | Requirement | Given / when / then outcome | Verification method | Mocked or live |
-| --- | --- | --- | --- | --- |
-| LEC-02-AC1 | R1 | Given two Lecturers' pending bookings, when one lists requests, then only their own allowlisted pending rows appear. | DB + integration + E2E | live |
-| LEC-02-AC2 | R1/R7 | Given signed-out, inactive, Student, Admin, foreign, and missing actors/IDs, when they invoke list/detail, then no protected data is disclosed. | DB security + E2E | live |
-| LEC-02-AC3 | R2 | Given an eligible owned pending booking, when its Lecturer approves, then exactly one row becomes approved and history is retained. | unit + DB + E2E | live |
-| LEC-02-AC4 | R3 | Given an eligible owned pending booking and an approved rejection input, when its Lecturer rejects, then it becomes rejected and the slot reservation is released under SH-05. | unit + DB + E2E | live |
-| LEC-02-AC5 | R4 | Given approved/rejected/cancelled/completed bookings, when a decision is attempted, then status and history remain unchanged with a safe conflict. | DB | live |
-| LEC-02-AC6 | R4 | Given a decision at or beyond the approved deadline, when submitted, then it is refused without mutation. | unit + DB | live |
-| LEC-02-AC7 | R2/R3 | Given a foreign Lecturer or forged IDs/status, when deciding, then authorization fails and no other booking changes. | DB security + integration | live |
-| LEC-02-AC8 | R5 | Given simultaneous approve/reject operations, when both execute, then one valid transition commits and the other receives a stale conflict. | concurrent DB integration | live |
-| LEC-02-AC9 | R5 | Given a repeated decision submission or lost response, when the same operation is retried, then no duplicate transition, notification, or audit event occurs. | unit + fault-injected integration | deterministic/live |
-| LEC-02-AC10 | R6 | Given a committed decision, when notification processing runs, then only the affected Student receives an allowlisted status notification. | DB + integration + E2E | live |
-| LEC-02-AC11 | R6/R7 | Given notification delivery failure, when the decision commits, then the result distinguishes committed state from delivery retry and never falsely rolls back or claims delivery. | fault-injected integration | deterministic |
-| LEC-02-AC12 | R7 | Given invalid, oversized, unknown, duplicate, or missing fields, when submitted, then safe validation feedback appears and no mutation occurs. | unit + integration | deterministic/live |
-| LEC-02-AC13 | R7/security | Given HTML, SQL, or model-instruction text in request fields, when displayed or decided, then it renders literally and no model/SQL/code execution occurs. | unit + browser security | deterministic/live |
-| LEC-02-AC14 | R7 | Given a DB timeout before or after possible commit, when the UI receives failure/uncertainty, then it offers safe retry/recovery without duplicate decisions. | fault-injected integration + E2E | deterministic/live |
-| LEC-02-AC15 | R1/R7 | Given zero, many, or dependency-failed requests, when the Lecturer opens the page, then empty/loading/error states are usable and bounded. | unit + E2E | deterministic/live |
-| LEC-02-AC16 | all | Given keyboard, 320px, 200% zoom, and pending submission, when the Lecturer uses the page, then labels, focus, status, and disabled duplicate controls remain usable. | E2E + manual | live/N/A |
-| LEC-02-AC17 | R8 | Given the app and AI provider states, when list/decision operations run, then no AI call or `ai_usage` access occurs and ordinary behavior is unchanged. | unit spy + inspection | deterministic |
+| ID          | Requirement | Given / when / then outcome                                                                                                                                                        | Verification method               | Mocked or live     |
+| ----------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------ |
+| LEC-02-AC1  | R1          | Given two Lecturers' pending bookings, when one lists requests, then only their own allowlisted pending rows appear.                                                               | DB + integration + E2E            | live               |
+| LEC-02-AC2  | R1/R7       | Given signed-out, inactive, Student, Admin, foreign, and missing actors/IDs, when they invoke list/detail, then no protected data is disclosed.                                    | DB security + E2E                 | live               |
+| LEC-02-AC3  | R2          | Given an eligible owned pending booking, when its Lecturer approves, then exactly one row becomes approved and history is retained.                                                | unit + DB + E2E                   | live               |
+| LEC-02-AC4  | R3          | Given an eligible owned pending booking and an approved rejection input, when its Lecturer rejects, then it becomes rejected and the slot reservation is released under SH-05.     | unit + DB + E2E                   | live               |
+| LEC-02-AC5  | R4          | Given approved/rejected/cancelled/completed bookings, when a decision is attempted, then status and history remain unchanged with a safe conflict.                                 | DB                                | live               |
+| LEC-02-AC6  | R4          | Given a decision at or beyond the approved deadline, when submitted, then it is refused without mutation.                                                                          | unit + DB                         | live               |
+| LEC-02-AC7  | R2/R3       | Given a foreign Lecturer or forged IDs/status, when deciding, then authorization fails and no other booking changes.                                                               | DB security + integration         | live               |
+| LEC-02-AC8  | R5          | Given simultaneous approve/reject operations, when both execute, then one valid transition commits and the other receives a stale conflict.                                        | concurrent DB integration         | live               |
+| LEC-02-AC9  | R5          | Given a repeated decision submission or lost response, when the same operation is retried, then no duplicate transition, notification, or audit event occurs.                      | unit + fault-injected integration | deterministic/live |
+| LEC-02-AC10 | R6          | Given a committed decision, when notification processing runs, then only the affected Student receives an allowlisted status notification.                                         | DB + integration + E2E            | live               |
+| LEC-02-AC11 | R6/R7       | Given notification delivery failure, when the decision commits, then the result distinguishes committed state from delivery retry and never falsely rolls back or claims delivery. | fault-injected integration        | deterministic      |
+| LEC-02-AC12 | R7          | Given invalid, oversized, unknown, duplicate, or missing fields, when submitted, then safe validation feedback appears and no mutation occurs.                                     | unit + integration                | deterministic/live |
+| LEC-02-AC13 | R7/security | Given HTML, SQL, or model-instruction text in request fields, when displayed or decided, then it renders literally and no model/SQL/code execution occurs.                         | unit + browser security           | deterministic/live |
+| LEC-02-AC14 | R7          | Given a DB timeout before or after possible commit, when the UI receives failure/uncertainty, then it offers safe retry/recovery without duplicate decisions.                      | fault-injected integration + E2E  | deterministic/live |
+| LEC-02-AC15 | R1/R7       | Given zero, many, or dependency-failed requests, when the Lecturer opens the page, then empty/loading/error states are usable and bounded.                                         | unit + E2E                        | deterministic/live |
+| LEC-02-AC16 | all         | Given keyboard, 320px, 200% zoom, and pending submission, when the Lecturer uses the page, then labels, focus, status, and disabled duplicate controls remain usable.              | E2E + manual                      | live/N/A           |
+| LEC-02-AC17 | R8          | Given the app and AI provider states, when list/decision operations run, then no AI call or `ai_usage` access occurs and ordinary behavior is unchanged.                           | unit spy + inspection             | deterministic      |
 
 ## Review evidence
 
@@ -263,18 +265,14 @@ approval/rejection may occur. Provider availability must not affect decision out
 - Open findings and disposition: all material unresolved decisions are listed below; implementation is blocked.
 - Human input required: rejection reason policy, decision deadline, notification contract, and administrator access.
 
-## Open questions blocking approval
+## Open questions
 
-1. Must rejection include a nonblank reason? If yes, what length limit and may the Student see it?
-2. What exact cutoff applies to decisions: one hour before slot start, slot start, or another Singapore-time rule?
-3. May administrators list, view, approve, or reject Lecturer requests? If yes, what privacy boundary and audit trail apply?
-4. Which notification mechanism/table/event contract is authoritative, and what does delivery failure mean to the UI?
-5. Should duplicate decisions be idempotent with a client operation key, or return a conflict after the first commit?
-6. What exact user-facing error/status mapping should the UI display?
-7. Should pending-request list/detail expose Student name, topic, questions, course, or only minimal identifiers?
+1. Which controlled rejection-reason options should the dropdown contain beyond the initial examples?
+2. What exact minimal audit fields should be retained for administrator decisions?
+3. What exact user-facing wording should be used for validation, authorization, conflict, and notification failures?
 
 ## Change log
 
-| Date | Change and reason | IDs affected | Evidence invalidated | By |
-| --- | --- | --- | --- | --- |
-| 2026-10-19 | Initial repository-grounded draft for Lecturer request decisions | LEC-02-R1–R7; AC1–AC17 | None | requirements_architect |
+| Date       | Change and reason                                                | IDs affected           | Evidence invalidated | By                     |
+| ---------- | ---------------------------------------------------------------- | ---------------------- | -------------------- | ---------------------- |
+| 2026-10-19 | Initial repository-grounded draft for Lecturer request decisions | LEC-02-R1–R7; AC1–AC17 | None                 | requirements_architect |
