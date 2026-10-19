@@ -39,6 +39,12 @@ must contain concrete evidence, and a skill or agent definition alone does not p
 independent review occurred. We must record actual execution results instead of treating planned
 workflow steps as completed evidence.
 
+Independent workflow evaluation showed that the general agent definitions are usable, while the
+`consultation-*` skills are intentionally limited to Lecturer work. The security review process
+covers the main risks, but it still needs more concrete role matrices, prompt-injection categories,
+privacy checks, secret scanning, and measurable AI failure expectations. These findings reinforce
+that evaluation results and limitations must be recorded separately from planned behavior.
+
 ## Evidence and limitations
 
 - The repository contains shared specifications, agent definitions, handoff templates, security

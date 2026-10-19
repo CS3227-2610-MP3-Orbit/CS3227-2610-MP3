@@ -17,6 +17,7 @@ request → analyst → spec (draft) → human review → approved
 | `scripts/check-traceability.mjs`         | Links tests to acceptance criteria; run by CI                                  |
 | `guardrails.md`                          | Development-agent and Lecturer AI guardrails, with enforcement limits          |
 | `evaluations/`                           | Skill, workflow, and security evaluation cases and evidence status              |
+| `logs/`                                  | Verified summaries of agent interactions and human decisions                    |
 | `scripts/setup-github.sh`                | Creates the GitHub environments and secrets (one-off setup)                    |
 | `scripts/setup-vercel-env.sh`            | Sets the Vercel Preview/Production variables (one-off setup)                   |
 | `scripts/create-user.mjs`                | Creates a confirmed user with a role in the dev or prod project                |
