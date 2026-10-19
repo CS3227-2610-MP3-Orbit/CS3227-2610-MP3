@@ -61,3 +61,19 @@ normal safe user-facing errors.
 
 Human approval recorded. Next action: invoke the Developer Agent for implementation. No application
 code or migration has been created yet.
+
+## Developer evidence (2026-10-19)
+
+The Developer Agent implemented the approved feature without changing the specification. Changed paths:
+
+- `supabase/migrations/20261019000000_lecturer_consultation_availability.sql`
+- `src/features/lecturer/availability.ts`
+- `src/features/lecturer/availability.test.ts`
+- `src/app/lecturer/actions.ts`
+- `src/app/lecturer/page.tsx`
+- `src/app/lecturer/slot-form.tsx`
+- `workflow/handoffs/analyst-to-developer.md`
+
+The migration adds `courses`, `course_lecturers`, `consultation_slots`, `consultation_bookings`, `consultation_notifications`, and `consultation_audit_log`, with RLS and relevant constraints. Server actions enforce lecturer session role, course membership, owner predicates, validation, overlap checks, duplicate handling, confirmation for booked-slot changes, hard deletion, notifications, and audit records.
+
+Checks: `git diff --check` passed. `npm.cmd test`, `npm.cmd run lint`, and `npm.cmd run typecheck` could not run because the dependency executables were unavailable; `npm.cmd ci` was started but interrupted after hanging in the environment. `npm.cmd run check:spec` exited 1 because pre-existing LEC-02–LEC-05 front-matter errors remain and several approved LEC-01 criteria still lack integration/E2E tests. The migration was not applied and no commit, push, merge, or deployment was performed.

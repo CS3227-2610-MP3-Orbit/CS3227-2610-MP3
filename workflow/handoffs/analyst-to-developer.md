@@ -34,3 +34,14 @@ None. No application code, tests, migrations, CI, agent definitions, skills, or 
 - Reviewed by: Human stakeholder
 - Decision: approved on 2026-10-19
 - Notes: The stakeholder approved the specification after resolving the one-hour booking deadline and user-facing error requirement. Developer implementation may begin.
+
+## Developer implementation evidence
+
+- Status: implementation completed locally; human approval is still required before review/commit.
+- Added migration: `supabase/migrations/20261019000000_lecturer_consultation_availability.sql`.
+- Added validation and overlap logic: `src/features/lecturer/availability.ts` and AC-labelled unit tests.
+- Added server actions: `src/app/lecturer/actions.ts`.
+- Added Lecturer UI: `src/app/lecturer/page.tsx` and `src/app/lecturer/slot-form.tsx`.
+- Security changes: every Lecturer action/page calls `requireRole("lecturer")`; slot writes derive `lecturer_id` from the session, scope queries by owner, and the migration enables RLS for courses, assignments, slots, bookings, notifications, and audit records.
+- Notifications are recorded for confirmed edits/deletes with active bookings. Audit records are recorded for successful slot mutations.
+- Limitations: no administrator UI/action was added; the migration provides administrator RLS access and the audit table, but an approved server-side admin management path remains to be implemented. The migration has not been applied to a database.
