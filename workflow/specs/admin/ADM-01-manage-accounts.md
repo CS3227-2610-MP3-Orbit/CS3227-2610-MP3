@@ -2,7 +2,7 @@
 id: ADM-01
 title: Administrator account management
 owner: johannsen
-status: draft
+status: approved
 ---
 
 # ADM-01: Administrator account management
@@ -26,6 +26,10 @@ status: draft
   `ADM-01-R8` (one protected recovery administrator per environment).
 - Proposed, needs review: `ADM-01-R8`'s exact mechanism only (`is_protected` column, partial unique
   index, migration-time marking). Unresolved: none blocking.
+
+- Approval: approved by Johannsen (spec owner, Administrator role) on 2026-10-19 at commit `1b373c9`
+  (spec digest `da79c65`). This is an owner approval; independent teammate review of this spec
+  happens on the implementation pull request, as `workflow/policies/approval-gates.md` requires.
 
 ## Product and feature description
 
@@ -268,3 +272,4 @@ spec; Supabase public sign-up stays enabled (residual risk, out of scope for ADM
 | 2026-10-19 | First draft from confirmed owner decisions and inspected code                                                                                                                                                                                                                                                                  | R1–R6, AC1–AC12            | None; no prior approval                      | requirements_architect |
 | 2026-10-19 | Owner decision resolved credential, data-access, and admin-creation open questions; confirmed R1/R3; added proposed R7 (zero-admin lockout) and its lock requirement; replaced RLS-only data model with RPC migration + policy drop; added AC13–AC14 and pgTAP coverage to AC6/AC8; removed resolved items from open questions | R1, R3, R7 (new), AC1–AC14 | None; still draft, no prior approval existed | requirements_architect |
 | 2026-10-19 | Owner confirmed R7; owner added and confirmed R8 (one protected recovery administrator per environment, demotion/deactivation refused for everyone incl. itself; `is_protected` mechanism tagged proposed); updated R3, data model, API errors, UI, security accepted-risk, edge cases; added AC15–AC17                        | R7, R8 (new), R3, AC1–AC17 | None; still draft, no prior approval existed | requirements_architect |
+| 2026-10-19 | Owner approval recorded (Johannsen) at `1b373c9`; status draft → approved                                                                                                                                                                                                                                                      | None                       | Approval granted                             | Johannsen              |
