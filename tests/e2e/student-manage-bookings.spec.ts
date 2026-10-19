@@ -86,8 +86,8 @@ test("[STU-04-AC1] [STU-04-AC3] [STU-04-AC12] owned history renders statuses and
   const fixture = await createOwnedBookingFixture();
   await signIn(page, fixture.email, fixture.password);
   await page.goto("/student/bookings");
-  await expect(page.getByText("pending", { exact: true })).toBeVisible();
-  await expect(page.getByText("approved", { exact: true })).toBeVisible();
+  await expect(page.getByText("Status: pending", { exact: true })).toBeVisible();
+  await expect(page.getByText("Status: approved", { exact: true })).toBeVisible();
   await expect(
     page.evaluate(() => (window as typeof window & { stu04Injected?: unknown }).stu04Injected),
   ).resolves.toBeUndefined();
