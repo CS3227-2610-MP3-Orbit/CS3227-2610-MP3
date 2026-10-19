@@ -89,6 +89,13 @@ select
   '2099-02-01 00:30:00+00'::timestamptz + ((number / 3) || ' hours')::interval
 from generate_series(1, 21) as generated(number);
 
+create temporary table stu01_browse_fixture_state (
+  booking_count integer not null
+) on commit drop;
+
+insert into stu01_browse_fixture_state (booking_count)
+select count(*)::integer from public.bookings;
+
 set local role authenticated;
 set local request.jwt.claim.sub = '00000000-0000-4000-8000-0000000000a1';
 
@@ -230,7 +237,7 @@ reset role;
 
 select is(
   (select count(*)::integer from public.bookings),
-  5,
+  (select booking_count from stu01_browse_fixture_state),
   '[STU-01-AC20] repeated browse calls do not mutate bookings'
 );
 
