@@ -25,7 +25,13 @@ export function parseSpec(text, file) {
   if (!fields.id || !fields.status) return { error: `${file}: front matter needs id and status` };
 
   const definition = new RegExp(`^\\s*-\\s+\\*\\*(${fields.id}-AC\\d+)\\*\\*`, "gm");
-  const criteria = [...text.matchAll(definition)].map((match) => match[1]);
+  const tableDefinition = new RegExp(`^\\s*\\|\\s*(${fields.id}-AC\\d+)\\s*\\|`, "gm");
+  const criteria = [
+    ...new Set([
+      ...[...text.matchAll(definition)].map((match) => match[1]),
+      ...[...text.matchAll(tableDefinition)].map((match) => match[1]),
+    ]),
+  ];
   return { id: fields.id, status: fields.status, file, criteria };
 }
 
@@ -94,7 +100,7 @@ function main() {
   const parsed = specFiles.map((file) => parseSpec(readFileSync(file, "utf8"), file));
   const specs = parsed.filter((spec) => !spec.error);
   const references = TEST_DIRS.flatMap((dir) => listFiles(dir, TEST_FILE)).flatMap((file) =>
-    path.basename(file) === "check-traceability.test.mjs" || file.startsWith("workflow/evaluation/")
+    path.basename(file) === "check-traceability.test.mjs" || file.replaceAll("\\", "/").startsWith("workflow/evaluation/")
       ? []
       : findReferences(readFileSync(file, "utf8"), file),
   );

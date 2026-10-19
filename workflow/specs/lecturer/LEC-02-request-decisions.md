@@ -2,7 +2,7 @@
 id: LEC-02
 title: Lecturer consultation request decisions
 owner: lecturer
-status: approved
+status: draft
 ---
 
 # LEC-02: Lecturer consultation request decisions
