@@ -15,10 +15,11 @@ describe("LEC-04 AI briefing boundaries", () => {
 
   it("[LEC-04-AC5] [LEC-04-AC6] applies the existing SoC quota failure boundary", () => {
     expect(
-      decideQuota({ userLastMinute: 3, userLastDay: 3, globalLastMinute: 0 }, DEFAULT_LIMITS),
-    ).toMatchObject({ allowed: false, reason: "user_minute" });
-    expect(
-      decideQuota({ userLastMinute: 0, userLastDay: 0, globalLastMinute: 20 }, DEFAULT_LIMITS),
-    ).toMatchObject({ allowed: false, reason: "global_minute" });
+      decideQuota({ globalLastDay: DEFAULT_LIMITS.globalPerDay - 1 }, DEFAULT_LIMITS),
+    ).toEqual({ allowed: true });
+    expect(decideQuota({ globalLastDay: DEFAULT_LIMITS.globalPerDay }, DEFAULT_LIMITS)).toMatchObject({
+      allowed: false,
+      reason: "global_day",
+    });
   });
 });
