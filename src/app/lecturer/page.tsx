@@ -2,13 +2,15 @@ import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { ConsultationList } from "@/components/consultation-list";
 import { listStaffConsultations } from "@/features/lecturer/consultations/server";
+import { listLecturerRequests } from "@/features/lecturer/requests-server";
 import { SlotForm } from "./slot-form";
 import { deleteSlot } from "./actions";
+import { RequestCard } from "./request-card";
 
 export default async function LecturerDashboardPage() {
   const user = await requireRole("lecturer");
   const supabase = await createClient();
-  const [{ data: courses }, { data: slots }, [result, history]] = await Promise.all([
+  const [{ data: courses }, { data: slots }, [result, history], requests] = await Promise.all([
     supabase.from("courses").select("id, code, name").order("code"),
     supabase
       .from("consultation_slots")
@@ -19,6 +21,7 @@ export default async function LecturerDashboardPage() {
       listStaffConsultations("lecturer", false),
       listStaffConsultations("lecturer", true),
     ]),
+    listLecturerRequests(),
   ]);
 
   return (
@@ -87,6 +90,27 @@ export default async function LecturerDashboardPage() {
           </>
         ) : (
           <p role="alert">Consultations are temporarily unavailable. Please try again.</p>
+        )}
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold">Consultation requests</h2>
+        {requests.kind === "success" ? (
+          requests.requests.length ? (
+            <ul className="mt-3 space-y-3">
+              {requests.requests.map((request) => (
+                <RequestCard key={request.bookingId} request={request} />
+              ))}
+            </ul>
+          ) : (
+            <p role="status" className="mt-2">
+              No pending consultation requests.
+            </p>
+          )
+        ) : (
+          <p role="alert" className="mt-2">
+            Requests are temporarily unavailable. Please retry.
+          </p>
         )}
       </section>
     </main>

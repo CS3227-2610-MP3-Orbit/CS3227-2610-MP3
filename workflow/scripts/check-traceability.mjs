@@ -16,6 +16,7 @@ const AC_ID = /[A-Z]{2,3}-\d{2}-AC\d+/;
 
 /** Parses one spec file into { id, status, criteria } or returns an error string. */
 export function parseSpec(text, file) {
+  text = text.replace(/\r\n?/g, "\n");
   const frontMatter = text.match(/^---\n([\s\S]*?)\n---/);
   if (!frontMatter) return { error: `${file}: missing front matter` };
 
@@ -25,7 +26,13 @@ export function parseSpec(text, file) {
   if (!fields.id || !fields.status) return { error: `${file}: front matter needs id and status` };
 
   const definition = new RegExp(`^\\s*-\\s+\\*\\*(${fields.id}-AC\\d+)\\*\\*`, "gm");
-  const criteria = [...text.matchAll(definition)].map((match) => match[1]);
+  const tableDefinition = new RegExp(`^\\s*\\|\\s*(${fields.id}-AC\\d+)\\s*\\|`, "gm");
+  const criteria = [
+    ...new Set([
+      ...[...text.matchAll(definition)].map((match) => match[1]),
+      ...[...text.matchAll(tableDefinition)].map((match) => match[1]),
+    ]),
+  ];
   return { id: fields.id, status: fields.status, file, criteria };
 }
 
