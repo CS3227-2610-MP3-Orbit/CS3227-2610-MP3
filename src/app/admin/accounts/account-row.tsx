@@ -96,8 +96,20 @@ export default function AccountRow({
     setCredential(null);
     startTransition(async () => {
       const result = await resetPasswordAction({ targetId: account.id });
-      if (result.kind === "success") setCredential(result.initialCredential);
-      else setMessage(describeResetFailure(result.kind));
+      if (result.kind === "success") {
+        setCredential(result.initialCredential);
+      } else if (result.kind === "password_reset_sessions_not_revoked") {
+        // ADM-01-R10: the password did change -- still show it -- but ending the target's
+        // existing sessions could not be confirmed, so this is a distinct, honest message,
+        // never the plain success copy.
+        setCredential(result.initialCredential);
+        setMessage(
+          "Password changed, but the account's existing sessions could not be confirmed ended. " +
+            "For a suspected compromise, deactivate the account as well.",
+        );
+      } else {
+        setMessage(describeResetFailure(result.kind));
+      }
     });
   }
 

@@ -174,6 +174,16 @@ export type SetActiveResult = z.infer<typeof setActiveResultSchema>;
 
 export const resetResultSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("success"), initialCredential: z.string() }).strict(),
+  // ADM-01-R10: the password change itself already succeeded by the time this kind can be
+  // returned, so the new one-time credential is still included here -- the caller is told the
+  // password changed but that ending the target's existing sessions could not be confirmed,
+  // never told sessions ended when they did not (see server.ts's resetPassword).
+  z
+    .object({
+      kind: z.literal("password_reset_sessions_not_revoked"),
+      initialCredential: z.string(),
+    })
+    .strict(),
   z.object({ kind: z.literal("validation_error"), field: fieldSchema }).strict(),
   z.object({ kind: z.literal("forbidden_self_change") }).strict(),
   z.object({ kind: z.literal("forbidden_protected") }).strict(),
@@ -182,3 +192,22 @@ export const resetResultSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("outcome_unknown"), correlationId: uuid }).strict(),
 ]);
 export type ResetResult = z.infer<typeof resetResultSchema>;
+
+// ADM-01-R10: the admin_revoke_sessions RPC's own result shape, parsed the same way every other
+// RPC result in this module is (reject/ignore anything that does not match exactly, rather than
+// trust an unexpected shape as success).
+export const revokeSessionsResultSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("success"),
+      targetId: uuid,
+      sessionsRevoked: z.number().int().nonnegative(),
+    })
+    .strict(),
+  z.object({ kind: z.literal("validation_error"), field: fieldSchema }).strict(),
+  z.object({ kind: z.literal("forbidden_self_change") }).strict(),
+  z.object({ kind: z.literal("forbidden_protected") }).strict(),
+  z.object({ kind: z.literal("forbidden_or_not_found") }).strict(),
+  z.object({ kind: z.literal("temporarily_unavailable"), correlationId: uuid }).strict(),
+]);
+export type RevokeSessionsResult = z.infer<typeof revokeSessionsResultSchema>;

@@ -277,7 +277,17 @@ describe("ADM-01 admin accounts server boundary", () => {
     });
   });
 
-  describe("resetPassword (ADM-01-R9)", () => {
+  describe("resetPassword (ADM-01-R9/R10)", () => {
+    beforeEach(() => {
+      // Default: admin_revoke_sessions (called via the same shared db.rpc mock as
+      // admin_set_role/admin_list_accounts) reports a confirmed success, so tests in this
+      // block that do not care about revocation itself still observe plain "success".
+      mocks.rpcAbort.mockResolvedValue({
+        data: { kind: "success", targetId, sessionsRevoked: 1 },
+        error: null,
+      });
+    });
+
     it("[ADM-01-AC19] refuses the caller's own account before any lookup or write", async () => {
       const result = await resetPassword({ targetId: actorId });
       expect(result).toEqual({ kind: "forbidden_self_change" });
@@ -298,13 +308,70 @@ describe("ADM-01 admin accounts server boundary", () => {
       expect(mocks.updateUserById).not.toHaveBeenCalled();
     });
 
-    it("resets an ordinary target's password and returns the new one-time credential", async () => {
+    it("resets an ordinary target's password, revokes their sessions, and returns the new one-time credential", async () => {
       mocks.password.mockReturnValue("brand-new-reset-password");
       const result = await resetPassword({ targetId });
       expect(result).toEqual({ kind: "success", initialCredential: "brand-new-reset-password" });
       expect(mocks.updateUserById).toHaveBeenCalledWith(targetId, {
         password: "brand-new-reset-password",
       });
+      expect(mocks.rpc).toHaveBeenCalledWith("admin_revoke_sessions", { target_id: targetId });
+      // ADM-01-R10: the password write must complete before sessions are revoked.
+      expect(mocks.updateUserById.mock.invocationCallOrder[0]).toBeLessThan(
+        mocks.rpc.mock.invocationCallOrder[0],
+      );
+    });
+
+    it("[ADM-01-AC25] does not call admin_revoke_sessions when the password write itself fails", async () => {
+      mocks.updateUserById.mockResolvedValue({ data: null, error: new Error("auth offline") });
+      expect(await resetPassword({ targetId })).toMatchObject({ kind: "outcome_unknown" });
+      expect(mocks.rpc).not.toHaveBeenCalled();
+    });
+
+    it("[ADM-01-R10] reports password_reset_sessions_not_revoked (still with the new password) when the RPC returns a non-success kind", async () => {
+      mocks.password.mockReturnValue("reset-but-not-revoked");
+      mocks.rpcAbort.mockResolvedValueOnce({
+        data: { kind: "forbidden_or_not_found" },
+        error: null,
+      });
+      const result = await resetPassword({ targetId });
+      expect(result).toEqual({
+        kind: "password_reset_sessions_not_revoked",
+        initialCredential: "reset-but-not-revoked",
+      });
+      // The password did change -- never reported as outcome_unknown or a false success.
+      expect(result.kind).not.toBe("outcome_unknown");
+      expect(result.kind).not.toBe("success");
+    });
+
+    it("[ADM-01-R10] reports password_reset_sessions_not_revoked when the RPC call itself throws or returns a malformed payload", async () => {
+      mocks.password.mockReturnValue("reset-but-rpc-threw");
+      mocks.rpcAbort.mockRejectedValueOnce(new Error("network drop"));
+      expect(await resetPassword({ targetId })).toEqual({
+        kind: "password_reset_sessions_not_revoked",
+        initialCredential: "reset-but-rpc-threw",
+      });
+
+      mocks.password.mockReturnValue("reset-but-rpc-malformed");
+      mocks.rpcAbort.mockResolvedValueOnce({
+        data: { kind: "success" /* missing fields */ },
+        error: null,
+      });
+      expect(await resetPassword({ targetId })).toEqual({
+        kind: "password_reset_sessions_not_revoked",
+        initialCredential: "reset-but-rpc-malformed",
+      });
+    });
+
+    it("[ADM-01-R10] a password_reset_sessions_not_revoked response never contains any other generated password", async () => {
+      mocks.password.mockReturnValue("only-this-password-should-appear");
+      mocks.rpcAbort.mockResolvedValueOnce({
+        data: { kind: "temporarily_unavailable" },
+        error: null,
+      });
+      const result = await resetPassword({ targetId });
+      expect(result).toMatchObject({ kind: "password_reset_sessions_not_revoked" });
+      expect(JSON.stringify(result)).toContain("only-this-password-should-appear");
     });
 
     it("[ADM-01-AC21] [ADM-01-AC11] rejects a malformed target id before any lookup", async () => {

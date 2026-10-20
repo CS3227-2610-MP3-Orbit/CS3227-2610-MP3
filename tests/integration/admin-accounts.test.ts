@@ -183,6 +183,36 @@ describe("ADM-01 admin accounts: real Postgres + real Auth", () => {
     expect(newAttempt.data.user?.id).toBe(target.id);
   });
 
+  it("[ADM-01-AC25] after a reset, the target's prior refresh token no longer works, while the new password signs in successfully", async () => {
+    const target = await createFixtureUser("student");
+    const signedIn = await freshClient().auth.signInWithPassword({
+      email: target.email,
+      password: target.password,
+    });
+    expect(signedIn.error).toBeNull();
+    const oldRefreshToken = signedIn.data.session?.refresh_token;
+    expect(
+      oldRefreshToken,
+      "fixture sign-in must return a session with a refresh token",
+    ).toBeTruthy();
+
+    const result = await resetPassword({ targetId: target.id });
+    expect(result.kind).toBe("success");
+    if (result.kind !== "success") throw new Error("reset must succeed");
+
+    const refreshAttempt = await freshClient().auth.refreshSession({
+      refresh_token: oldRefreshToken!,
+    });
+    expect(refreshAttempt.error).not.toBeNull();
+
+    const newAttempt = await freshClient().auth.signInWithPassword({
+      email: target.email,
+      password: result.initialCredential,
+    });
+    expect(newAttempt.error).toBeNull();
+    expect(newAttempt.data.user?.id).toBe(target.id);
+  });
+
   it("[ADM-01-AC19] an admin cannot reset their own password, including a direct call", async () => {
     const result = await resetPassword({ targetId: admin.id });
     expect(result).toEqual({ kind: "forbidden_self_change" });

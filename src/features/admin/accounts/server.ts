@@ -15,6 +15,7 @@ import {
   listAccountsInputSchema,
   listResultSchema,
   resetPasswordInputSchema,
+  revokeSessionsResultSchema,
   setActiveInputSchema,
   setActiveResultSchema,
   setRoleInputSchema,
@@ -154,9 +155,10 @@ export async function setActive(raw: unknown): Promise<SetActiveResult> {
   }
 }
 
-/** ADM-01-R9: reset another user's password. Refuses the caller's own account (use SH-06's
- * own change-password page instead) and the protected recovery administrator, both checked
- * server-side from the target's own profile row before any write. */
+/** ADM-01-R9/R10: reset another user's password, then end every session/refresh token the
+ * target already holds. Refuses the caller's own account (use SH-06's own change-password
+ * page instead) and the protected recovery administrator, both checked server-side from the
+ * target's own profile row before any write. */
 export async function resetPassword(raw: unknown): Promise<ResetResult> {
   const actor = await requireRole("admin");
   const input = resetPasswordInputSchema.safeParse(boundedInput(raw));
@@ -167,8 +169,9 @@ export async function resetPassword(raw: unknown): Promise<ResetResult> {
   // admin_set_role/admin_set_active's own self-check (ADM-01-R5).
   if (targetId === actor.id) return { kind: "forbidden_self_change" };
 
+  let db: Awaited<ReturnType<typeof createClient>>;
   try {
-    const db = await createClient();
+    db = await createClient();
     const { data: target, error } = await db
       .from("profiles")
       .select("is_protected")
@@ -182,12 +185,33 @@ export async function resetPassword(raw: unknown): Promise<ResetResult> {
     return temporarilyUnavailable();
   }
 
+  let password: string;
   try {
-    const password = generateInitialPassword();
+    password = generateInitialPassword();
     const { error } = await createAdminClient().auth.admin.updateUserById(targetId, { password });
     if (error) return outcomeUnknown();
-    return { kind: "success", initialCredential: password };
   } catch {
     return outcomeUnknown();
   }
+
+  // ADM-01-R10: the password change above already succeeded, so from here on a revocation
+  // failure is reported as the distinct "password_reset_sessions_not_revoked" kind -- never
+  // outcome_unknown and never plain success -- carrying the same new credential (the password
+  // itself did change) so the caller still sees it, but is never told sessions ended when they
+  // did not. Uses the caller's own cookie-scoped client (not the service-role client), the same
+  // RPC-calling convention as setRole/setActive, so this goes through admin_revoke_sessions'
+  // own requireRole-equivalent current_app_role() check too.
+  try {
+    const { data, error: revokeError } = await db
+      .rpc("admin_revoke_sessions", { target_id: targetId })
+      .abortSignal(AbortSignal.timeout(10000));
+    const revoked = revokeSessionsResultSchema.safeParse(data);
+    if (revokeError || !revoked.success || revoked.data.kind !== "success") {
+      return { kind: "password_reset_sessions_not_revoked", initialCredential: password };
+    }
+  } catch {
+    return { kind: "password_reset_sessions_not_revoked", initialCredential: password };
+  }
+
+  return { kind: "success", initialCredential: password };
 }
