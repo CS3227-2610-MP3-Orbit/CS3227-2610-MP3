@@ -22,6 +22,25 @@ status: draft
   changes the prior profile authorization contract, resets this canonical specification to `draft`, and
   makes the prior approval stale until a teammate reviews the exact revised digest.
 - Change-impact record: `workflow/reviews/stu-01/2026-10-18-shared-spec-traceability-impact.md`.
+- Quota-change impact record: `workflow/reviews/stu-05/sh-01-quota-change-impact.md`.
+- Prior content digest before the 2026-10-19 quota revision:
+  `a1a660ead71b0565afddf27633c63b6299bc5fa8`.
+- Quota-revision source: Joseph's confirmed 2026-10-19 decisions for active Student AI usage. This is
+  material; `status: draft` remains unchanged and all earlier approval reports remain stale pending
+  teammate review of the exact revised digest.
+- Quota-subset approval report: Joseph reported on 2026-10-19 that he and the team approved the revised
+  quota/accounting subset (`SH-01-R6`, `SH-01-AC6`, `SH-01-AC7`). This does not approve the broader
+  SH-01 foundation document, which remains `draft` because it has unrelated revised/open requirements.
+  Individual identities and remote PR approval were not independently verified; this is not merge,
+  deployment, or sensitive-change approval.
+- Material quota-subset revision: Joseph accepted the 2026-10-19 admission-day reservation/midnight
+  attribution and 30-day metadata-retention decisions. The reported quota-subset approval is stale pending
+  renewed team review of the exact revised content.
+- Renewed quota-subset approval report: Joseph reported on 2026-10-19 that the team approved the exact
+  revised quota subset (`SH-01-R6`, `SH-01-AC6`, `SH-01-AC7`) reviewed at digest
+  `07f3f1e5d6c0148076157447ccf584edacc3620e`. SH-01 remains `draft` because this approval does not cover
+  its unrelated revised/open requirements. Reviewer identities and remote GitHub/PR evidence remain
+  unverified; this is not merge, deployment, or sensitive-implementation approval.
 
 ## Context
 
@@ -63,7 +82,7 @@ such as slots and bookings are defined by their own specs and added by later mig
 
 - Wrong email or password: one generic message, so the form does not reveal which emails exist.
 - SoC LLM slow, down, rate-limited or over quota: `generateText` returns a typed failure instead of
-  throwing, and non-AI features keep working.
+  throwing, failures/refusals do not consume a successful daily quota, and non-AI features keep working.
 
 ## AI behaviour
 
@@ -71,10 +90,30 @@ such as slots and bookings are defined by their own specs and added by later mig
 - User-written text is wrapped with `wrapUntrusted` and the system prompt says it is data, not instructions.
 - Inputs longer than 4,000 characters are refused before calling the model.
 - Each call times out after 20 seconds.
-- Quotas are checked before each call: per user per minute, per user per day, and for the whole app
-  per minute (one team key is shared by everyone). Each call is recorded before usage is counted,
-  so simultaneous calls cannot slip past a limit together. If usage cannot be recorded or counted,
-  the call is refused.
+- `SH-01-R6 — AI quota, rate and accounting boundary`
+  - Classification: `confirmed`.
+  - Source: Joseph's 2026-10-19 confirmed decisions; shared SoC-key constraint.
+  - There is no per-minute or per-Student daily quota. At most 100 app-wide daily-capacity reservations
+    may be admitted for each Asia/Singapore calendar day. A valid provider result finalizes its
+    admission-day reservation as one successful AI response. The shared daily counter resets at 00:00
+    Asia/Singapore according to trusted server/database time, never a browser clock. A request admitted
+    before midnight finalizes against that original admission day even if its provider response arrives
+    after midnight; a request admitted after midnight uses the new day.
+  - A timeout, provider unavailable/rate limit, invalid/empty response, validation failure, accounting
+    failure, quota/rate refusal, or duplicate in-flight refusal does not consume either daily successful
+    quota. A later deliberate request that receives a valid response counts separately.
+  - Before a model call, the server atomically reserves applicable minute and daily capacity and records a
+    minimal server-side attempt. At most one attempt may be in flight for each Student. A valid provider
+    output atomically finalizes the attempt as successful against its admission-day reservation.
+    Timeout, provider, validation, accounting, and refusal failures release the reservation and do not
+    consume daily quota. If accounting cannot safely admit or finalize an attempt, the model call is
+    refused.
+  - A stale pending reservation expires or is reconciled by trusted server/database logic without another
+    model call. A resolved retry is a new deliberate request; the system does not promise exactly-once
+    provider billing. If a provider outcome cannot safely be determined, it is not claimed as success,
+    raw information is not exposed, and the ordinary feature workflow remains usable. Retain only user ID,
+    feature identifier, attempt state/outcome, and timestamps; delete each attempt record no later than 30
+    days after `created_at`. Never retain prompt text, output text, or raw provider response.
 
 ## Acceptance criteria
 
@@ -83,8 +122,17 @@ such as slots and bookings are defined by their own specs and added by later mig
 - **SH-01-AC3** Given a signed-in user, when they open the app or another role's dashboard, then they are sent to their own role's dashboard.
 - **SH-01-AC4** Given a new sign-up that includes `role: admin` in its metadata, when the account is created, then its role is `student`.
 - **SH-01-AC5** Given user-written text, when it is wrapped for the model, then it sits inside exactly one untrusted-data block that the text cannot close early.
-- **SH-01-AC6** Given recent AI usage counts, when any of the per-user-minute, per-user-day or global-minute limits is reached, then the call is refused with a reason and a retry time.
-- **SH-01-AC7** Given the SoC LLM times out, rate-limits or errors, when a feature calls `generateText`, then it receives a typed failure and no exception.
+- **SH-01-AC6** Given deterministic usage/accounting fixtures, when 99 app-wide daily-capacity
+  reservations exist for the current Asia/Singapore admission day, then the 100th request is admitted and
+  the 101st is refused before the model call without revealing other users' usage. No minute or
+  per-Student daily quota refusal occurs. A valid response finalizes against its admission day even after
+  midnight, while a new request at 00:00 Asia/Singapore uses the new day. Failures/refusals release a
+  reservation and do not become a successful response.
+- **SH-01-AC7** Given the SoC LLM times out, rate-limits, errors, returns invalid/empty content, or has an
+  indeterminate outcome, when a feature calls `generateText`, then it receives a typed failure without an
+  exception, its reservation is released or safely reconciled without an automatic provider retry, no
+  successful response is claimed, and the feature's ordinary non-AI workflow remains usable. Usage rows
+  retain only allowed metadata and are deleted no later than 30 days after `created_at`.
 - **SH-01-AC8** Given an authenticated Student, when database permissions are exercised directly, then
   the Student can read their own profile row but cannot read any other profile row; an approved narrow
   feature RPC may return only its allowlisted staff projection after independently checking the active
@@ -106,13 +154,16 @@ Feature-specific rules (booking transitions, slot editing, reports) belong to ea
 
 ## Unresolved implementation decisions
 
-- Exact quota numbers: to be derived from the SoC LLM documentation (NUS network only).
 - Self sign-up for students, or accounts created only by administrators?
 
 ## Change log
 
-| Date       | Change                                                                        | By                     |
-| ---------- | ----------------------------------------------------------------------------- | ---------------------- |
-| 2026-10-17 | First draft                                                                   | johannsen              |
-| 2026-10-18 | Recorded team-reported approval and retained unresolved implementation limits | requirements_architect |
-| 2026-10-18 | Restricted Student staff discovery to narrow RPC projections; reset to draft  | requirements_architect |
+| Date       | Change                                                                                                                                | By                     |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| 2026-10-17 | First draft                                                                                                                           | johannsen              |
+| 2026-10-18 | Recorded team-reported approval and retained unresolved implementation limits                                                         | requirements_architect |
+| 2026-10-18 | Restricted Student staff discovery to narrow RPC projections; reset to draft                                                          | requirements_architect |
+| 2026-10-19 | Added user-confirmed Student/global daily AI limits and failure-free accounting; retained global-minute/atomic-mechanism questions    | requirements_architect |
+| 2026-10-19 | Added confirmed global 10/minute limit and durable reservation/finalization/expiry protocol; renewed teammate review remains required | requirements_architect |
+| 2026-10-19 | Recorded team-reported approval of quota subset only; retained broader SH-01 draft status                                             | requirements_architect |
+| 2026-10-19 | Resolved admission-day reservation/midnight attribution and 30-day usage retention; prior quota-subset approval became stale          | requirements_architect |
