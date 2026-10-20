@@ -10,6 +10,7 @@ The Requirements Analyst inspected the repository and prepared a draft for Lectu
 
 | ID  | Criterion | Test reference |
 | --- | --------- | -------------- |
+
 ## Evidence
 
 - `src/app/lecturer/layout.tsx` currently protects the Lecturer route with `requireRole("lecturer")`.
