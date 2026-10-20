@@ -12,7 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { submitRequest, recoverRequest, refreshRequestSlot } from "./actions";
+import { type ImproveResult } from "@/features/student/bookings/improve-request-validation";
+import { validateProposalForApply } from "@/features/student/bookings/improve-request-validation";
+import { type Advice } from "@/lib/ai/output-validation";
+import { improveRequest, submitRequest, recoverRequest, refreshRequestSlot } from "./actions";
 
 const messages = {
   slot_unavailable:
@@ -36,8 +39,70 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
   const [result, setResult] = useState<ReceiptResult | null>(null);
   const [needsReview, setNeedsReview] = useState(false);
   const [reviewReady, setReviewReady] = useState(false);
+  const [aiPending, setAiPending] = useState(false);
+  const aiBusy = useRef(false);
+  const [aiResult, setAiResult] = useState<ImproveResult | null>(null);
+  const [proposal, setProposal] = useState<Advice | null>(null);
+  const [sourceSnapshot, setSourceSnapshot] = useState<{ topic: string; questions: string } | null>(
+    null,
+  );
+  const [proposalError, setProposalError] = useState<"topic" | "questions" | null>(null);
+  const [confirmApply, setConfirmApply] = useState(false);
+  const [appliedProposal, setAppliedProposal] = useState(false);
   const locked = !hydrated || pending || attempt !== null;
   const field = result?.kind === "validation_error" ? result.field : null;
+
+  async function improve() {
+    if (aiBusy.current || aiPending) return;
+    aiBusy.current = true;
+    setAiPending(true);
+    try {
+      const next = await improveRequest({ topic, questions });
+      setAiResult(next);
+      if (next.kind === "success") {
+        setProposal(next.proposal);
+        setSourceSnapshot({ topic, questions });
+        setConfirmApply(false);
+        setAppliedProposal(false);
+      }
+    } catch (error) {
+      unstable_rethrow(error);
+      setAiResult({ kind: "ai_unavailable", reason: "unavailable" });
+    } finally {
+      aiBusy.current = false;
+      setAiPending(false);
+    }
+  }
+
+  function applyProposal() {
+    if (!proposal) return;
+    const parsed = validateProposalForApply(proposal);
+    if (!parsed.success) {
+      setProposalError(parsed.field);
+      return;
+    }
+    if (
+      sourceSnapshot &&
+      (sourceSnapshot.topic !== topic || sourceSnapshot.questions !== questions) &&
+      !confirmApply
+    ) {
+      setConfirmApply(true);
+      return;
+    }
+    setProposalError(null);
+    setTopic(parsed.data.topic);
+    setQuestions(parsed.data.questions);
+    setProposal(null);
+    setSourceSnapshot(null);
+    setConfirmApply(false);
+    setAppliedProposal(true);
+  }
+
+  function dismissProposal() {
+    setProposal(null);
+    setSourceSnapshot(null);
+    setConfirmApply(false);
+  }
 
   async function submit() {
     if (busy.current || needsReview) return;
@@ -204,6 +269,210 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
             </p>
           )}
         </div>
+        <section
+          className="space-y-4 rounded-lg border border-border bg-muted p-4 shadow-sm sm:p-5"
+          aria-label="Improve your draft with AI"
+        >
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-foreground">Improve your draft with AI</h2>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Get a suggested rewrite, then choose exactly what to use in your request.
+            </p>
+          </div>
+          <p className="rounded-md border border-border bg-muted px-3 py-2 text-sm leading-5 text-foreground">
+            Generating uses one AI request. Apply and Dismiss use no AI request. Review and edit any
+            generated proposal yourself before submitting your request.
+          </p>
+          <button
+            type="button"
+            disabled={!hydrated || aiPending}
+            onClick={() => void improve()}
+            className="min-h-11 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            {aiPending
+              ? "Improving draft…"
+              : proposal
+                ? "Generate again"
+                : appliedProposal
+                  ? "Generate another suggestion"
+                  : "Improve my request"}
+          </button>
+          <div role="status" aria-live="polite" className="break-words">
+            {aiPending && <p>Improving your draft…</p>}
+            {aiResult?.kind === "validation_error" && (
+              <p>
+                Please correct the {aiResult.field === "request" ? "draft fields" : aiResult.field}
+                before requesting AI advice.
+              </p>
+            )}
+            {aiResult?.kind === "quota_exceeded" && (
+              <p>
+                AI request limit reached. You can still write and submit your consultation request
+                manually.
+              </p>
+            )}
+            {aiResult?.kind === "in_flight" && (
+              <p>Your draft is already being improved. Please wait.</p>
+            )}
+            {aiResult?.kind === "unresolved_attempt" && (
+              <p>
+                We could not confirm the AI result. You can continue writing and submitting
+                manually.
+              </p>
+            )}
+            {aiResult?.kind === "ai_unavailable" && (
+              <p>
+                AI advice is temporarily unavailable. You can still write and submit your
+                consultation request manually.
+              </p>
+            )}
+          </div>
+          <section aria-label="Generated advice" className="min-h-10 break-words">
+            {appliedProposal && (
+              <p
+                role="status"
+                className="mb-3 rounded-md border border-border bg-muted px-3 py-2 text-sm leading-5 text-foreground"
+              >
+                AI suggestion applied to your request. You can still edit the fields before
+                submitting.
+              </p>
+            )}
+            {proposal ? (
+              <div
+                className="space-y-5 rounded-lg border border-border bg-card p-4 shadow-sm sm:p-5"
+                aria-busy={aiPending}
+              >
+                <div className="space-y-1 border-b border-border pb-4">
+                  <h3 className="text-base font-semibold text-foreground">Suggested improvement</h3>
+                  <p className="text-sm leading-5 text-muted-foreground">
+                    Edit the suggestion if needed, then apply it to the request form below.
+                  </p>
+                </div>
+                {sourceSnapshot &&
+                  (sourceSnapshot.topic !== topic || sourceSnapshot.questions !== questions) && (
+                    <p
+                      role="status"
+                      className="rounded-md border border-border bg-muted px-3 py-2 text-sm leading-5 text-foreground"
+                    >
+                      Applying this proposal will replace your current topic and questions with the
+                      generated snapshot.
+                    </p>
+                  )}
+                <div className="space-y-1">
+                  <label htmlFor="proposed-topic" className="font-semibold text-foreground">
+                    Generated topic
+                  </label>
+                  <Input
+                    id="proposed-topic"
+                    value={proposal.topic}
+                    aria-invalid={proposalError === "topic"}
+                    aria-describedby="proposed-topic-error"
+                    onChange={(event) => {
+                      setConfirmApply(false);
+                      setProposal({ ...proposal, topic: event.target.value });
+                    }}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="proposed-questions" className="font-semibold text-foreground">
+                    Generated questions
+                  </label>
+                  <Textarea
+                    id="proposed-questions"
+                    rows={5}
+                    value={proposal.questions}
+                    aria-invalid={proposalError === "questions"}
+                    aria-describedby="proposed-questions-error"
+                    onChange={(event) => {
+                      setConfirmApply(false);
+                      setProposal({ ...proposal, questions: event.target.value });
+                    }}
+                  />
+                </div>
+                {/* Retained proposal suggestions, initially sourced from aiResult.proposal.suggestions. */}
+                {proposal.suggestions.length > 0 && (
+                  <div className="rounded-md border border-border bg-muted p-4">
+                    <p className="font-semibold text-foreground">Suggestions</p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-muted-foreground">
+                      {proposal.suggestions.map((suggestion, index) => (
+                        <li key={`${index}-${suggestion}`}>{suggestion}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="grid gap-3 border-t border-border pt-4 sm:grid-cols-2">
+                  {/* >Apply to request< >Dismiss< */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConfirmApply(false);
+                      applyProposal();
+                    }}
+                    className="min-h-12 rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    Apply to request
+                  </button>
+                  <button
+                    type="button"
+                    onClick={dismissProposal}
+                    className="min-h-12 rounded-md border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+                {confirmApply && (
+                  <section
+                    aria-labelledby="confirm-apply-title"
+                    aria-describedby="confirm-apply-description"
+                    className="space-y-3 rounded-md border-2 border-border bg-muted p-4"
+                  >
+                    <div className="space-y-1">
+                      <h4 id="confirm-apply-title" className="font-semibold text-foreground">
+                        Replace your current draft?
+                      </h4>
+                      <p
+                        id="confirm-apply-description"
+                        className="text-sm leading-5 text-foreground"
+                      >
+                        Your topic or questions changed after this suggestion was generated.
+                        Confirming will replace both fields with the generated version.
+                      </p>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmApply(false)}
+                        className="min-h-11 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                      >
+                        Keep my current draft
+                      </button>
+                      <button
+                        type="button"
+                        onClick={applyProposal}
+                        className="min-h-11 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                      >
+                        Apply suggestion
+                      </button>
+                    </div>
+                  </section>
+                )}
+                {proposalError && (
+                  <p
+                    id={`proposed-${proposalError}-error`}
+                    role="alert"
+                    className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                  >
+                    Generated {proposalError} must be within the allowed length.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="rounded-md border border-dashed border-border bg-card px-3 py-4 text-sm text-muted-foreground">
+                Generated advice will appear here.
+              </p>
+            )}
+          </section>
+        </section>
         {needsReview ? (
           <div className="space-y-3">
             <Button

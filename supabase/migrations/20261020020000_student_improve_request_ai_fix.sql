@@ -1,0 +1,60 @@
+-- STU-05 corrective migration: every admitted attempt counts toward rolling minute limits,
+-- including attempts later released from daily capacity after a provider failure.
+create or replace function public.claim_ai_attempt(p_user_id uuid, p_feature text) returns jsonb
+language plpgsql security definer set search_path = ''
+set lock_timeout = '5s' set statement_timeout = '10s' as $$
+declare
+  v_now timestamptz := clock_timestamp();
+  v_day date := (v_now at time zone 'Asia/Singapore')::date;
+  v_user_minute integer;
+  v_global_minute integer;
+  v_user_day integer;
+  v_global_day integer;
+  v_pending_since timestamptz;
+  v_attempt_id bigint;
+begin
+  if p_user_id is null or p_feature <> 'student.improve-request' then
+    return jsonb_build_object('kind', 'unavailable');
+  end if;
+
+  perform pg_advisory_xact_lock(hashtext('public.ai_usage.student-improve-request'));
+  update public.ai_usage
+  set state = 'expired', resolved_at = v_now
+  where state in ('pending', 'indeterminate')
+    and created_at < v_now - interval '2 minutes';
+
+  select min(created_at) into v_pending_since
+  from public.ai_usage
+  where user_id = p_user_id and feature = p_feature and state in ('pending', 'indeterminate');
+  if v_pending_since is not null then
+    return jsonb_build_object('kind', 'in_flight');
+  end if;
+
+  -- Do not filter by state: every admitted attempt remains rate-countable for 60 seconds.
+  select count(*) into v_user_minute from public.ai_usage
+  where user_id = p_user_id and created_at >= v_now - interval '60 seconds';
+  select count(*) into v_global_minute from public.ai_usage
+  where created_at >= v_now - interval '60 seconds';
+  -- Daily capacity is released on failed, expired, or indeterminate outcomes.
+  select count(*) into v_user_day from public.ai_usage
+  where user_id = p_user_id and admission_day = v_day and state in ('pending', 'succeeded');
+  select count(*) into v_global_day from public.ai_usage
+  where admission_day = v_day and state in ('pending', 'succeeded');
+
+  if v_user_minute >= 3 or v_global_minute >= 10 then
+    return jsonb_build_object('kind', 'quota_exceeded', 'retryAfterSeconds', 60);
+  end if;
+  if v_user_day >= 10 or v_global_day >= 500 then
+    return jsonb_build_object('kind', 'quota_exceeded', 'retryAfterSeconds', 60);
+  end if;
+
+  insert into public.ai_usage (user_id, feature, state, admission_day)
+  values (p_user_id, p_feature, 'pending', v_day)
+  returning id into v_attempt_id;
+  return jsonb_build_object('kind', 'admitted', 'attemptId', v_attempt_id);
+exception when unique_violation then
+  return jsonb_build_object('kind', 'in_flight');
+when lock_not_available or deadlock_detected or serialization_failure or query_canceled then
+  return jsonb_build_object('kind', 'unavailable');
+end;
+$$;
