@@ -18,14 +18,14 @@
 
 ## Criteria coverage assessment
 
-| Criterion | Current evidence | Assessment |
-| --- | --- | --- |
-| LEC-04-AC1 | Server action calls `requireRole`, scopes booking by lecturer and approved status, then calls `generateText`. | Partial: no direct integration test proves authorization precedes retrieval/model invocation. |
-| LEC-04-AC2 | Query and active-user role checks exist. | Partial: no tests prove unauthorized roles, cross-lecturer IDs, deactivated users, or no model call. |
-| LEC-04-AC3 | `wrapUntrusted()` escapes angle brackets and the system prompt rejects instructions in data. | Partial: unit boundary test exists; no mocked model/integration test proves booking state and authorization remain unchanged. |
-| LEC-04-AC4 | UI renders returned content inside `<pre>` as text. | Partial: no rendered/UI test proves script/markup remains inert. |
+| Criterion  | Current evidence                                                                                                                           | Assessment                                                                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LEC-04-AC1 | Server action calls `requireRole`, scopes booking by lecturer and approved status, then calls `generateText`.                              | Partial: no direct integration test proves authorization precedes retrieval/model invocation.                                                                    |
+| LEC-04-AC2 | Query and active-user role checks exist.                                                                                                   | Partial: no tests prove unauthorized roles, cross-lecturer IDs, deactivated users, or no model call.                                                             |
+| LEC-04-AC3 | `wrapUntrusted()` escapes angle brackets and the system prompt rejects instructions in data.                                               | Partial: unit boundary test exists; no mocked model/integration test proves booking state and authorization remain unchanged.                                    |
+| LEC-04-AC4 | UI renders returned content inside `<pre>` as text.                                                                                        | Partial: no rendered/UI test proves script/markup remains inert.                                                                                                 |
 | LEC-04-AC5 | Gateway has input limit, timeout, rate-limit, quota, unavailable, and empty-response results; action maps most failures to user-safe text. | Partial: current tests cover only quota decisions; provider failure, oversized input, empty output, persistence failure, and consultation fallback are untested. |
-| LEC-04-AC6 | Gateway records usage and refuses quota-exhausted calls. | Partial: quota unit test exists; no action/gateway integration test proves repeated calls, no secret leakage, or configured feature behavior. |
+| LEC-04-AC6 | Gateway records usage and refuses quota-exhausted calls.                                                                                   | Partial: quota unit test exists; no action/gateway integration test proves repeated calls, no secret leakage, or configured feature behavior.                    |
 
 ## Current implementation evidence
 
