@@ -10,6 +10,10 @@ select has_function('public', 'admin_set_role', array['uuid', 'app_role'],
 select has_function('public', 'admin_set_active', array['uuid', 'boolean'],
   '[ADM-01-R4] [ADM-01-R5] [ADM-01-R7] [ADM-01-R8] admin_set_active RPC exists');
 
+-- Isolate from seed data: existing administrators would otherwise change the zero-admin
+-- counts, and only one protected administrator may exist. Rolled back with the rest.
+update public.profiles set role = 'student', is_protected = false where role = 'admin';
+
 -- Fixtures. All writes roll back at the end, even on the disposable local DB.
 insert into auth.users (id) values
   ('83000000-0000-4000-8000-000000000001'), -- admin_p: protected recovery admin
