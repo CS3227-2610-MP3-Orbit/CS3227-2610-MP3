@@ -11,6 +11,7 @@
     "test": "vitest run --exclude 'workflow/**'",
     "test:watch": "vitest",
     "test:db": "supabase test db",
+    "test:admin:integration": "vitest run --config tests/integration/admin-accounts.vitest.config.mts",
     "test:e2e": "playwright test",
     "test:hooks": "node --test workflow/hooks/hooks.test.mjs",
     "test:workflow": "npm run test:hooks && vitest run workflow/hooks/hook-integration.test.mjs workflow/scripts/*.test.mjs",
