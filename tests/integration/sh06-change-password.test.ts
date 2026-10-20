@@ -10,6 +10,8 @@
 // ever touched. See tests/integration/README.md for required environment variables.
 import { afterEach, describe, expect, it } from "vitest";
 
+import { ATTEMPT_WINDOW_MS, decidePasswordAttemptLimit } from "@/features/account/rate-limit";
+
 import {
   adminClient,
   createFixtureUser,
@@ -39,6 +41,55 @@ async function verifyCurrentPassword(email: string, password: string) {
   // "local" only -- the default "global" scope would revoke the caller's real session too.
   if (!error) await verifier.auth.signOut({ scope: "local" });
   return { ok: !error && !!data.session, error };
+}
+
+// --- SH-06-R7 claim-then-count against the real password_change_attempts table/RLS, using
+// the real decision function (decidePasswordAttemptLimit) that src/features/account/server.ts
+// is unit-tested against -- this exercises the live DB artifact and the real pure rule
+// together, exactly as changeOwnPassword() wires them, without going through requireUser()'s
+// Next.js cookies()-bound request context (already covered by the e2e test's real HTTP
+// requests, as noted in this file's header).
+
+async function claimAttempt(userId: string): Promise<number> {
+  const { data, error } = await adminClient()
+    .from("password_change_attempts")
+    .insert({ user_id: userId })
+    .select("id")
+    .single();
+  if (error || !data) throw new Error("SH-06 test: failed to claim an attempt row");
+  return data.id as number;
+}
+
+async function countAttemptsInWindow(userId: string) {
+  const windowStart = new Date(Date.now() - ATTEMPT_WINDOW_MS).toISOString();
+  const { data, error } = await adminClient()
+    .from("password_change_attempts")
+    .select("created_at")
+    .eq("user_id", userId)
+    .gte("created_at", windowStart)
+    .order("created_at", { ascending: true });
+  if (error || !data || data.length === 0)
+    throw new Error("SH-06 test: failed to count the attempt window");
+  return { count: data.length, oldestCreatedAt: new Date(data[0].created_at as string) };
+}
+
+async function clearAttempt(id: number): Promise<void> {
+  await adminClient().from("password_change_attempts").delete().eq("id", id);
+}
+
+/** One full SH-06-R7 attempt: claim, count, decide, then verify only if allowed. */
+async function attemptPasswordChange(user: { id: string; email: string }, password: string) {
+  const claimId = await claimAttempt(user.id);
+  const window = await countAttemptsInWindow(user.id);
+  const decision = decidePasswordAttemptLimit(window.count, window.oldestCreatedAt);
+  if (!decision.allowed) {
+    await clearAttempt(claimId);
+    return { outcome: "rate_limited" as const, retryAfterSeconds: decision.retryAfterSeconds };
+  }
+  const verification = await verifyCurrentPassword(user.email, password);
+  if (!verification.ok) return { outcome: "wrong_password" as const };
+  await clearAttempt(claimId);
+  return { outcome: "verified" as const };
 }
 
 describe("SH-06 real local Supabase Auth integration", () => {
@@ -153,5 +204,84 @@ describe("SH-06 real local Supabase Auth integration", () => {
     const anonymous = publicClient();
     const { error } = await anonymous.auth.updateUser({ password: "irrelevant-no-session-123456" });
     expect(error).toBeTruthy();
+  });
+
+  it("[SH-06-AC8] after a password change via session 1, session 2's refresh token stops working while session 1 still works", async () => {
+    const user = await fixture();
+    const session1 = sessionClient();
+    const session2 = sessionClient();
+
+    const { error: signIn1Error } = await session1.auth.signInWithPassword({
+      email: user.email,
+      password: FIXTURE_PASSWORD,
+    });
+    expect(signIn1Error).toBeNull();
+    const { error: signIn2Error, data: signIn2 } = await session2.auth.signInWithPassword({
+      email: user.email,
+      password: FIXTURE_PASSWORD,
+    });
+    expect(signIn2Error).toBeNull();
+    const session2RefreshToken = signIn2.session?.refresh_token;
+    expect(session2RefreshToken).toBeTruthy();
+
+    // The real verify-then-update sequence, via session 1's own client.
+    const verification = await verifyCurrentPassword(user.email, FIXTURE_PASSWORD);
+    expect(verification.ok).toBe(true);
+    const newPassword = `Sh06-R6-${crypto.randomUUID()}`;
+    const { error: updateError } = await session1.auth.updateUser({ password: newPassword });
+    expect(updateError).toBeNull();
+
+    // SH-06-R6: end every OTHER session via the caller's (session 1's) own cookie-bound client.
+    const { error: signOutOthersError } = await session1.auth.signOut({ scope: "others" });
+    expect(signOutOthersError).toBeNull();
+
+    // Session 2's refresh token no longer works.
+    const refreshed2 = await session2.auth.refreshSession({
+      refresh_token: session2RefreshToken!,
+    });
+    expect(refreshed2.error).toBeTruthy();
+
+    // Session 1 still works: it stayed signed in through the whole sequence.
+    const { data: still, error: stillError } = await session1.auth.getUser();
+    expect(stillError).toBeNull();
+    expect(still.user?.id).toBe(user.id);
+  });
+
+  it("[SH-06-AC10] 5 wrong current-password attempts, then a 6th attempt with the CORRECT password, all within 15 minutes, still refused as rate_limited", async () => {
+    const user = await fixture();
+
+    for (let i = 0; i < 5; i += 1) {
+      const attempt = await attemptPasswordChange(user, "definitely-the-wrong-password");
+      expect(attempt.outcome).toBe("wrong_password");
+    }
+
+    const sixth = await attemptPasswordChange(user, FIXTURE_PASSWORD);
+    expect(sixth.outcome).toBe("rate_limited");
+    if (sixth.outcome === "rate_limited") expect(sixth.retryAfterSeconds).toBeGreaterThan(0);
+
+    // Proves this was the app-level rate limit, not an actually-wrong password: Supabase
+    // Auth itself still accepts the correct password outside this limiter's accounting.
+    const direct = await verifyCurrentPassword(user.email, FIXTURE_PASSWORD);
+    expect(direct.ok).toBe(true);
+  });
+
+  it("[SH-06-AC11] a successful verification's cleared attempt row does not block a later legitimate change", async () => {
+    const user = await fixture();
+
+    // 3 wrong attempts recorded and kept (count toward the window).
+    for (let i = 0; i < 3; i += 1) {
+      const attempt = await attemptPasswordChange(user, "definitely-the-wrong-password");
+      expect(attempt.outcome).toBe("wrong_password");
+    }
+
+    // A successful verification: allowed (count = 4, including its own claim), and its own
+    // row is cleared afterward -- it must not add a 4th permanent entry to the window.
+    const success = await attemptPasswordChange(user, FIXTURE_PASSWORD);
+    expect(success.outcome).toBe("verified");
+
+    // A later legitimate attempt is still allowed: only the 3 original failures remain
+    // (count = 4, including this attempt's own claim), still at/under the limit.
+    const later = await attemptPasswordChange(user, FIXTURE_PASSWORD);
+    expect(later.outcome).toBe("verified");
   });
 });

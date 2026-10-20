@@ -62,9 +62,17 @@ export function boundedInput(raw: unknown): unknown {
 }
 
 export const resultSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("success") }).strict(),
+  // SH-06-R6: otherSessionsEnded is false (not omitted) when the best-effort
+  // signOut({scope:"others"}) call itself failed -- the message must stay honest rather than
+  // claim other devices were signed out when that could not be confirmed.
+  z.object({ kind: z.literal("success"), otherSessionsEnded: z.boolean() }).strict(),
   z.object({ kind: z.literal("validation_error"), field: fieldSchema }).strict(),
   z.object({ kind: z.literal("conflict"), reason: z.literal("wrong_current_password") }).strict(),
   z.object({ kind: z.literal("temporarily_unavailable"), correlationId: z.string() }).strict(),
+  // SH-06-R7: refused before any Supabase Auth call; retryAfterSeconds counts down to when
+  // the oldest counted attempt ages out of the rolling window.
+  z
+    .object({ kind: z.literal("rate_limited"), retryAfterSeconds: z.number().int().positive() })
+    .strict(),
 ]);
 export type ChangePasswordResult = z.infer<typeof resultSchema>;

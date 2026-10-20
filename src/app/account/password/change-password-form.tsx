@@ -25,6 +25,11 @@ export function ChangePasswordForm() {
       <section role="status" className="space-y-2 rounded-md border px-3 py-2">
         <h2 className="text-lg font-semibold">Password changed</h2>
         <p>Your password has been updated. You remain signed in on this session.</p>
+        <p>
+          {result.otherSessionsEnded
+            ? "Your other devices were signed out."
+            : "We could not confirm your other devices were signed out; sign out there manually if you suspect they were compromised."}
+        </p>
       </section>
     );
   }
@@ -75,6 +80,9 @@ export function ChangePasswordForm() {
         {pending && <p>Updating your password…</p>}
         {result?.kind === "validation_error" && <p>{fieldMessages[result.field]}</p>}
         {result?.kind === "conflict" && <p>Current password is incorrect.</p>}
+        {result?.kind === "rate_limited" && (
+          <p>Too many attempts. Try again in {Math.ceil(result.retryAfterSeconds / 60)} minutes.</p>
+        )}
         {result?.kind === "temporarily_unavailable" && (
           <p>
             The service is temporarily unavailable. Please try again. Reference:{" "}
