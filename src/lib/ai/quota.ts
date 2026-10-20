@@ -33,8 +33,11 @@ export const DEFAULT_LIMITS: QuotaLimits = {
  * Pure function: no I/O, so every rule can be unit-tested.
  */
 export function decideQuota(counts: UsageCounts, limits: QuotaLimits): QuotaDecision {
-  // TODO(johannsen): implement the quota rules. See workflow/specs/shared/SH-01-foundation.md (AC6).
-  void counts;
-  void limits;
-  throw new Error("decideQuota is not implemented yet");
+  if (counts.userLastMinute >= limits.perUserPerMinute)
+    return { allowed: false, reason: "user_minute", retryAfterSeconds: 60 };
+  if (counts.userLastDay >= limits.perUserPerDay)
+    return { allowed: false, reason: "user_day", retryAfterSeconds: 86_400 };
+  if (counts.globalLastMinute >= limits.globalPerMinute)
+    return { allowed: false, reason: "global_minute", retryAfterSeconds: 60 };
+  return { allowed: true };
 }

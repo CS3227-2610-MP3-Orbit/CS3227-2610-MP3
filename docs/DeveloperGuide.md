@@ -2,6 +2,20 @@
 
 ## Setting up
 
+Install the project dependencies, copy `.env.example` to a local environment file, and provide
+the required development values through the local environment. Keep `.env.local` untracked and
+never paste secret values into commits, issues, pull requests, screenshots, chat, or command
+output. If a secret is exposed, revoke it and create a replacement before continuing.
+
+The normal development sequence is:
+
+1. Start from an up-to-date feature branch based on `develop`.
+2. Create or update a draft specification under `workflow/specs/`.
+3. Resolve questions and obtain human approval for the specification.
+4. Hand the approved specification to the Developer Agent.
+5. Run the Tester/Security Reviewer independently and record the evidence.
+6. Fix findings, rerun the relevant checks, and submit the pull request for human review.
+
 ## Architecture
 
 ## Data model and access rules
@@ -26,6 +40,20 @@ code that is currently deployed:
   `supabase/tests/rls_enabled.test.sql` fails otherwise.
 
 ## AI features and the SoC LLM gateway
+
+AI features use the existing SoC LLM gateway configuration and quota controls. Keep prompts
+limited to the data required for the feature. Student-provided topics and questions are untrusted
+content: delimit them clearly, instruct the model not to follow instructions found inside them, and
+validate the response before displaying or storing it. Provider failures, rate limits, malformed
+responses, and persistence failures must produce a user-facing failure without exposing secrets or
+silently claiming that a briefing was generated.
+
+For the Lecturer AI briefing, the user selects one upcoming approved consultation. The application
+generates a summary, grouped question themes, and preparation topics, stores the result in the
+database, and displays only the latest ten saved briefings to the user. Student email is excluded
+from the model input under the least-data principle. The feature still requires lecturer
+authorization, booking ownership checks, row-level security, and tests for prompt injection,
+quota boundaries, provider failure, and unauthorized access.
 
 ## Security
 
@@ -125,6 +153,10 @@ requirements before implementation. Acceptance tests reference criterion IDs, an
 changes flow through spec → tests → code. `npm run check:spec` checks traceability. Each role leaves a
 handoff using `workflow/handoffs/_TEMPLATE.md`, including exact scope, spec version, actual command
 results, findings, and the next decision.
+
+Do not treat an Analyst output as a final requirement set. It is a draft until human decisions have
+resolved its open questions. Record decisions about ownership, deadlines, status transitions,
+privacy, error behaviour, retention, and notifications in the specification before implementation.
 
 Specification approval is bound to the reviewed Git commit or spec content digest. Material changes
 to behavior, permissions, data contracts, failure/security cases, or acceptance criteria invalidate
