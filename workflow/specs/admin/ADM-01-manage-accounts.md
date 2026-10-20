@@ -28,6 +28,9 @@ status: approved
 - Confirmed (owner decision 2026-10-20): `ADM-01-R9`'s refusal for the protected recovery
   administrator. Proposed, needs review: `ADM-01-R8`'s exact mechanism (`is_protected` column,
   partial unique index, migration-time marking).
+- Confirmed (owner decision 2026-10-20, "fix those issues," approving an automated security
+  review's findings): `ADM-01-R10` (a password reset also ends the target's sessions) and the
+  documented access-token-validity limitation below.
 
 - Approval: approved by Johannsen (spec owner, Administrator role) on 2026-10-19 at commit `1b373c9`
   (spec digest `da79c65`). This is an owner approval; independent teammate review of this spec
@@ -37,6 +40,9 @@ status: approved
   revision.
 - Re-approval: approved by Johannsen (spec owner) on 2026-10-20 including `ADM-01-R9`. Owner
   approval; independent teammate review happens on the implementation pull request.
+- Re-approval: Johannsen said "fix those issues" on 2026-10-20, approving an automated security
+  review's findings below (`ADM-01-R10` and the documented limitation). Status remains `approved`;
+  independent teammate review of the new RPC still happens on the implementation pull request.
 
 ## Product and feature description
 
@@ -149,6 +155,24 @@ sessions is open (the Supabase admin API limits what can be revoked); until reso
 target already holds may continue after their password is reset — a residual risk, not a
 requirement here.
 
+### ADM-01-R10 — Password reset ends the target's sessions
+
+`confirmed`; source: owner decision 2026-10-20 ("fix those issues," an automated security review).
+Resolves `ADM-01-R9`'s open session-revocation question: after an admin's password reset succeeds,
+every one of the target's sessions and refresh tokens is revoked, via a new admin-only security-
+definer RPC `admin_revoke_sessions(target_id uuid)` — `set search_path = ''`; checks
+`current_app_role() = 'admin'`; refuses `target_id = auth.uid()` and the protected recovery admin,
+same as `ADM-01-R5`/`R8`; deletes the target's rows from `auth.sessions` (refresh tokens cascade);
+`execute` granted to `authenticated` only (not `public`/`anon`). If the password change succeeded
+but revocation fails, the result is the distinct, honest `password_reset_sessions_not_revoked`, not
+plain success — the caller is never told sessions were ended when they were not.
+
+**Documented limitation, not a requirement** (applies here and to `SH-06-R6`): an access token
+already issued stays valid until it expires (Supabase default ≤ 1 hour), because
+`getCurrentUser()` verifies it locally via `getClaims` rather than checking revocation; refresh
+tokens are revoked immediately. For a suspected compromise, the admin can deactivate the account
+first (immediate, `ADM-01-R6`) and reset the password after.
+
 ## Non-functional requirements
 
 No new performance/accessibility/capacity target beyond existing conventions (keyboard operable,
@@ -181,9 +205,9 @@ button and a "Done" button; after Done or navigating away, the password cannot b
 
 Creation and password reset (`R1`, `R9`) both use `createAdminClient` only after
 `requireRole("admin")` (project rule) — reset calls `auth.admin.updateUserById`, not a `profiles`
-RPC. Role-change and activate/deactivate go through new security-definer RPCs (owner decision
-2026-10-19), matching Joseph's RPC-only pattern (`SH-03`/`SH-05`), not the direct admin `UPDATE`
-policy — see Data model.
+RPC, then `admin_revoke_sessions` (`R10`). Role-change, activate/deactivate, and session revocation
+go through new security-definer RPCs (owner decisions 2026-10-19/2026-10-20), matching Joseph's
+RPC-only pattern (`SH-03`/`SH-05`), not the direct admin `UPDATE` policy — see Data model.
 
 ## Data model and integrity rules
 
@@ -199,9 +223,13 @@ and drops `"profiles: admin updates"`, so role/`is_active`/`is_protected` change
 (which never write `is_protected`) or a maintainer's migration/script; `"profiles: admin reads all"`
 is unchanged. No existing migration is edited. `ADM-01-R9` needs no new table/column: the self/
 protected check reads the existing `profiles` row (already admin-readable), and the password itself
-lives only in `auth.users`, updated via the service-role client. **Open, not a requirement here**:
-how a deactivated/role-changed lecturer interacts with Joseph's `course_lecturers`/
-`consultation_slots`/`bookings` is left to that feature's own spec.
+lives only in `auth.users`, updated via the service-role client. The same (or a further append-only)
+migration adds `admin_revoke_sessions(target_id uuid)` for `ADM-01-R10` — `security definer`,
+`set search_path = ''`, checking `current_app_role() = 'admin'`, refusing `target_id = auth.uid()`
+and the protected admin, deleting the target's `auth.sessions` rows; `execute` revoked from
+`public`/`anon`, granted to `authenticated` only. **Open, not a requirement here**: how a
+deactivated/role-changed lecturer interacts with Joseph's `course_lecturers`/`consultation_slots`/
+`bookings` is left to that feature's own spec.
 
 ## API and boundary contracts
 
@@ -215,9 +243,10 @@ Proposed internal Server Actions under `/admin/accounts` (not public REST), all 
 - `setRole`/`setActive({targetId, ...})` → call `admin_set_role`/`admin_set_active`; success or
   `validation_error` / `forbidden_self_change` / `forbidden_zero_admins` / `forbidden_protected` /
   `forbidden_or_not_found`.
-- `resetPassword({targetId})` → `{initialCredential}` (shown once) or `forbidden_self_change`
-  (target is the caller; use `SH-06`) / `forbidden_protected` (pending confirmation) /
-  `forbidden_or_not_found`.
+- `resetPassword({targetId})` → `{initialCredential}` (shown once, then calls
+  `admin_revoke_sessions`) or `validation_error` / `password_reset_sessions_not_revoked` (password
+  changed, revocation failed — distinct from success) / `forbidden_self_change` (target is the
+  caller; use `SH-06`) / `forbidden_protected` / `forbidden_or_not_found`.
 
 No action accepts a caller-supplied "this is my own id" override, a role for the caller's own account,
 or an arbitrary field/SQL selector. Non-admin/signed-out direct calls to the action or the underlying
@@ -240,6 +269,10 @@ RPC get the same refusal as any other admin-only path, with no data disclosed.
 - Accepted risks (owner decision 2026-10-19): a compromised admin can create further admins; a
   leaked protected-admin credential needs the service-role key/script to recover, not another admin
   action — both accepted, not mitigated here.
+- Documented limitation (owner decision 2026-10-20, `ADM-01-R10`): an access token issued before a
+  reset stays valid until it expires (≤ 1 hour by default), since `getCurrentUser()` checks it
+  locally rather than against revocation; only refresh tokens are revoked immediately. Mitigation
+  for a suspected compromise: deactivate first (`ADM-01-R6`, immediate), then reset the password.
 
 ## AI behavior
 
@@ -261,6 +294,8 @@ No AI is used. No model call, prompt, or `ai_usage` read/write occurs on any acc
 | Protected admin tries to change their own role or deactivate themselves         | Refused (both `ADM-01-R5` and `ADM-01-R8` apply), no change | Protected admin is never self-modifiable either             |
 | Admin resets their own password                                                 | Refused, directs to `SH-06`                                 | Password self-service stays in one place                    |
 | Admin resets the protected recovery admin's password                            | Refused                                                     | Recovery account cannot be taken over via reset             |
+| `admin_revoke_sessions` called on self or the protected admin                   | Refused, no sessions removed                                | Same self/protected invariants apply to session revocation  |
+| Password changes but session revocation fails                                   | `password_reset_sessions_not_revoked`, not plain success    | Caller is never told sessions ended when they did not       |
 
 ## Acceptance criteria and verification
 
@@ -288,23 +323,26 @@ Planned tests, not results.
 - **ADM-01-AC20** (R9, R8; unit + integration (security); live DB) Admin attempts to reset the protected admin's password, incl. direct call → refused, unchanged
 - **ADM-01-AC21** (R9; integration (security); live DB) Non-admin/signed-out caller invokes the reset action directly → refused, no data, no mutation
 - **ADM-01-AC22** (R9, security; integration (security); live DB) A reset's new password → never present in `listAccounts`, server logs, or any later response, and not re-returned by a second call
+- **ADM-01-AC23** (R10; pgTAP; live DB) `admin_revoke_sessions` called by a non-admin, or with the caller's own id, or with the protected admin's id → refused, no `auth.sessions` row removed
+- **ADM-01-AC24** (R10; pgTAP; live DB) An admin calls `admin_revoke_sessions` on a valid, non-self, non-protected target → all of that target's `auth.sessions` rows are removed
+- **ADM-01-AC25** (R10; integration; live auth) After an admin resets a user's password → the target's prior refresh token no longer works, while the new password signs in successfully
 
 ## Review evidence
 
 - Challenge record: none yet; not independently reviewed.
 - Review type: not yet reviewed.
 - Open findings: none recorded yet.
-- Human input required: confirm or revise `ADM-01-R9`'s protected-admin refusal (see below); this
-  spec is `draft` again and needs re-approval regardless.
+- Human input required: none currently blocking; see "Open questions" for non-blocking items.
 
 ## Open questions blocking approval
 
 None blocking.
 
 Non-blocking: `ADM-01-R8`'s exact mechanism (`is_protected` column/index/migration-time marking);
-whether `ADM-01-R9` should also revoke the target's existing sessions (Supabase admin API limits,
-residual risk either way); the lecturer-deactivation interaction with Joseph's tables, left to that
-feature's own spec; Supabase public sign-up stays enabled (residual risk, out of scope for ADM-01).
+the lecturer-deactivation interaction with Joseph's tables, left to that feature's own spec;
+Supabase public sign-up stays enabled (residual risk, out of scope for ADM-01). `ADM-01-R9`'s
+session-revocation question is resolved by `ADM-01-R10`, subject to the documented access-token-
+validity limitation recorded there.
 
 ## Change log
 
@@ -316,3 +354,4 @@ feature's own spec; Supabase public sign-up stays enabled (residual risk, out of
 | 2026-10-19 | Owner approval recorded (Johannsen) at `1b373c9`; status draft → approved                                                                                                                                                                                                                                                                                                        | None                       | Approval granted                             | Johannsen              |
 | 2026-10-19 | Material change: added `ADM-01-R9` (admin resets another user's password, reusing the creation generator and one-time panel; protected-admin refusal tagged proposed pending owner confirmation; session-revocation left Open); status approved → draft, approval at `7f6c579` marked superseded, re-approval required; updated UI, API, data model, edge cases; added AC18–AC22 | R9 (new), AC1–AC22         | Approval at `7f6c579` superseded             | requirements_architect |
 | 2026-10-20 | Owner confirmed the R9 protected-admin refusal and re-approved the spec; status draft → approved                                                                                                                                                                                                                                                                                 | R9                         | None                                         | Johannsen              |
+| 2026-10-20 | Security review findings; owner approved 2026-10-20: added `ADM-01-R10` (password reset ends the target's sessions via a new `admin_revoke_sessions` RPC) and the documented access-token-validity limitation; updated technical constraints, data model, API result codes, security notes, and edge cases; added AC23–AC25; status remains `approved`                           | R10 (new), AC23–AC25       | None                                         | requirements_architect |
