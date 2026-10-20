@@ -3,13 +3,14 @@
 import { useActionState, useEffect, useRef } from "react";
 
 import type { CreateCourseResult } from "@/features/admin/courses/validation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 import { createCourseAction } from "./actions";
 
 const initial: CreateCourseResult | { kind: "idle" } = { kind: "idle" };
-
-const control =
-  "mt-1 block w-full rounded-md border px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2";
 
 function describeFailure(result: CreateCourseResult): string {
   switch (result.kind) {
@@ -35,68 +36,68 @@ export default function CreateCourseForm() {
   }, [state]);
 
   return (
-    <section className="rounded-lg border p-4" aria-label="Create course">
-      <h2 className="font-semibold">Create course</h2>
-      <form ref={formRef} action={action} className="mt-3 space-y-4" aria-busy={pending}>
-        <div>
-          <label htmlFor="code" className="block text-sm font-medium">
-            Code
-          </label>
-          <input
-            id="code"
-            name="code"
-            type="text"
-            required
-            disabled={pending}
-            aria-invalid={field === "code"}
-            aria-describedby="code-help"
-            className={control}
-          />
-          <p id="code-help" className="mt-1 text-sm text-gray-600">
-            {field === "code"
-              ? "Enter 2-20 characters: letters, numbers, / - or _."
-              : "2-20 characters: letters, numbers, / - or _. Unique across all courses."}
-          </p>
-        </div>
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium">
-            Name
-          </label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            required
-            disabled={pending}
-            aria-invalid={field === "name"}
-            aria-describedby="name-help"
-            className={control}
-          />
-          <p id="name-help" className="mt-1 text-sm text-gray-600">
-            {field === "name" ? "Enter a name of 1-200 characters." : "1-200 characters."}
-          </p>
-        </div>
-        <div role="status" aria-live="polite" className="text-sm">
-          {pending && <p>Creating course…</p>}
-          {state.kind === "validation_error" && (
-            <p>Please correct the {field === "request" ? "course fields" : field} and try again.</p>
-          )}
-          {(state.kind === "conflict_duplicate_code" ||
-            state.kind === "temporarily_unavailable") && <p>{describeFailure(state)}</p>}
-          {state.kind === "success" && (
-            <p>
-              Course created: {state.code} ({state.name}).
-            </p>
-          )}
-        </div>
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
-        >
-          {pending ? "Creating…" : "Create course"}
-        </button>
-      </form>
+    <section aria-label="Create course">
+      <Card>
+        <CardHeader>
+          <h2 className="font-semibold">Create course</h2>
+        </CardHeader>
+        <CardContent>
+          <form ref={formRef} action={action} className="space-y-4" aria-busy={pending}>
+            <div>
+              <Label htmlFor="code">Code</Label>
+              <Input
+                id="code"
+                name="code"
+                type="text"
+                required
+                disabled={pending}
+                aria-invalid={field === "code"}
+                aria-describedby="code-help"
+                className="mt-1"
+              />
+              <p id="code-help" className="mt-1 text-sm text-muted-foreground">
+                {field === "code"
+                  ? "Enter 2-20 characters: letters, numbers, / - or _."
+                  : "2-20 characters: letters, numbers, / - or _. Unique across all courses."}
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                required
+                disabled={pending}
+                aria-invalid={field === "name"}
+                aria-describedby="name-help"
+                className="mt-1"
+              />
+              <p id="name-help" className="mt-1 text-sm text-muted-foreground">
+                {field === "name" ? "Enter a name of 1-200 characters." : "1-200 characters."}
+              </p>
+            </div>
+            <div role="status" aria-live="polite" className="text-sm">
+              {pending && <p>Creating course…</p>}
+              {state.kind === "validation_error" && (
+                <p>
+                  Please correct the {field === "request" ? "course fields" : field} and try again.
+                </p>
+              )}
+              {(state.kind === "conflict_duplicate_code" ||
+                state.kind === "temporarily_unavailable") && <p>{describeFailure(state)}</p>}
+              {state.kind === "success" && (
+                <p>
+                  Course created: {state.code} ({state.name}).
+                </p>
+              )}
+            </div>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Creating…" : "Create course"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </section>
   );
 }

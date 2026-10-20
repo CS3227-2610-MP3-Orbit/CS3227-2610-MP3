@@ -3,6 +3,9 @@ import Link from "next/link";
 import { listAccounts } from "@/features/admin/accounts/server";
 import { listCourses } from "@/features/admin/courses/server";
 import { requireRole } from "@/lib/auth/session";
+import { buttonVariants } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 import CourseRow from "./course-row";
 import CreateCourseForm from "./create-course-form";
@@ -13,6 +16,9 @@ function pick(params: RawSearchParams, key: string): string | undefined {
   const value = params[key];
   return typeof value === "string" ? value : undefined;
 }
+
+const selectClass =
+  "mt-1 h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 export default async function AdminCoursesPage({
   searchParams,
@@ -59,42 +65,35 @@ export default async function AdminCoursesPage({
       <form
         action="/admin/courses"
         method="get"
-        className="grid gap-4 rounded-lg border p-4 sm:grid-cols-4"
+        className="grid gap-4 rounded-lg border bg-card p-4 sm:grid-cols-3"
         aria-label="Search courses"
       >
         <div className="sm:col-span-2">
-          <label htmlFor="query" className="block text-sm font-medium">
-            Search
-          </label>
-          <input
+          <Label htmlFor="query">Search</Label>
+          <Input
             id="query"
             name="query"
             type="search"
             defaultValue={query ?? ""}
             placeholder="Code or name"
-            className="mt-1 w-full rounded-md border px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="mt-1"
           />
         </div>
         <div>
-          <label htmlFor="active" className="block text-sm font-medium">
-            Status
-          </label>
+          <Label htmlFor="active">Status</Label>
           <select
             id="active"
             name="active"
             defaultValue={activeFilter ?? ""}
-            className="mt-1 w-full rounded-md border px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2"
+            className={selectClass}
           >
             <option value="">All statuses</option>
             <option value="true">Active</option>
             <option value="false">Deactivated</option>
           </select>
         </div>
-        <div className="flex items-center gap-4 sm:col-span-4">
-          <button
-            type="submit"
-            className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
+        <div className="flex items-center gap-4 sm:col-span-3">
+          <button type="submit" className={buttonVariants({ variant: "default" })}>
             Search
           </button>
           <Link
@@ -108,18 +107,18 @@ export default async function AdminCoursesPage({
 
       <section aria-live="polite" aria-busy="false">
         {result.kind === "validation_error" && (
-          <p role="alert" className="rounded-md border border-amber-600 p-4">
+          <p role="alert" className="rounded-lg border border-destructive/50 p-4">
             Please correct the search filters and try again.
           </p>
         )}
         {result.kind === "temporarily_unavailable" && (
-          <div role="alert" className="rounded-md border border-red-700 p-4">
+          <div role="alert" className="rounded-lg border border-destructive p-4">
             <p>Courses are temporarily unavailable. Please retry.</p>
-            <p className="mt-1 text-xs">Reference: {result.correlationId}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Reference: {result.correlationId}</p>
           </div>
         )}
         {result.kind === "forbidden_or_not_found" && (
-          <p role="alert" className="rounded-md border border-red-700 p-4">
+          <p role="alert" className="rounded-lg border border-destructive p-4">
             This information is not available to your account.
           </p>
         )}

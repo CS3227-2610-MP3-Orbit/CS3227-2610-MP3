@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 
 import { assignedLecturerIds, courseStatusLabel } from "@/features/admin/courses/presentation";
 import type { Course } from "@/features/admin/courses/validation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 import {
   assignLecturerAction,
@@ -13,10 +17,8 @@ import {
   updateCourseAction,
 } from "./actions";
 
-const control =
-  "mt-1 rounded-md border px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2";
-const button =
-  "rounded-md border px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50";
+const selectClass =
+  "mt-1 h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 function describeMutateFailure(kind: string): string {
   switch (kind) {
@@ -123,86 +125,80 @@ export default function CourseRow({
   }
 
   return (
-    <li className="min-w-0 rounded-lg border p-4">
+    <li className="min-w-0 rounded-lg border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           {editing ? (
             <div className="flex flex-wrap gap-2">
               <div>
-                <label htmlFor={`code-${course.id}`} className="block text-xs font-medium">
+                <Label htmlFor={`code-${course.id}`} className="text-xs">
                   Code
-                </label>
-                <input
+                </Label>
+                <Input
                   id={`code-${course.id}`}
                   value={code}
                   disabled={pending}
                   onChange={(event) => setCode(event.target.value)}
-                  className={control}
+                  className="mt-1"
                 />
               </div>
               <div>
-                <label htmlFor={`name-${course.id}`} className="block text-xs font-medium">
+                <Label htmlFor={`name-${course.id}`} className="text-xs">
                   Name
-                </label>
-                <input
+                </Label>
+                <Input
                   id={`name-${course.id}`}
                   value={name}
                   disabled={pending}
                   onChange={(event) => setName(event.target.value)}
-                  className={control}
+                  className="mt-1"
                 />
               </div>
             </div>
           ) : (
             <>
               <p className="break-words font-semibold">{course.code}</p>
-              <p className="break-words text-sm text-gray-600">{course.name}</p>
+              <p className="break-words text-sm text-muted-foreground">{course.name}</p>
             </>
           )}
         </div>
-        <span
-          className={
-            course.isActive
-              ? "rounded-full border border-green-700 px-2 py-1 text-xs font-medium text-green-700"
-              : "rounded-full border border-gray-500 px-2 py-1 text-xs font-medium text-gray-600"
-          }
-        >
-          {courseStatusLabel(course)}
-        </span>
+        <Badge variant={course.isActive ? "default" : "outline"}>{courseStatusLabel(course)}</Badge>
       </div>
 
       <div className="mt-3 flex flex-wrap items-end gap-3">
         {editing ? (
           <>
-            <button type="button" disabled={pending} onClick={saveEdit} className={button}>
+            <Button type="button" variant="outline" size="sm" disabled={pending} onClick={saveEdit}>
               Save
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               disabled={pending}
               onClick={() => {
                 setCode(course.code);
                 setName(course.name);
                 setEditing(false);
               }}
-              className={button}
             >
               Cancel
-            </button>
+            </Button>
           </>
         ) : (
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             disabled={pending}
             onClick={() => setEditing(true)}
-            className={button}
           >
             Edit
-          </button>
+          </Button>
         )}
-        <button type="button" disabled={pending} onClick={toggleActive} className={button}>
+        <Button type="button" variant="outline" size="sm" disabled={pending} onClick={toggleActive}>
           {course.isActive ? "Deactivate" : "Reactivate"}
-        </button>
+        </Button>
       </div>
 
       <div role="status" aria-live="polite" className="mt-2 text-sm">
@@ -213,7 +209,7 @@ export default function CourseRow({
       <div className="mt-4">
         <h3 className="text-sm font-semibold">Lecturers</h3>
         {course.lecturers.length === 0 ? (
-          <p role="status" className="mt-1 text-sm text-gray-600">
+          <p role="status" className="mt-1 text-sm text-muted-foreground">
             No lecturer currently assigned.
           </p>
         ) : (
@@ -224,14 +220,15 @@ export default function CourseRow({
                 className="flex items-center justify-between gap-2 text-sm"
               >
                 <span className="break-words">{lecturer.lecturerName || "(no name)"}</span>
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   disabled={pending}
                   onClick={() => remove(lecturer.assignmentId)}
-                  className={button}
                 >
                   Remove
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
@@ -239,15 +236,15 @@ export default function CourseRow({
 
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <div>
-            <label htmlFor={`assign-${course.id}`} className="block text-xs font-medium">
+            <Label htmlFor={`assign-${course.id}`} className="text-xs">
               Assign lecturer
-            </label>
+            </Label>
             <select
               id={`assign-${course.id}`}
               value={selectedLecturer}
               disabled={pending || assignable.length === 0}
               onChange={(event) => setSelectedLecturer(event.target.value)}
-              className={control}
+              className={selectClass}
             >
               <option value="">
                 {assignable.length === 0 ? "No eligible lecturers" : "Select a lecturer"}
@@ -259,14 +256,15 @@ export default function CourseRow({
               ))}
             </select>
           </div>
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             disabled={pending || !selectedLecturer}
             onClick={assign}
-            className={button}
           >
             Assign
-          </button>
+          </Button>
         </div>
       </div>
     </li>
