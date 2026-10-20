@@ -16,6 +16,7 @@ const AC_ID = /[A-Z]{2,3}-\d{2}-AC\d+/;
 
 /** Parses one spec file into { id, status, criteria } or returns an error string. */
 export function parseSpec(text, file) {
+  text = text.replace(/\r\n?/g, "\n");
   const frontMatter = text.match(/^---\n([\s\S]*?)\n---/);
   if (!frontMatter) return { error: `${file}: missing front matter` };
 
@@ -100,7 +101,8 @@ function main() {
   const parsed = specFiles.map((file) => parseSpec(readFileSync(file, "utf8"), file));
   const specs = parsed.filter((spec) => !spec.error);
   const references = TEST_DIRS.flatMap((dir) => listFiles(dir, TEST_FILE)).flatMap((file) =>
-    path.basename(file) === "check-traceability.test.mjs" || file.replaceAll("\\", "/").startsWith("workflow/evaluation/")
+    path.basename(file) === "check-traceability.test.mjs" ||
+    file.replaceAll("\\", "/").startsWith("workflow/evaluation/")
       ? []
       : findReferences(readFileSync(file, "utf8"), file),
   );
