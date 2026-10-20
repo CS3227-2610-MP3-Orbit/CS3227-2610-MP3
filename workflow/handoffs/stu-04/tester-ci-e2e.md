@@ -1,4 +1,4 @@
-# STU-04 CI E2E selector correction
+# STU-04 CI E2E tester handoff
 
 Outcome: incomplete
 Task ID: STU-04-CI-E2E-SELECTORS

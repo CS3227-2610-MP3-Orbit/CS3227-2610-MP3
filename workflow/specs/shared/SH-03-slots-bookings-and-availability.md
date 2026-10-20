@@ -9,6 +9,9 @@ status: draft
 
 ## Document control
 
+- Four browse clarifications, source digests, self-review, and follow-up plan:
+  `workflow/reviews/stu-01/browse-clarifications.md`; confirmed by Joseph on 2026-10-18.
+
 - Spec owner: shared/team; changes require independent review under `.github/CODEOWNERS`.
 - Reviewed repository baseline: `e5893b28a6d898bdfb698dcb7f48e293ab373e7b` plus the uncommitted
   STU-01 implementation identified in `workflow/handoffs/archive/stu-01/2026-10-18-stu-01-coordinator.md`.
@@ -24,8 +27,8 @@ status: draft
   staff discovery uses narrow RPC projections; the exact UTC slot wire shape and 200-per-type option
   caps are normative.
 - Proposed assumptions requiring review: exact physical entity/function names and cursor encoding.
-- Unresolved decisions: rate/latency targets and cursor time expiry; they do not authorize broader
-  inputs or results.
+- Unresolved operational decisions: rate/latency targets; they do not authorize broader inputs or
+  results. Cursor time expiry is resolved: no time-based expiry under `SH-03-R12`.
 
 This material revision preserves the approved Student browse/read behavior while moving future slot and
 booking mutations to `SH-05`. The status is reset to `draft`; prior approval and review evidence are
@@ -166,7 +169,9 @@ dependent display text. Course/Lecturer IDs are approved filter and future reque
 not authorize direct table access or disclose a profile beyond this exact projection.
 
 The same successful response carries the `CourseFilterOption` and `LecturerFilterOption` projections
-defined in `SH-02`, independently capped at 200 each under `SH-02-R6`. Options beyond a cap are omitted
+defined in `SH-02`, independently returning all eligible distinct options up to 200 each under
+`SH-02-R6`. These options use all available slots before selected filters and pagination; an empty
+filtered result may still return nonempty options. Options beyond a cap are omitted
 without a count, truncation/existence indicator, or different error.
 
 ### SH-03-R12 — Pagination and cursor behavior
@@ -176,8 +181,18 @@ without a count, truncation/existence indicator, or different error.
 
 Pages contain at most 20 rows in ascending `(starts_at, slot_id)` keyset order. Cursors are opaque,
 integrity protected, versioned, bound to normalized filters/order, and carry no authorization grant or
-private data. Pages are independent point-in-time reads, not frozen snapshots. Altered, wrong-filter,
-unsupported, malformed, or stale cursors return a safe restart outcome and no partial result.
+private data. Pages are independent point-in-time reads, not frozen snapshots.
+
+A cursor is stale if its version is unsupported or its anchor slot no longer exists at the encoded
+`(starts_at, slot_id)` position while satisfying `SH-03-R6` and the bound filters at query time.
+Examples include deletion, start-time edit, start no longer in the future, a reserving/completed
+booking, endpoint deactivation, or loss of current assignment. There is no time-based token expiry:
+elapsed token age alone cannot invalidate an otherwise-valid cursor. Changes to other slots alone
+do not stale the cursor while its anchor remains eligible.
+
+Altered, wrong-filter, unsupported, malformed, or stale cursors return a safe validation/restart
+outcome with no partial result and no reason exposing hidden anchor state. Restart removes the cursor,
+retains valid filters, and requests the first page under normal authorization and availability rules.
 
 ### SH-03-R13 — Authorization and transport failures
 
@@ -342,8 +357,11 @@ These planned checks are not results. The retained IDs remain stable for unchang
   existing pending/approved records remain unchanged.
 - **SH-03-AC16** (`SH-03-R10`; unit/query spy): malformed, repeated, array, unknown, and oversized input
   fails before a slot query.
-- **SH-03-AC17** (`SH-03-R10`; integration): lecturer/course/date filters alone and together constrain
-  every result with AND semantics.
+- **SH-03-AC17** (`SH-03-R10`; pgTAP/integration): lecturer/course/date filters alone each include a
+  known matching available slot and exclude an otherwise-available nonmatching slot. A combined
+  filter includes the full match and excludes fixtures failing only lecturer, only course, or only
+  date. Use fixtures fitting one page and assert IDs, not only `every()`/absence checks; an always-empty
+  implementation must fail. Date fixtures include inclusive Singapore start and exclusive next start.
 - **SH-03-AC18** (`SH-03-R11`; contract plus pgTAP): active Student browse returns exactly the eight
   allowlisted slot fields, canonical UUIDs, ISO-8601 UTC `startsAt`/`endsAt` strings ending in `Z`, and
   the safe option projections; it returns no additional field and changes no row.
@@ -354,8 +372,12 @@ These planned checks are not results. The retained IDs remain stable for unchang
   `search_path`, and object qualification are present.
 - **SH-03-AC21** (`SH-03-R12`; integration): over 20 equal/different-start slots traverse in bounded
   deterministic order without duplicate IDs.
-- **SH-03-AC22** (`SH-03-R12`; unit/integration): altered, unsupported, changed-filter, or stale cursor
-  yields no partial rows and offers restart.
+- **SH-03-AC22** (`SH-03-R12`; unit/integration plus browser recovery): altered, malformed,
+  changed-filter, unsupported-version, and unavailable/changed-anchor cursors return no partial rows
+  and offer first-page restart retaining valid filters without exposing the anchor's hidden state.
+  Exercise reservation, deletion, start-time change, elapsed slot start, endpoint deactivation, and
+  assignment removal independently. Advancing time while the anchor remains eligible and the version
+  supported does not reject a cursor solely for its age; unrelated-slot changes do not stale it.
 - **SH-03-AC23** (`SH-03-R12`; integration): controlled between-page changes demonstrate point-in-time
   responses without a snapshot-completeness claim.
 - **SH-03-AC24** (`SH-03-R13`; Playwright): signed-out and wrong-role page visits redirect without slot
@@ -383,10 +405,10 @@ These planned checks are not results. The retained IDs remain stable for unchang
 - Human input required: approve or reject the exact revised digest before tests, RLS, or implementation
   are changed.
 
-## Open questions blocking approval
+## Review gate
 
-1. Does the exact revised digest faithfully encode the eight confirmed decisions without expanding the
-   Student data surface?
+No product choice remains open for these four browse clarifications. An independent teammate must
+review the exact revised digest; this draft and its self-review do not approve implementation.
 
 ## Change log
 

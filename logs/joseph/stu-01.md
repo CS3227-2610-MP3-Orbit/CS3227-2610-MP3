@@ -19,9 +19,10 @@ The recorded post-fix results were:
 - Joseph subsequently reported that the persistent local migration was applied and
   `npm run test:db` works. That later run was not independently observed in the recorded agent check.
 
-This is not merge readiness. The canonical specifications are draft and the latest independent review
-still identifies four medium ambiguities: option-cap semantics, positive filter fixtures, stale cursor
-meaning, and filter-option interaction. Human review of the database migrations is also required.
+The four browse ambiguities have now been resolved in the draft following Joseph's request: independent
+200/200 option caps, positive and negative filter fixtures, eligibility/version-based cursor staleness
+without time expiry, and filter-independent option lists. Specs remain draft pending review of the
+revised files. This clarification does not establish implementation compliance or merge readiness.
 
 ## Timeline
 
@@ -34,6 +35,35 @@ meaning, and filter-option interaction. Human review of the database migrations 
    removed that policy, and the behavioral database suite passed 22/22 transactionally.
 6. Shared specifications were split and revised for traceability. Their exact-draft challenge left the
    four product/testability decisions listed above open, so those specs remain draft.
+7. Task `STU-01-CLARIFY-FOUR`: the requirements architect resolved those four points in STU-01, SH-02,
+   and SH-03. Impact and self-review are consolidated in
+   `workflow/reviews/stu-01/browse-clarifications.md`. SQL inspection found the cursor and unfiltered
+   option behavior already present, but option caps and fuller acceptance fixtures require follow-up.
+   No application code, tests, or migrations were changed in this task. This generated log entry awaits
+   human verification.
+   `npm run check:spec` passed: 16 specs, 150 criteria, 53 covered; uncovered draft criteria remain
+   warnings. No behavioral test pass is claimed for the clarified criteria.
+
+## CI formatting repair — 2026-10-18
+
+Task `TASK-STU-01-CI-FORMAT` inspected PR job `117638225150` in run `39114777731` and
+push job `117638216174` in run `39114774713`. Both Verify summaries showed formatting as
+the sole failure; the other eight checks passed. At baseline
+`7092cdfc7b31043e52ab72048e72294c0b71a04b`, the tester/verifier applied Prettier only to
+`src/features/student/slots/format.test.ts`, `src/features/student/slots/verification.test.ts`,
+and `tests/e2e/student-browse-available-slots.spec.ts`. Assertions and behavior were unchanged.
+
+The coordinator independently ran `npm run verify -- --profile=app` with the CI public
+Supabase URL and placeholder key: all nine stages passed, including formatting, lint,
+typecheck, workflow controls, sensitive-path classification, application tests (26 passed,
+4 todo), spec traceability, secret scanning, and the production build. Traceability reported
+53/150 criteria covered; uncovered draft requirements remain warnings. No spec status or
+CI enforcement was changed for this repair. The local build automatically loaded its local
+environment file; the agent did not inspect or print its contents.
+
+Evidence: `workflow/handoffs/stu-01/ci-format-fix.md`. No database/browser suite was rerun
+for this formatting-only change. GitHub has not tested the repaired working tree; a human
+must commit and push it to trigger fresh runs. No remote pass, merge, or deployment is claimed.
 
 ## Where to look
 

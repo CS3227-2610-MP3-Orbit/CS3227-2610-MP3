@@ -23,6 +23,11 @@
 ],
 "verification": [
 {
+"check": "STU-01-CLARIFY-FOUR: npm run check:spec",
+"result": "passed",
+"evidence": "16 specs, 150 criteria, 53 covered; uncovered draft criteria remain warnings. This is traceability, not behavioral verification."
+},
+{
 "check": "transactional migrations plus pgTAP",
 "result": "passed",
 "evidence": "22/22 assertions passed and the transaction was rolled back"
@@ -50,7 +55,7 @@
 ],
 "unresolvedIssues": [
 "The canonical STU-01 and shared specifications remain draft after material traceability revisions.",
-"Independent specification review left four medium ambiguities: independent option caps, positive filter fixtures, stale cursor meaning, and filter-option interaction.",
+"The four browse ambiguities are resolved in the revised draft; new acceptance coverage and the option-cap implementation still require follow-up.",
 "The two database migrations require independent human sensitive-change review before merge or use.",
 "No merge, deployment, push, or human approval is recorded."
 ]
@@ -68,8 +73,23 @@
 
 The browse-and-filter implementation and its narrow profile-RLS repair exist in the working tree. The
 recorded functional checks passed after the repair, including the transactional 22/22 pgTAP run. The
-feature is not ready to merge because the revised specifications still require decisions and renewed
-review, and the migrations require human sensitive-change review.
+four browse decisions are now recorded in the revised draft. Renewed review and implementation/test
+alignment remain separate from this specification-only task.
+
+## Browse clarification task
+
+- Task: `STU-01-CLARIFY-FOUR`; assigned to `requirements_architect`.
+- Joseph requested applying the four recommendations in the conversation; this records product
+  direction, not teammate approval of the resulting file digests.
+- Course and Lecturer option limits are independent, with at most 200 of each.
+- Every filter and their combination require positive-match and negative-match acceptance fixtures.
+- Stale cursors cover unavailable anchors and unsupported versions; age alone does not expire them.
+- Options use all currently eligible slots independently of active filters and pagination.
+- Impact, source/revision digests, and self-review: `workflow/reviews/stu-01/browse-clarifications.md`.
+- Existing SQL already checks anchor eligibility and computes options independently of filters;
+  option aggregation is currently unbounded. Historical passing tests do not prove the revised criteria.
+- Current clarification check: `npm run check:spec` passed (16 specs, 150 criteria, 53 covered),
+  with existing draft coverage warnings. Application/database suites were not rerun for spec edits.
 
 ## Evidence and history
 
@@ -79,9 +99,8 @@ review, and the migrations require human sensitive-change review.
 
 ## Next action
 
-Resolve the four open specification findings, update and approve the exact specification revision,
-then align tests and code in spec → tests → code order. A teammate must independently review the
-migrations before merge or database use.
+Review the clarified draft, then add the specified acceptance fixtures and enforce independent
+option caps in a new migration. Existing migrations must not be edited.
 
 ## Human review
 

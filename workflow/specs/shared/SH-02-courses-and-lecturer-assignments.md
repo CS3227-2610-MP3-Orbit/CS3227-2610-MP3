@@ -16,6 +16,8 @@ status: draft
   `97c7288030a3aa1df604ce892cf4547497c75be9`; prior canonical metadata digest:
   `8e8f677d361a18a41e9b073ac189618a2b9b63b5`.
 - Change-impact record: `workflow/reviews/stu-01/2026-10-18-shared-spec-traceability-impact.md`.
+- Four browse clarifications, source digests, self-review, and follow-up plan:
+  `workflow/reviews/stu-01/browse-clarifications.md`; confirmed by Joseph on 2026-10-18.
 - Parent/shared requirements: `SH-01`, `SH-03`, and `STU-01`.
 - Related future scope: `SH-04` owns course/assignment management and Lecturer projections.
 - Confirmed requirements: the previously approved Student browse visibility, data-minimization,
@@ -129,8 +131,14 @@ and nonexistent lecturer/course identifiers produce no distinguishable existence
 - Source: prior team-reported approval and STU-01 challenge disposition.
 
 At query time, options include only active courses and active lecturers represented by at least one slot
-visible under `SH-03`. Course options sort by `(code, id)` and return at most the first 200; Lecturer
-options sort by `(displayName, id)` and return at most the first 200. The projection contains course
+visible under `SH-03-R6`, evaluated before selected lecturer/course/date filters and pagination.
+Changing any filter or cursor does not narrow either dropdown; with availability held fixed, every
+successful page returns the same option lists, including when selected filters match no slots.
+Course options sort by `(code, id)` and return exactly the first `min(200, eligible distinct courses)`;
+Lecturer options sort by `(displayName, id)` and independently return exactly the first
+`min(200, eligible distinct lecturers)`. Thus 201 courses and 2 lecturers return 200 and 2 options,
+not 200 of each. Eligibility can change between requests as availability changes.
+The projection contains course
 ID/code/name and lecturer ID/display name, with no counts, contact fields, assignment dates, audit fields,
 or reason for absence.
 
@@ -268,8 +276,11 @@ These planned checks are not results. Automated test names reference the exact r
 - **SH-02-AC7** (`SH-02-R5`; pgTAP): active Students without enrolment records have identical course
   eligibility subject only to availability filters.
 - **SH-02-AC8** (`SH-02-R6`; pgTAP/contract): mixed availability returns only qualifying option fields
-  in the specified deterministic order; more than 200 represented entries returns exactly 200 of each
-  type without counts, a truncation/existence indicator, or a changed slot projection.
+  in deterministic order; each type independently returns all eligible distinct entries up to 200.
+  Fixtures with 201 courses/2 lecturers, 2 courses/201 lecturers, and both types at 0, 199, 200, and
+  201 prove independent caps without counts, truncation/existence indicators, or changed slot fields.
+  Holding availability fixed, unfiltered, individually filtered, combined-filter, empty-result, and
+  later-page requests return identical option lists. Unavailable-only options remain absent.
 - **SH-02-AC12** (`SH-02-R9`; pgTAP): Students cannot directly read/mutate course or assignment tables
   or read another user's profile row, while own-profile access and the protected narrow browse function
   remain callable.
@@ -294,10 +305,10 @@ These planned checks are not results. Automated test names reference the exact r
 - Human input required: approve or reject the exact revised digest before tests, RLS, or implementation
   are changed.
 
-## Open questions blocking approval
+## Review gate
 
-1. Does the exact revised digest faithfully encode the eight confirmed decisions without expanding the
-   Student data surface?
+No product choice remains open for these four browse clarifications. An independent teammate must
+review the exact revised digest; this draft and its self-review do not approve implementation.
 
 ## Change log
 
