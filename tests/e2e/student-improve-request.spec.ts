@@ -28,7 +28,7 @@ async function createStudentSlotFixture() {
   await sql(`update auth.users set email_confirmed_at=now() where id=${quote(student)};
     insert into auth.users(id) values (${quote(lecturer)});
     update public.profiles set role='lecturer',full_name='Dr STU05 Fixture' where id=${quote(lecturer)};
-    insert into public.courses(id,code,name) values (${quote(course)},'STU05','AI UI verification');
+    insert into public.courses(id,code,name) values (${quote(course)},${quote(`STU05-${course.replaceAll("-", "").slice(0, 12).toUpperCase()}`)},'AI UI verification');
     insert into public.course_lecturers(course_id,lecturer_id) values (${quote(course)},${quote(lecturer)});
     insert into public.consultation_slots(id,course_id,lecturer_id,starts_at,ends_at)
     values (${quote(slot)},${quote(course)},${quote(lecturer)},'2099-07-01 01:00Z','2099-07-01 02:00Z');`);
