@@ -2,7 +2,7 @@
 id: LEC-06
 title: Lecturer authorization and AI security
 owner: lecturer
-status: approved
+status: draft
 ---
 
 # LEC-06: Lecturer authorization and AI security

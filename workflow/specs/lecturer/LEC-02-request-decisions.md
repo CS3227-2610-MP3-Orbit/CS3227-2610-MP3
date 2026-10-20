@@ -2,7 +2,7 @@
 id: LEC-02
 title: Lecturer consultation request decisions
 owner: lecturer
-status: approved
+status: draft
 ---
 
 # LEC-02: Lecturer consultation request decisions
@@ -16,13 +16,13 @@ status: approved
 - Related plan and latest handoff: `workflow/handoffs/analyst-to-developer.md`.
 - Confirmed requirements: owning lecturers decide their consultation requests; existing statuses are
   `pending`, `approved`, `rejected`, `cancelled`, and `completed`; terminal history is retained.
- - Human decisions recorded: rejection reasons are required and selected from a controlled dropdown
-   containing `Schedule unavailable`, `Insufficient information`, `Course mismatch`, `Feeling Unwell`,
-   and `Family emergency`; students can see the selected reason; decisions are allowed until the
-   consultation starts; administrators may view and manage requests; audit records store booking ID,
-   actor ID, decision, timestamp, and operation ID only; notifications are in-app only; and lecturers
-   may view all currently stored request fields subject to privacy rules. User-facing failures use safe
-   generic messages without database, provider, or authorization details.
+- Human decisions recorded: rejection reasons are required and selected from a controlled dropdown
+  containing `Schedule unavailable`, `Insufficient information`, `Course mismatch`, `Feeling Unwell`,
+  and `Family emergency`; students can see the selected reason; decisions are allowed until the
+  consultation starts; administrators may view and manage requests; audit records store booking ID,
+  actor ID, decision, timestamp, and operation ID only; notifications are in-app only; and lecturers
+  may view all currently stored request fields subject to privacy rules. User-facing failures use safe
+  generic messages without database, provider, or authorization details.
 
 ## Product and feature description
 

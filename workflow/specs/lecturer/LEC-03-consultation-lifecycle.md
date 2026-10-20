@@ -2,10 +2,13 @@
 id: LEC-03
 title: View and complete consultations
 owner: lecturer
-status: draft
+status: superseded
 ---
 
 # LEC-03: View and complete consultations
+
+> Superseded by `workflow/specs/lecturer/LEC-03-consultation-completion.md`, which is the approved
+> specification for this feature.
 
 ## Context
 
@@ -15,14 +18,14 @@ Lecturers need a reliable view of upcoming consultations and a way to mark compl
 
 - An active lecturer may view and complete consultations assigned to them.
 - Students may view only their own booking information and may not mark a consultation completed.
-- Administrator permissions require clarification.
+- Administrators have no access; administrator consultation management is out of scope.
 - All unauthorized or deactivated users must be refused server-side.
 
 ## Functional requirements
 
 - The lecturer can view upcoming consultations associated with their account.
-- The lecturer can open the minimum student and booking details needed to conduct the consultation.
-- The lecturer can mark an eligible consultation completed.
+- The lecturer can open only the student name, email, topic, questions, course, slot time, and booking status.
+- Approved consultations become completed automatically after their scheduled end time.
 - Completed consultations remain distinguishable from upcoming consultations.
 
 ## Non-functional requirements
@@ -39,7 +42,8 @@ Lecturers need a reliable view of upcoming consultations and a way to mark compl
 ## Business rules
 
 - A lecturer may complete only their own eligible consultations.
-- The definition of upcoming, the permitted completion window, cancellation behavior, notes, and whether completion can be reversed are open questions.
+- Approved before start is `upcoming`; between start and end is `ongoing`; after end is `completed`.
+- Completion is not reversible, and Lecturer notes are out of scope.
 
 ## Acceptance criteria
 
@@ -73,13 +77,11 @@ Lecturers need a reliable view of upcoming consultations and a way to mark compl
 
 ## Open questions
 
-- Which details may lecturers view?
-- What qualifies as upcoming and eligible for completion?
-- Is completion reversible, and can a lecturer add notes?
-- What do administrators see or modify?
+None. This draft is retained only as historical context and is superseded by the approved completion specification.
 
 ## Change log
 
-| Date       | Change                                       | By    |
-| ---------- | -------------------------------------------- | ----- |
-| 2026-10-19 | Initial draft based on repository inspection | Codex |
+| Date       | Change                                                                                              | By                  |
+| ---------- | --------------------------------------------------------------------------------------------------- | ------------------- |
+| 2026-10-19 | Initial draft based on repository inspection                                                        | Codex               |
+| 2026-10-20 | Superseded by the approved consultation-completion specification; recorded Lecturer owner decisions | human feature owner |
