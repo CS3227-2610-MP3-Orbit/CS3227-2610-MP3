@@ -119,6 +119,30 @@ Finish with the handoffs, actual command results, unresolved findings, and evide
 whether to merge. Do not merge, deploy, approve specs, or let child agents delegate.
 ```
 
+## Claude Code
+
+Claude Code uses the same four roles. `.claude/agents/*.md` define `requirements-architect`,
+`developer`, `tester-verifier` and `security-reviewer` (Claude agent names use hyphens). Each file only
+sets the agent's tools and tells it to follow the `developer_instructions` in the matching
+`.codex/agents/*.toml`, so the role instructions still have one source of truth.
+
+Claude agents add technical limits that the Codex roles express only as instructions:
+
+| Claude agent             | Tools                               | Effect                                     |
+| ------------------------ | ----------------------------------- | ------------------------------------------ |
+| `requirements-architect` | Read, Grep, Glob, Edit, Write       | Cannot run commands                        |
+| `developer`              | Read, Grep, Glob, Edit, Write, Bash | Full implementation access                 |
+| `tester-verifier`        | Read, Grep, Glob, Edit, Write, Bash | Path limits are instruction-only           |
+| `security-reviewer`      | Read, Grep, Glob                    | Technically read-only; cannot run commands |
+
+No Claude agent has the Agent tool, so child agents cannot delegate. `.claude/settings.json` denies
+reading `.env` files, `git push`, deployments and `supabase db push` for the main session and every
+agent. The `feature-specification` skill is shared: `.claude/skills/feature-specification` links to
+`.codex/skills/feature-specification`.
+
+The main Claude session is the coordinator and follows the same procedure and assignment envelope
+as above, for example: "Use the requirements-architect agent for TASK-ADM-01 ...".
+
 ## Manual discovery and configuration checks
 
 From the repository root:

@@ -23,6 +23,7 @@
 # the author cannot count as the independent approval required by branch protection.
 /AGENTS.md                  @JohannsenLum @josephkwok001 @JordanGoh4
 /.codex/                    @JohannsenLum @josephkwok001 @JordanGoh4
+/.claude/                   @JohannsenLum @josephkwok001 @JordanGoh4
 /workflow/agents/           @JohannsenLum @josephkwok001 @JordanGoh4
 /workflow/hooks/            @JohannsenLum @josephkwok001 @JordanGoh4
 /workflow/policies/         @JohannsenLum @josephkwok001 @JordanGoh4
