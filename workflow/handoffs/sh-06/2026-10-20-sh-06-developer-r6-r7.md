@@ -8,7 +8,7 @@
 "requirementIds": ["SH-06-R6", "SH-06-R7", "SH-06-AC8", "SH-06-AC9", "SH-06-AC10", "SH-06-AC11", "SH-06-AC12"],
 "status": "passed",
 "changedFiles": [
-"supabase/migrations/20261020030000_password_change_attempts.sql",
+"supabase/migrations/20261020130000_password_change_attempts.sql",
 "supabase/tests/password_change_attempts.test.sql",
 "src/features/account/rate-limit.ts",
 "src/features/account/rate-limit.test.ts",
@@ -22,7 +22,7 @@
 "workflow/handoffs/sh-06/2026-10-20-sh-06-developer-r6-r7.md"
 ],
 "verification": [
-{"check": "npx supabase migration up --local", "result": "passed", "evidence": "20261020030000_password_change_attempts.sql applied cleanly"},
+{"check": "npx supabase migration up --local", "result": "passed", "evidence": "20261020130000_password_change_attempts.sql applied cleanly"},
 {"check": "npx supabase db lint --level error", "result": "passed", "evidence": "No schema errors found"},
 {"check": "npx supabase test db (full suite)", "result": "failed", "evidence": "Overall run fails only on supabase/tests/admin_revoke_sessions.test.sql ('permission denied for table sessions'), owned by the concurrent ADM-01-R10 agent (migration 20261020020000_*, outside my allowed paths) -- not touched or caused by this task"},
 {"check": "psql -f supabase/tests/password_change_attempts.test.sql (isolated)", "result": "passed", "evidence": "12/12 pgTAP assertions ok"},
@@ -52,7 +52,7 @@
   claim-then-count + pure-decision pattern this mirrors for `ai_usage`/`password_change_attempts`);
   `src/features/account/server.ts` (prior cycle's `changeOwnPassword`, kept intact and extended);
   `workflow/handoffs/sh-06/2026-10-20-sh-06-developer.md` (prior cycle, R1-R5/AC1-AC7).
-- Allowed edit scope: `supabase/migrations/20261020030000_password_change_attempts.sql` (new),
+- Allowed edit scope: `supabase/migrations/20261020130000_password_change_attempts.sql` (new),
   `supabase/tests/password_change_attempts.test.sql` (new), `src/features/account/**` (+tests),
   `src/app/account/**`, `tests/integration/sh06-*`/`sh06.vitest.config.mts`,
   `tests/e2e/change-password.spec.ts`, this handoff. No `src/features/admin/**`,
@@ -91,7 +91,7 @@
 
 ## Changes
 
-- `supabase/migrations/20261020030000_password_change_attempts.sql` (new): the table exactly as
+- `supabase/migrations/20261020130000_password_change_attempts.sql` (new): the table exactly as
   specified (identity PK, `user_id` FK on delete cascade, `created_at`), an index on
   `(user_id, created_at)`, RLS enabled, no policies, `revoke all ... from public, anon,
 authenticated` -- same shape as `public.ai_usage`. Applied locally.
@@ -165,7 +165,7 @@ only, never echoed/printed.
 
 ## Changes outside the owner's area
 
-`supabase/migrations/20261020030000_password_change_attempts.sql` is a new, append-only migration
+`supabase/migrations/20261020130000_password_change_attempts.sql` is a new, append-only migration
 under the shared `supabase/migrations/` path (per `AGENTS.md`, shared paths need team review); no
 existing migration was edited. No other shared-path (`src/lib/`) file was changed this cycle.
 
@@ -179,7 +179,7 @@ existing migration was edited. No other shared-path (`src/lib/`) file was change
 
 ## Next action
 
-Independent teammate review of `supabase/migrations/20261020030000_password_change_attempts.sql`
+Independent teammate review of `supabase/migrations/20261020130000_password_change_attempts.sql`
 (shared-path migration) and the rate-limit logic in `src/features/account/{rate-limit,server}.ts`,
 per the spec's own note. Separately, the coordinator should ask the ADM-01-R10 developer agent to
 fix `supabase/tests/admin_revoke_sessions.test.sql` so `npx supabase test db` passes end to end

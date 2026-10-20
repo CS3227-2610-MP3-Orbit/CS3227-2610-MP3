@@ -8,7 +8,7 @@
 "requirementIds": ["ADM-01-R1", "ADM-01-R2", "ADM-01-R3", "ADM-01-R4", "ADM-01-R5", "ADM-01-R6", "ADM-01-R9", "ADM-01-R8-UI"],
 "status": "passed",
 "changedFiles": [
-"supabase/migrations/20261020010000_admin_list_accounts.sql",
+"supabase/migrations/20261020110000_admin_list_accounts.sql",
 "supabase/tests/admin_list_accounts.test.sql",
 "src/features/admin/accounts/validation.ts",
 "src/features/admin/accounts/validation.test.ts",
@@ -64,7 +64,7 @@
 - Latest handoffs read: `workflow/handoffs/adm-01/2026-10-19-adm-01-requirements-architect.md`,
   `workflow/handoffs/adm-01/2026-10-19-adm-01-developer-db.md` (DB layer: `admin_set_role`/
   `admin_set_active` RPCs, `is_protected` column/index, migration
-  `20261020000000_admin_account_management.sql`, already applied locally).
+  `20261020100000_admin_account_management.sql`, already applied locally).
 - Allowed edit paths used: `src/app/admin/**`, `src/features/admin/accounts/**` (not
   `password.ts`, read/used only), one new migration + its pgTAP test, new test files under
   `tests/integration/` and `tests/e2e/`, `package.json` (one new script), this handoff. Did not
@@ -72,7 +72,7 @@
 
 ## Decisions and assumptions
 
-- **New migration `20261020010000_admin_list_accounts.sql`** adds `admin_list_accounts(p_query,
+- **New migration `20261020110000_admin_list_accounts.sql`** adds `admin_list_accounts(p_query,
 p_role, p_active)`, a `security definer` RPC joining `profiles` and `auth.users` (for email) and
   returning `{kind:"success", accounts:[{id,email,fullName,role,isActive,isProtected}]}` or
   `forbidden_or_not_found`. Chose this over `createAdminClient().auth.admin.listUsers()` because
@@ -134,7 +134,7 @@ p_role, p_active)`, a `security definer` RPC joining `profiles` and `auth.users`
 
 ## Changes
 
-- `supabase/migrations/20261020010000_admin_list_accounts.sql` (new): `admin_list_accounts` RPC —
+- `supabase/migrations/20261020110000_admin_list_accounts.sql` (new): `admin_list_accounts` RPC —
   see Decisions. Applied locally with `npx supabase migration up --local` (non-destructive;
   confirmed via `supabase migration list --local` that only this new file was pending — did not
   run `db reset --local`, to avoid disrupting the concurrent SH-06 agent's session state).
@@ -166,7 +166,7 @@ p_role, p_active)`, a `security definer` RPC joining `profiles` and `auth.users`
 
 | Command                                                             | Result | Evidence                                                                                                 |
 | ------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------- |
-| `npx supabase migration up --local`                                 | passed | `{"applied":[".../20261020010000_admin_list_accounts.sql"],"message":"Migrations applied"}`              |
+| `npx supabase migration up --local`                                 | passed | `{"applied":[".../20261020110000_admin_list_accounts.sql"],"message":"Migrations applied"}`              |
 | `npx supabase test db`                                              | passed | `Files=7, Tests=98, ... Result: PASS`                                                                    |
 | `npm run lint`                                                      | passed | no output                                                                                                |
 | `npm run typecheck`                                                 | passed | `Types generated successfully`, clean `tsc`                                                              |

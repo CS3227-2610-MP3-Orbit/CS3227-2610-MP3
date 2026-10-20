@@ -8,7 +8,7 @@
 "requirementIds": ["ADM-01-R3", "ADM-01-R4", "ADM-01-R5", "ADM-01-R7", "ADM-01-R8"],
 "status": "passed",
 "changedFiles": [
-"supabase/migrations/20261020000000_admin_account_management.sql",
+"supabase/migrations/20261020100000_admin_account_management.sql",
 "supabase/tests/admin_account_management.test.sql",
 "workflow/handoffs/adm-01/2026-10-19-adm-01-developer-db.md"
 ],
@@ -37,7 +37,7 @@
   Johannsen recorded in Document control), as named in my assignment envelope
 - Latest handoff read: `workflow/handoffs/adm-01/2026-10-19-adm-01-requirements-architect.md`
 - Allowed edit paths used (exactly these three, nothing else):
-  `supabase/migrations/20261020000000_admin_account_management.sql`,
+  `supabase/migrations/20261020100000_admin_account_management.sql`,
   `supabase/tests/admin_account_management.test.sql`, this handoff.
 
 ## Status
@@ -66,7 +66,7 @@ on-disk approval status no longer matches what a reviewer would see if they read
 
 ## Changes
 
-- `supabase/migrations/20261020000000_admin_account_management.sql` (new):
+- `supabase/migrations/20261020100000_admin_account_management.sql` (new):
   - Adds `profiles.is_protected boolean not null default false` and a unique partial index
     (`profiles_protected_singleton_idx on profiles (is_protected) where is_protected`) allowing at
     most one `true` row.
@@ -148,7 +148,7 @@ on-disk approval status no longer matches what a reviewer would see if they read
 | `npx supabase db reset --local`                                                                                                         | passed              | all 7 migrations (including the new one) applied, seed ran, no errors                                                                                                                                                                                     |
 | `npx supabase test db`                                                                                                                  | passed              | `Files=6, Tests=88, 0 wallclock secs ... Result: PASS` (52 pre-existing STU/SH tests + 36 new ADM-01 tests, 0 failed)                                                                                                                                     |
 | `npx supabase db lint --level error`                                                                                                    | passed              | `No schema errors found`                                                                                                                                                                                                                                  |
-| `npx prettier --check supabase/migrations/20261020000000_admin_account_management.sql supabase/tests/admin_account_management.test.sql` | not-applicable      | `No parser could be inferred for file ...sql` — this repo has no prettier SQL plugin and no other `.sql` file is prettier-formatted either; `.prettierignore` already excludes other generated/build paths but SQL is simply unsupported by prettier here |
+| `npx prettier --check supabase/migrations/20261020100000_admin_account_management.sql supabase/tests/admin_account_management.test.sql` | not-applicable      | `No parser could be inferred for file ...sql` — this repo has no prettier SQL plugin and no other `.sql` file is prettier-formatted either; `.prettierignore` already excludes other generated/build paths but SQL is simply unsupported by prettier here |
 | `grep -rn "update public.profiles" supabase/migrations/*.sql` (before my migration)                                                     | passed              | no match — confirms no existing migration wrote to `profiles`, so the privilege revoke is safe                                                                                                                                                            |
 | `grep` for direct `profiles` table updates in `src/`                                                                                    | passed              | no match found                                                                                                                                                                                                                                            |
 | `git status --porcelain`                                                                                                                | passed-with-finding | only my 3 files are new/mine; a pre-existing, not-mine modification to the spec and 2 unrelated untracked files were already present (see Findings #1)                                                                                                    |

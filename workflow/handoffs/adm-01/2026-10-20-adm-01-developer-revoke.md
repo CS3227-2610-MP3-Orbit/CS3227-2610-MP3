@@ -8,7 +8,7 @@
 "requirementIds": ["ADM-01-R10", "ADM-01-AC23", "ADM-01-AC24", "ADM-01-AC25"],
 "status": "passed",
 "changedFiles": [
-"supabase/migrations/20261020020000_admin_revoke_sessions.sql",
+"supabase/migrations/20261020120000_admin_revoke_sessions.sql",
 "supabase/tests/admin_revoke_sessions.test.sql",
 "src/features/admin/accounts/validation.ts",
 "src/features/admin/accounts/server.ts",
@@ -18,7 +18,7 @@
 "workflow/handoffs/adm-01/2026-10-20-adm-01-developer-revoke.md"
 ],
 "verification": [
-{"check": "npx supabase migration up --local", "result": "passed", "evidence": "only 20261020020000_admin_revoke_sessions.sql was pending beforehand (confirmed via migration list --local); applied cleanly, no db reset used"},
+{"check": "npx supabase migration up --local", "result": "passed", "evidence": "only 20261020120000_admin_revoke_sessions.sql was pending beforehand (confirmed via migration list --local); applied cleanly, no db reset used"},
 {"check": "npx supabase test db", "result": "passed", "evidence": "Files=9, Tests=125, 0 failed (includes the concurrent SH-06 agent's password_change_attempts.test.sql, unaffected, plus the new 15-assertion admin_revoke_sessions.test.sql)"},
 {"check": "npx supabase db lint --level error", "result": "passed", "evidence": "'No schema errors found'"},
 {"check": "npm run lint", "result": "passed", "evidence": "no output, exit 0"},
@@ -48,7 +48,7 @@
 - Latest handoffs read: `workflow/handoffs/adm-01/2026-10-20-adm-01-developer-app.md` (app layer:
   `createAccount`/`listAccounts`/`setRole`/`setActive`/`resetPassword`, the one-time-password UI),
   `workflow/handoffs/adm-01/2026-10-19-adm-01-developer-db.md` (DB layer: `admin_set_role`/
-  `admin_set_active`, `is_protected`, migration `20261020000000_admin_account_management.sql`).
+  `admin_set_active`, `is_protected`, migration `20261020100000_admin_account_management.sql`).
 - Allowed edit paths used: new migration + its pgTAP test; `src/features/admin/accounts/{server.ts,
 validation.ts}` and `server.test.ts`; `src/app/admin/accounts/account-row.tsx` (the new result
   kind's UI message); `tests/integration/admin-accounts.test.ts`; this handoff. Did not touch
@@ -57,7 +57,7 @@ validation.ts}` and `server.test.ts`; `src/app/admin/accounts/account-row.tsx` (
 
 ## Decisions and assumptions
 
-- **`admin_revoke_sessions(target_id uuid)`** (new migration `20261020020000_admin_revoke_sessions.sql`):
+- **`admin_revoke_sessions(target_id uuid)`** (new migration `20261020120000_admin_revoke_sessions.sql`):
   `security definer`, `set search_path = ''`, owned by `postgres` (same owner as
   `current_app_role()`/`admin_set_role`/`admin_set_active`), so it can read/write `auth.sessions`
   even though that table has row-level security enabled with no policies for any role. Checks
@@ -102,7 +102,7 @@ validation.ts}` and `server.test.ts`; `src/app/admin/accounts/account-row.tsx` (
 
 ## Changes
 
-- `supabase/migrations/20261020020000_admin_revoke_sessions.sql` (new): the RPC; see Decisions.
+- `supabase/migrations/20261020120000_admin_revoke_sessions.sql` (new): the RPC; see Decisions.
   Applied with `npx supabase migration up --local` (not `db reset`), confirmed only this file was
   pending first.
 - `supabase/tests/admin_revoke_sessions.test.sql` (new): pgTAP, `[ADM-01-ACn]`-tagged; covers the
@@ -131,7 +131,7 @@ validation.ts}` and `server.test.ts`; `src/app/admin/accounts/account-row.tsx` (
 
 | Command                              | Result              | Evidence                                                                                      |
 | ------------------------------------ | ------------------- | --------------------------------------------------------------------------------------------- |
-| `npx supabase migration up --local`  | passed              | `{"applied":[".../20261020020000_admin_revoke_sessions.sql"]}`                                |
+| `npx supabase migration up --local`  | passed              | `{"applied":[".../20261020120000_admin_revoke_sessions.sql"]}`                                |
 | `npx supabase test db`               | passed              | `Files=9, Tests=125, ... Result: PASS`                                                        |
 | `npx supabase db lint --level error` | passed              | `No schema errors found`                                                                      |
 | `npm run lint`                       | passed              | no output                                                                                     |
@@ -149,7 +149,7 @@ instructions (another agent owns e2e; a reset would wipe the shared DB mid-run f
 None by me. `supabase/migrations/` is shared per CODEOWNERS (needs teammate review per policy;
 flagged here as security-sensitive, since it grants a new RPC the ability to delete rows in the
 `auth` schema). `src/features/account/**`, `src/app/account/password/change-password-form.tsx`,
-and `supabase/migrations/20261020030000_password_change_attempts.sql` /
+and `supabase/migrations/20261020130000_password_change_attempts.sql` /
 `supabase/tests/password_change_attempts.test.sql` show modified/untracked in `git status` but are
 the concurrent SH-06 agent's own work, not mine (see Finding #1).
 
