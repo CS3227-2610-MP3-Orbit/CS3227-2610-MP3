@@ -6,6 +6,7 @@ import {
   requestConsultation,
   recoverConsultation,
 } from "@/features/student/bookings/request-server";
+import { improveRequestDraft } from "@/features/student/bookings/improve-request-server";
 
 export async function submitRequest(input: unknown) {
   await requireRole("student");
@@ -18,4 +19,8 @@ export async function recoverRequest(input: unknown) {
 export async function refreshRequestSlot(input: unknown) {
   await requireRole("student");
   return getRequestSlot(input);
+}
+export async function improveRequest(input: unknown) {
+  await requireRole("student");
+  return improveRequestDraft(input);
 }

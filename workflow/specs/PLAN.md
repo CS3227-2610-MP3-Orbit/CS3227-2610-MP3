@@ -66,7 +66,7 @@ planning and may be adjusted during review.
 | SH-03       | Shared        | Slots, bookings, state transitions, and concurrency constraints |
 | STU-01      | Student       | Browse and filter available slots                               |
 | STU-02      | Student       | Request, view, edit, and cancel bookings                        |
-| STU-03      | Student       | Improve-request AI                                              |
+| STU-05      | Student       | Improve-request AI                                              |
 | LEC-01      | Lecturer      | Create, edit, and delete availability                           |
 | LEC-02      | Lecturer      | Review, decide, view, and complete consultations                |
 | LEC-03      | Lecturer      | Consultation-briefing AI                                        |

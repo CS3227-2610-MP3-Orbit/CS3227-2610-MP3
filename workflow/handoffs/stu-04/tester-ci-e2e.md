@@ -3,22 +3,39 @@
 Outcome: incomplete
 Task ID: STU-04-CI-E2E-SELECTORS
 Requirement IDs: STU-04-AC1, STU-04-AC3, STU-04-AC12
-Approved spec digest: `9eafaec3a8a4a83ebd11beca09ecfd88ca7463b2`
-Implementation commit reviewed: `7e14fcdc5fdd960a6ec9b5c554c50486848ed359`
 
-## Finding and correction
+## Reviewed evidence
 
-GitHub Actions runs `39190847546` and `39190760309` each passed 29 integration tests and eight of nine browser tests. The remaining STU-04 browser test searched for exact standalone text `pending` and `approved`, while the implemented booking list renders `Status: pending` and `Status: approved`.
+- GitHub Actions pull-request run `39190847546`, job `117863079086`.
+- GitHub Actions push run `39190760309`, job `117862802372`.
+- Both reported the same assertion mismatch in
+  `tests/e2e/student-manage-bookings.spec.ts`: the test searched for standalone `pending` and
+  `approved` text while the booking list visibly renders `Status: pending` and `Status: approved`.
 
-The two selectors now match the visible labels. Application behavior, specifications, migrations, and CI configuration were not changed.
+## Changed files
 
-## Verification
+- `tests/e2e/student-manage-bookings.spec.ts`: changed only the two incorrect exact-text selectors
+  to match the complete visible status labels. The test still requires both booking states to be
+  displayed and retains its hostile-text non-execution assertion.
+- `workflow/handoffs/stu-04/tester-ci-e2e.md`: records this correction and its evidence.
 
-- `npm run typecheck`: passed before the branch correction was reapplied.
-- Prettier on the changed test and handoff: passed before the branch correction was reapplied.
-- `git diff --check`: passed before the branch correction was reapplied.
-- GitHub-hosted E2E rerun: not yet run; requires committing and pushing this correction.
+## Checks run and actual results
 
-## Remaining limitation
+- `npx prettier --check tests/e2e/student-manage-bookings.spec.ts workflow/handoffs/stu-04/tester-ci-e2e.md`:
+  passed; both files use Prettier formatting.
+- `git diff --check`: passed with no whitespace errors.
+- `npm run typecheck`: passed; Next.js route generation and `tsc --noEmit` completed.
+- Static rendering check: `src/app/student/bookings/page.tsx` renders `Status: {b.status}` and the
+  updated exact selectors match the resulting visible labels.
 
-Completion depends on the new GitHub Actions E2E result after this fix is pushed to the pull-request branch.
+## Checks not run and reasons
+
+- GitHub-hosted E2E: requires a new pushed commit and Actions run.
+
+## Unresolved issues
+
+- The correction is not considered verified by GitHub Actions until a new hosted run passes.
+
+## Next action
+
+- Coordinator should include this test correction in the branch and rerun GitHub Actions.
