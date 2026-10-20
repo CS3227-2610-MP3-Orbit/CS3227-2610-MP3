@@ -26,10 +26,11 @@ export const bookingSchema = z
     endsAt: z.string().datetime(),
     topic: z.string(),
     questions: z.string(),
+    rejectionReason: z.string().nullable(),
     version,
   })
   .strict();
-export const listBookingSchema = bookingSchema.omit({ questions: true });
+export const listBookingSchema = bookingSchema.omit({ questions: true, rejectionReason: true });
 export const getInputSchema = z.object({ bookingId: uuid }).strict();
 export const updateInputSchema = z
   .object({
