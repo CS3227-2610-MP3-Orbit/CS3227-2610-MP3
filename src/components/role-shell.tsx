@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 import { signOut } from "@/app/login/actions";
 import type { CurrentUser } from "@/lib/auth/session";
@@ -13,6 +14,9 @@ export function RoleShell({ user, children }: { user: CurrentUser; children: Rea
         <span className="font-semibold">{ROLE_LABEL[user.role]}</span>
         <div className="flex items-center gap-4 text-sm">
           <span>{user.fullName}</span>
+          <Link href="/account/password" className="underline">
+            Change password
+          </Link>
           <form action={signOut}>
             <button type="submit" className="underline">
               Sign out
