@@ -1,5 +1,7 @@
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { ConsultationList } from "@/components/consultation-list";
+import { listStaffConsultations } from "@/features/lecturer/consultations/server";
 import { listLecturerRequests } from "@/features/lecturer/requests-server";
 import { SlotForm } from "./slot-form";
 import { deleteSlot } from "./actions";
@@ -8,18 +10,22 @@ import { RequestCard } from "./request-card";
 export default async function LecturerDashboardPage() {
   const user = await requireRole("lecturer");
   const supabase = await createClient();
-  const [{ data: courses }, { data: slots }, requests] = await Promise.all([
+  const [{ data: courses }, { data: slots }, [result, history], requests] = await Promise.all([
     supabase.from("courses").select("id, code, name").order("code"),
     supabase
       .from("consultation_slots")
       .select("id, course_id, starts_at, ends_at, courses(code, name)")
       .eq("lecturer_id", user.id)
       .order("starts_at"),
+    Promise.all([
+      listStaffConsultations("lecturer", false),
+      listStaffConsultations("lecturer", true),
+    ]),
     listLecturerRequests(),
   ]);
 
   return (
-    <div className="space-y-8">
+    <main className="space-y-8">
       <section>
         <h1 className="text-2xl font-semibold">Lecturer dashboard</h1>
         <p className="mt-2 text-sm">
@@ -61,6 +67,32 @@ export default async function LecturerDashboardPage() {
         )}
       </section>
 
+      <section className="grid gap-6">
+        <h2 className="text-xl font-semibold">Lecturer consultations</h2>
+        {result.kind === "success" ? (
+          <>
+            <section aria-labelledby="active-consultations">
+              <h3 id="active-consultations" className="text-xl font-semibold">
+                Active consultations
+              </h3>
+              <ConsultationList consultations={result.consultations} />
+            </section>
+            <section aria-labelledby="past-consultations">
+              <h3 id="past-consultations" className="text-xl font-semibold">
+                Past consultations
+              </h3>
+              {history.kind === "success" ? (
+                <ConsultationList consultations={history.consultations} />
+              ) : (
+                <p role="alert">Past consultations are temporarily unavailable.</p>
+              )}
+            </section>
+          </>
+        ) : (
+          <p role="alert">Consultations are temporarily unavailable. Please try again.</p>
+        )}
+      </section>
+
       <section>
         <h2 className="text-xl font-semibold">Consultation requests</h2>
         {requests.kind === "success" ? (
@@ -81,6 +113,6 @@ export default async function LecturerDashboardPage() {
           </p>
         )}
       </section>
-    </div>
+    </main>
   );
 }
