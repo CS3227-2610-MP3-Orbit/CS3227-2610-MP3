@@ -22,14 +22,21 @@ status: approved
   change/self-deactivation refused; deactivation revokes access with a live session;
   `createAdminClient` only after `requireRole("admin")`; no AI; one-time generated password, no
   invite email; role/active changes via new security-definer RPCs, not the direct admin update
-  policy; admins may create/promote administrators; `ADM-01-R7` (zero-active-admin lockout); and
-  `ADM-01-R8` (one protected recovery administrator per environment).
-- Proposed, needs review: `ADM-01-R8`'s exact mechanism only (`is_protected` column, partial unique
-  index, migration-time marking). Unresolved: none blocking.
+  policy; admins may create/promote administrators; `ADM-01-R7` (zero-active-admin lockout);
+  `ADM-01-R8` (one protected recovery administrator per environment); and `ADM-01-R9` (admin resets
+  another user's password, using the same generator and one-time-reveal UI as account creation).
+- Confirmed (owner decision 2026-10-20): `ADM-01-R9`'s refusal for the protected recovery
+  administrator. Proposed, needs review: `ADM-01-R8`'s exact mechanism (`is_protected` column,
+  partial unique index, migration-time marking).
 
 - Approval: approved by Johannsen (spec owner, Administrator role) on 2026-10-19 at commit `1b373c9`
   (spec digest `da79c65`). This is an owner approval; independent teammate review of this spec
   happens on the implementation pull request, as `workflow/policies/approval-gates.md` requires.
+  **Superseded**: approval at `7f6c579` superseded by the `ADM-01-R9` change below; re-approval
+  required before implementation of R9 proceeds. Prior requirements R1–R8 are unchanged by this
+  revision.
+- Re-approval: approved by Johannsen (spec owner) on 2026-10-20 including `ADM-01-R9`. Owner
+  approval; independent teammate review happens on the implementation pull request.
 
 ## Product and feature description
 
@@ -125,6 +132,23 @@ index allowing at most one `true` row, set by the same migration for the earlies
 admin (if none exists yet, the script marks it later). `R8` implies `R7` when a protected admin
 exists; `R7` stays as defence in depth otherwise.
 
+### ADM-01-R9 — Administrator resets another user's password
+
+`confirmed`; source: owner decision 2026-10-19. An admin resets another user's password; the app
+generates a new one with the same generator as account creation (`generateInitialPassword()` in
+`src/features/admin/accounts/password.ts`: 24 characters from A–Z/a–z/0–9 via `crypto.randomInt`)
+and shows it once, with the same copy-then-"Done" panel as creation (see UI description) — once
+dismissed it cannot be shown again. Refused for: the caller's own account (must use `SH-06`
+instead); an unknown target; non-admin/signed-out callers. **Confirmed (owner decision 2026-10-20)**: also refused for the protected recovery administrator (`ADM-01-R8`),
+so a compromised admin account cannot take over the recovery account by resetting its password.
+Implementation is server-side via the service-role client (`auth.admin.updateUserById`) only after
+`requireRole("admin")` and a server-side check of the target's protected/self status (via the
+existing admin profile read, not a new table); the new password is never logged or stored in any
+app table. **Open, non-blocking**: whether a reset should also revoke the target's existing
+sessions is open (the Supabase admin API limits what can be revoked); until resolved, a session the
+target already holds may continue after their password is reset — a residual risk, not a
+requirement here.
+
 ## Non-functional requirements
 
 No new performance/accessibility/capacity target beyond existing conventions (keyboard operable,
@@ -136,7 +160,10 @@ An "Accounts" page under `/admin`: search/filter list, per-row role/active-statu
 "Create account" form (email, full name, role). States: loading, empty result, field validation
 error, duplicate-email conflict, submitting, success (credential shown once). The signed-in admin's
 own row and the protected recovery admin's row (badged "protected") have role/active controls
-disabled and explained, not merely hidden — a direct call is still refused server-side.
+disabled and explained, not merely hidden — a direct call is still refused server-side; the
+protected row's "reset password" control is disabled too (`ADM-01-R9`, pending confirmation). The
+one-time password panel shown after creating an account (`R1`) or resetting one (`R9`) has a Copy
+button and a "Done" button; after Done or navigating away, the password cannot be shown again.
 
 ## Use cases
 
@@ -152,9 +179,11 @@ disabled and explained, not merely hidden — a direct call is still refused ser
 
 ## Technical constraints and proposals
 
-Creation must use `createAdminClient` only after `requireRole("admin")` (project rule). Role-change
-and activate/deactivate go through new security-definer RPCs (owner decision 2026-10-19), matching
-Joseph's RPC-only pattern (`SH-03`/`SH-05`), not the direct admin `UPDATE` policy — see Data model.
+Creation and password reset (`R1`, `R9`) both use `createAdminClient` only after
+`requireRole("admin")` (project rule) — reset calls `auth.admin.updateUserById`, not a `profiles`
+RPC. Role-change and activate/deactivate go through new security-definer RPCs (owner decision
+2026-10-19), matching Joseph's RPC-only pattern (`SH-03`/`SH-05`), not the direct admin `UPDATE`
+policy — see Data model.
 
 ## Data model and integrity rules
 
@@ -168,9 +197,11 @@ The same migration adds `profiles.is_protected boolean not null default false` w
 index allowing at most one `true` row, sets it for the environment's earliest-created active admin,
 and drops `"profiles: admin updates"`, so role/`is_active`/`is_protected` change only via the RPCs
 (which never write `is_protected`) or a maintainer's migration/script; `"profiles: admin reads all"`
-is unchanged. No existing migration is edited. **Open, not a requirement here**: how a deactivated/
-role-changed lecturer interacts with Joseph's `course_lecturers`/`consultation_slots`/`bookings` is
-left to that feature's own spec.
+is unchanged. No existing migration is edited. `ADM-01-R9` needs no new table/column: the self/
+protected check reads the existing `profiles` row (already admin-readable), and the password itself
+lives only in `auth.users`, updated via the service-role client. **Open, not a requirement here**:
+how a deactivated/role-changed lecturer interacts with Joseph's `course_lecturers`/
+`consultation_slots`/`bookings` is left to that feature's own spec.
 
 ## API and boundary contracts
 
@@ -183,6 +214,9 @@ Proposed internal Server Actions under `/admin/accounts` (not public REST), all 
   `{id, email, fullName, role, isActive, isProtected}[]`; never a password/secret/credential field.
 - `setRole`/`setActive({targetId, ...})` → call `admin_set_role`/`admin_set_active`; success or
   `validation_error` / `forbidden_self_change` / `forbidden_zero_admins` / `forbidden_protected` /
+  `forbidden_or_not_found`.
+- `resetPassword({targetId})` → `{initialCredential}` (shown once) or `forbidden_self_change`
+  (target is the caller; use `SH-06`) / `forbidden_protected` (pending confirmation) /
   `forbidden_or_not_found`.
 
 No action accepts a caller-supplied "this is my own id" override, a role for the caller's own account,
@@ -225,51 +259,60 @@ No AI is used. No model call, prompt, or `ai_usage` read/write occurs on any acc
 | Two admins concurrently demote/deactivate each other                            | At most one change commits                                  | No window with zero active administrators                   |
 | Another admin targets the protected recovery admin for role change/deactivation | `forbidden_protected`, no change                            | Protected admin is never demoted/deactivated by anyone else |
 | Protected admin tries to change their own role or deactivate themselves         | Refused (both `ADM-01-R5` and `ADM-01-R8` apply), no change | Protected admin is never self-modifiable either             |
+| Admin resets their own password                                                 | Refused, directs to `SH-06`                                 | Password self-service stays in one place                    |
+| Admin resets the protected recovery admin's password                            | Refused                                                     | Recovery account cannot be taken over via reset             |
 
 ## Acceptance criteria and verification
 
 Planned tests, not results.
 
-| ID          | Requirement  | Given / when / then                                                                                                                               | Verification                          | Mocked/live      |
-| ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------- |
-| ADM-01-AC1  | R1           | Valid lecturer input → created profile's role is `lecturer`, not the trigger's default `student`                                                  | integration                           | live DB          |
-| ADM-01-AC2  | R1           | Valid student input → one profile created with role `student`                                                                                     | unit + integration                    | live DB          |
-| ADM-01-AC3  | R1           | Email already in use → `conflict: duplicate_email`, no second account                                                                             | integration                           | live DB          |
-| ADM-01-AC4  | R2           | List/search existing accounts → only allowlisted fields, no password/secret                                                                       | integration                           | live DB          |
-| ADM-01-AC5  | R3           | Admin changes another user's role → stored role updates and reads back                                                                            | integration                           | live DB          |
-| ADM-01-AC6  | R3, R5       | Admin attempts own role change, incl. direct Server Action/RPC call → refused, unchanged                                                          | unit + integration + pgTAP (security) | live DB          |
-| ADM-01-AC7  | R4           | Admin deactivates then reactivates another user → `is_active` reflects each change                                                                | integration                           | live DB          |
-| ADM-01-AC8  | R4, R5       | Admin attempts self-deactivation, incl. direct call → refused, stays active                                                                       | unit + integration + pgTAP (security) | live DB          |
-| ADM-01-AC9  | R6           | User deactivated while holding a live session → next request denied as signed out                                                                 | pgTAP + e2e                           | live DB          |
-| ADM-01-AC10 | R1–R4        | Signed-out/non-admin caller invokes any Server Action or RPC directly → refused, no data, no mutation                                             | integration (security)                | live DB          |
-| ADM-01-AC11 | R1           | Malformed email, empty name, or invalid role → `validation_error` naming the field, no account                                                    | unit                                  | mocked           |
-| ADM-01-AC12 | R1, security | Any success or failure → no password/secret in response or server logs                                                                            | unit + integration                    | live DB          |
-| ADM-01-AC13 | R1, R2       | A just-created account's credential → never present in `listAccounts`/any later read, and not re-returned by a second call                        | integration (security)                | live DB          |
-| ADM-01-AC14 | R7           | Exactly two active admins, each concurrently demotes/deactivates the other → at most one change commits, at least one active admin always remains | pgTAP (concurrent)                    | live DB          |
-| ADM-01-AC15 | R8           | Another admin calls `admin_set_role`/`admin_set_active` on the protected admin → refused (`forbidden_protected`), nothing changes                 | pgTAP                                 | live DB          |
-| ADM-01-AC16 | R8, security | Any authenticated role, including admin, attempts to update `profiles.is_protected` directly → refused/no effect; no RPC or grant permits it      | pgTAP (security)                      | live DB          |
-| ADM-01-AC17 | R8           | The protected admin's row is rendered in the accounts list → role and deactivate controls are hidden/disabled, protected badge shown              | unit + e2e                            | mocked + live UI |
+- **ADM-01-AC1** (R1; integration; live DB) Valid lecturer input → created profile's role is `lecturer`, not the trigger's default `student`
+- **ADM-01-AC2** (R1; unit + integration; live DB) Valid student input → one profile created with role `student`
+- **ADM-01-AC3** (R1; integration; live DB) Email already in use → `conflict: duplicate_email`, no second account
+- **ADM-01-AC4** (R2; integration; live DB) List/search existing accounts → only allowlisted fields, no password/secret
+- **ADM-01-AC5** (R3; integration; live DB) Admin changes another user's role → stored role updates and reads back
+- **ADM-01-AC6** (R3, R5; unit + integration + pgTAP (security); live DB) Admin attempts own role change, incl. direct Server Action/RPC call → refused, unchanged
+- **ADM-01-AC7** (R4; integration; live DB) Admin deactivates then reactivates another user → `is_active` reflects each change
+- **ADM-01-AC8** (R4, R5; unit + integration + pgTAP (security); live DB) Admin attempts self-deactivation, incl. direct call → refused, stays active
+- **ADM-01-AC9** (R6; pgTAP + e2e; live DB) User deactivated while holding a live session → next request denied as signed out
+- **ADM-01-AC10** (R1–R4; integration (security); live DB) Signed-out/non-admin caller invokes any Server Action or RPC directly → refused, no data, no mutation
+- **ADM-01-AC11** (R1; unit; mocked) Malformed email, empty name, or invalid role → `validation_error` naming the field, no account
+- **ADM-01-AC12** (R1, security; unit + integration; live DB) Any success or failure → no password/secret in response or server logs
+- **ADM-01-AC13** (R1, R2; integration (security); live DB) A just-created account's credential → never present in `listAccounts`/any later read, and not re-returned by a second call
+- **ADM-01-AC14** (R7; pgTAP (concurrent); live DB) Exactly two active admins, each concurrently demotes/deactivates the other → at most one change commits, at least one active admin always remains
+- **ADM-01-AC15** (R8; pgTAP; live DB) Another admin calls `admin_set_role`/`admin_set_active` on the protected admin → refused (`forbidden_protected`), nothing changes
+- **ADM-01-AC16** (R8, security; pgTAP (security); live DB) Any authenticated role, including admin, attempts to update `profiles.is_protected` directly → refused/no effect; no RPC or grant permits it
+- **ADM-01-AC17** (R8; unit + e2e; mocked + live UI) The protected admin's row is rendered in the accounts list → role and deactivate controls are hidden/disabled, protected badge shown
+- **ADM-01-AC18** (R9; integration; live auth) Admin resets another user's password → the new password signs in successfully and the old password no longer works
+- **ADM-01-AC19** (R9; unit + integration (security); live DB) Admin attempts to reset their own password, incl. direct call → refused, unchanged, directs to `SH-06`
+- **ADM-01-AC20** (R9, R8; unit + integration (security); live DB) Admin attempts to reset the protected admin's password, incl. direct call → refused, unchanged
+- **ADM-01-AC21** (R9; integration (security); live DB) Non-admin/signed-out caller invokes the reset action directly → refused, no data, no mutation
+- **ADM-01-AC22** (R9, security; integration (security); live DB) A reset's new password → never present in `listAccounts`, server logs, or any later response, and not re-returned by a second call
 
 ## Review evidence
 
 - Challenge record: none yet; not independently reviewed.
 - Review type: not yet reviewed.
 - Open findings: none recorded yet.
-- Human input required: none blocking; see below for one non-blocking implementation detail.
+- Human input required: confirm or revise `ADM-01-R9`'s protected-admin refusal (see below); this
+  spec is `draft` again and needs re-approval regardless.
 
 ## Open questions blocking approval
 
-None currently blocking: the owner's 2026-10-19 decisions resolved the prior open questions and
-confirmed `ADM-01-R7` and `ADM-01-R8` above. Non-blocking: `ADM-01-R8`'s exact mechanism
-(`is_protected` column/index/migration-time marking) is `proposed` for implementation review, not the
-capability; the lecturer-deactivation interaction with Joseph's tables is left to that feature's own
-spec; Supabase public sign-up stays enabled (residual risk, out of scope for ADM-01).
+None blocking.
+
+Non-blocking: `ADM-01-R8`'s exact mechanism (`is_protected` column/index/migration-time marking);
+whether `ADM-01-R9` should also revoke the target's existing sessions (Supabase admin API limits,
+residual risk either way); the lecturer-deactivation interaction with Joseph's tables, left to that
+feature's own spec; Supabase public sign-up stays enabled (residual risk, out of scope for ADM-01).
 
 ## Change log
 
-| Date       | Change and reason                                                                                                                                                                                                                                                                                                              | IDs affected               | Evidence invalidated                         | By                     |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- | -------------------------------------------- | ---------------------- |
-| 2026-10-19 | First draft from confirmed owner decisions and inspected code                                                                                                                                                                                                                                                                  | R1–R6, AC1–AC12            | None; no prior approval                      | requirements_architect |
-| 2026-10-19 | Owner decision resolved credential, data-access, and admin-creation open questions; confirmed R1/R3; added proposed R7 (zero-admin lockout) and its lock requirement; replaced RLS-only data model with RPC migration + policy drop; added AC13–AC14 and pgTAP coverage to AC6/AC8; removed resolved items from open questions | R1, R3, R7 (new), AC1–AC14 | None; still draft, no prior approval existed | requirements_architect |
-| 2026-10-19 | Owner confirmed R7; owner added and confirmed R8 (one protected recovery administrator per environment, demotion/deactivation refused for everyone incl. itself; `is_protected` mechanism tagged proposed); updated R3, data model, API errors, UI, security accepted-risk, edge cases; added AC15–AC17                        | R7, R8 (new), R3, AC1–AC17 | None; still draft, no prior approval existed | requirements_architect |
-| 2026-10-19 | Owner approval recorded (Johannsen) at `1b373c9`; status draft → approved                                                                                                                                                                                                                                                      | None                       | Approval granted                             | Johannsen              |
+| Date       | Change and reason                                                                                                                                                                                                                                                                                                                                                                | IDs affected               | Evidence invalidated                         | By                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------------------------- | ---------------------- |
+| 2026-10-19 | First draft from confirmed owner decisions and inspected code                                                                                                                                                                                                                                                                                                                    | R1–R6, AC1–AC12            | None; no prior approval                      | requirements_architect |
+| 2026-10-19 | Owner decision resolved credential, data-access, and admin-creation open questions; confirmed R1/R3; added proposed R7 (zero-admin lockout) and its lock requirement; replaced RLS-only data model with RPC migration + policy drop; added AC13–AC14 and pgTAP coverage to AC6/AC8; removed resolved items from open questions                                                   | R1, R3, R7 (new), AC1–AC14 | None; still draft, no prior approval existed | requirements_architect |
+| 2026-10-19 | Owner confirmed R7; owner added and confirmed R8 (one protected recovery administrator per environment, demotion/deactivation refused for everyone incl. itself; `is_protected` mechanism tagged proposed); updated R3, data model, API errors, UI, security accepted-risk, edge cases; added AC15–AC17                                                                          | R7, R8 (new), R3, AC1–AC17 | None; still draft, no prior approval existed | requirements_architect |
+| 2026-10-19 | Owner approval recorded (Johannsen) at `1b373c9`; status draft → approved                                                                                                                                                                                                                                                                                                        | None                       | Approval granted                             | Johannsen              |
+| 2026-10-19 | Material change: added `ADM-01-R9` (admin resets another user's password, reusing the creation generator and one-time panel; protected-admin refusal tagged proposed pending owner confirmation; session-revocation left Open); status approved → draft, approval at `7f6c579` marked superseded, re-approval required; updated UI, API, data model, edge cases; added AC18–AC22 | R9 (new), AC1–AC22         | Approval at `7f6c579` superseded             | requirements_architect |
+| 2026-10-20 | Owner confirmed the R9 protected-admin refusal and re-approved the spec; status draft → approved                                                                                                                                                                                                                                                                                 | R9                         | None                                         | Johannsen              |
