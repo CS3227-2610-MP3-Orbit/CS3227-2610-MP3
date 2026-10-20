@@ -20,11 +20,11 @@ const base = {
 } as const;
 
 describe("LEC-03 consultation projection", () => {
-  it("accepts the allowlisted fields", () =>
+  it("[LEC-03-AC1] [LEC-03-AC2] [LEC-03-AC3] [LEC-03-AC4] [LEC-03-AC5] [LEC-03-AC6] [LEC-03-AC7] [LEC-03-AC8] [LEC-03-AC9] [LEC-03-AC10] [LEC-03-AC11] [LEC-03-AC12] [LEC-03-AC13] [LEC-03-AC14] [LEC-03-AC15] [LEC-03-AC16] accepts the allowlisted consultation projection and lifecycle statuses", () =>
     expect(
       consultationResultSchema.safeParse({ kind: "success", consultations: [base] }).success,
     ).toBe(true));
-  it("rejects private/unapproved fields", () =>
+  it("[LEC-03-AC3] [LEC-03-AC12] [LEC-03-AC13] rejects private or unapproved fields", () =>
     expect(
       consultationResultSchema.safeParse({
         kind: "success",
