@@ -18,18 +18,23 @@ language sql stable security definer set search_path = '' as $$
   where b.id=p_booking_id and b.student_id=auth.uid();
 $$;
 
-create table public.consultation_notifications (
-  id uuid primary key default gen_random_uuid(),
-  recipient_id uuid not null references public.profiles(id) on delete restrict,
-  booking_id uuid not null references public.bookings(id) on delete restrict,
-  kind text not null check (kind in ('approved', 'rejected')),
-  rejection_reason text,
-  created_at timestamptz not null default now(),
-  unique (booking_id, kind)
-);
+-- The availability migration creates the shared notification table first.
+-- Extend it for booking-decision notifications rather than recreating it.
+alter table public.consultation_notifications
+  add column booking_id uuid references public.bookings(id) on delete restrict,
+  add column rejection_reason text;
+alter table public.consultation_notifications
+  alter column slot_id drop not null,
+  alter column message drop not null;
+alter table public.consultation_notifications
+  drop constraint if exists consultation_notifications_kind_check;
+alter table public.consultation_notifications
+  add constraint consultation_notifications_kind_check
+  check (kind in ('slot_updated', 'slot_deleted', 'approved', 'rejected'));
+create unique index consultation_notifications_booking_kind_key
+  on public.consultation_notifications (booking_id, kind)
+  where booking_id is not null;
 alter table public.consultation_notifications enable row level security;
-create policy "notifications: recipient reads own" on public.consultation_notifications
-  for select to authenticated using (recipient_id = (select auth.uid()));
 revoke insert, update, delete on public.consultation_notifications from anon, authenticated;
 
 create table public.consultation_decision_audit (
