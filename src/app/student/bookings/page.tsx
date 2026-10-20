@@ -22,7 +22,7 @@ export default async function MyBookingsPage() {
         ) : (
           <ul className="space-y-3">
             {result.bookings.map((b) => (
-              <li key={b.bookingId} className="rounded border p-4 break-words">
+              <li key={b.bookingId} className="rounded-lg border bg-card p-4 break-words">
                 <p>
                   <strong>
                     {b.courseCode} — {b.courseName}
@@ -43,7 +43,7 @@ export default async function MyBookingsPage() {
           </ul>
         )
       ) : (
-        <div role="alert">
+        <div role="alert" className="rounded-lg border border-destructive p-4">
           <p>Bookings are temporarily unavailable. Please retry.</p>
           <Link className="underline" href="/student/bookings">
             Retry

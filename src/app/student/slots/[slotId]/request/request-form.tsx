@@ -8,6 +8,10 @@ import {
   type RequestSlot,
   type ReceiptResult,
 } from "@/features/student/bookings/request-validation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { submitRequest, recoverRequest, refreshRequestSlot } from "./actions";
 
 const messages = {
@@ -17,8 +21,6 @@ const messages = {
   slot_changed: "The slot details have changed. Refresh and review them before submitting again.",
   idempotency_mismatch: "This request cannot be changed while its submission is being resolved.",
 };
-const control =
-  "mt-1 block w-full min-w-0 rounded border p-2 focus-visible:outline-2 focus-visible:outline-offset-2";
 const subscribe = () => () => {};
 const clientReady = () => true;
 const serverReady = () => false;
@@ -90,7 +92,7 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
 
   if (result?.kind === "success")
     return (
-      <section role="status" className="space-y-3 rounded border p-4 break-words">
+      <section role="status" className="space-y-3 rounded-lg border bg-card p-4 break-words">
         <h2 className="text-xl font-semibold">
           {result.receipt.status === "pending"
             ? "Request submitted — pending lecturer approval"
@@ -106,7 +108,10 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
 
   return (
     <div className="space-y-5">
-      <section aria-label="Selected consultation slot" className="rounded border p-4 break-words">
+      <section
+        aria-label="Selected consultation slot"
+        className="rounded-lg border bg-card p-4 break-words"
+      >
         <p>
           <strong>Course: </strong>
           {slot.courseCode} — {slot.courseName}
@@ -117,7 +122,7 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
         </p>
         <p>Starts: {formatSingaporeDateTime(slot.startsAt)} (SGT)</p>
         <p>Ends: {formatSingaporeDateTime(slot.endsAt)} (SGT)</p>
-        <p className="mt-2 text-sm">
+        <p className="mt-2 text-sm text-muted-foreground">
           The slot is reserved only when your request is submitted successfully.
         </p>
       </section>
@@ -133,10 +138,10 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
       >
         <noscript>Enable JavaScript to review and submit a consultation request.</noscript>
         <div>
-          <label htmlFor="topic" className="font-medium">
+          <Label htmlFor="topic" className="font-medium">
             Consultation topic (required)
-          </label>
-          <input
+          </Label>
+          <Input
             id="topic"
             name="topic"
             required
@@ -145,19 +150,19 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
             onChange={(event) => setTopic(event.target.value)}
             aria-invalid={field === "topic"}
             aria-describedby="topic-help"
-            className={control}
+            className="mt-1"
           />
-          <p id="topic-help" className="text-sm">
+          <p id="topic-help" className="mt-1 text-sm text-muted-foreground">
             {field === "topic"
               ? "Enter a topic of 1–200 characters."
               : "1–200 characters after trimming."}
           </p>
         </div>
         <div>
-          <label htmlFor="questions" className="font-medium">
+          <Label htmlFor="questions" className="font-medium">
             Questions (required)
-          </label>
-          <textarea
+          </Label>
+          <Textarea
             id="questions"
             name="questions"
             required
@@ -167,15 +172,15 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
             onChange={(event) => setQuestions(event.target.value)}
             aria-invalid={field === "questions"}
             aria-describedby="questions-help"
-            className={control}
+            className="mt-1"
           />
-          <p id="questions-help" className="text-sm">
+          <p id="questions-help" className="mt-1 text-sm text-muted-foreground">
             {field === "questions"
               ? "Enter questions of 1–2,000 characters."
               : "1–2,000 characters after trimming."}
           </p>
         </div>
-        <div role="status" aria-live="polite" className="break-words">
+        <div role="status" aria-live="polite" className="break-words text-sm">
           {pending && <p>Submitting or checking your request…</p>}
           {result?.kind === "validation_error" && (
             <p>
@@ -201,36 +206,33 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
         </div>
         {needsReview ? (
           <div className="space-y-3">
-            <button
+            <Button
               type="button"
+              variant="outline"
               disabled={pending}
               onClick={() => void refreshDetails()}
-              className="rounded border p-2 focus-visible:outline-2"
             >
               Refresh slot details
-            </button>
+            </Button>
             {reviewReady && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                className="block"
                 onClick={() => {
                   setNeedsReview(false);
                   setReviewReady(false);
                   setResult(null);
                 }}
-                className="block rounded border p-2 focus-visible:outline-2"
               >
                 I have reviewed the updated details
-              </button>
+              </Button>
             )}
           </div>
         ) : (
-          <button
-            type="submit"
-            disabled={!hydrated || pending}
-            className="rounded bg-black px-4 py-2 text-white disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
+          <Button type="submit" disabled={!hydrated || pending}>
             {pending ? "Submitting…" : attempt ? "Retry same request" : "Submit request"}
-          </button>
+          </Button>
         )}
       </form>
     </div>

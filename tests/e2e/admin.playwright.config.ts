@@ -25,7 +25,10 @@ export default defineConfig({
   // Relative to this config file's own directory (tests/e2e), not the cwd -- unlike the root
   // playwright.config.ts, which lives at the project root where "tests/e2e" is correct.
   testDir: ".",
-  testMatch: /admin-.*\.spec\.ts$/,
+  // SH-07 added ui-shell.spec.ts here too: it needs the same already-running local Supabase
+  // instance and local-only seed accounts as the admin-accounts spec, so it shares this config
+  // rather than the root playwright.config.ts (which requires a disposable STU02_TEST_* stack).
+  testMatch: /(admin-.*|ui-shell)\.spec\.ts$/,
   workers: 1,
   timeout: 45000,
   use: { baseURL },

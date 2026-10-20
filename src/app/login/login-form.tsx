@@ -2,6 +2,10 @@
 
 import { useActionState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import { signIn, type LoginState } from "./actions";
 
 const initialState: LoginState = { error: null };
@@ -11,38 +15,28 @@ export function LoginForm() {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1">
-        Email
-        <input
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          className="rounded border px-3 py-2"
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        Password
-        <input
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" name="email" type="email" required autoComplete="email" />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
           name="password"
           type="password"
           required
           autoComplete="current-password"
-          className="rounded border px-3 py-2"
         />
-      </label>
+      </div>
       {state.error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-destructive">
           {state.error}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={isPending}
-        className="rounded bg-foreground px-3 py-2 text-background"
-      >
+      <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? "Signing in…" : "Sign in"}
-      </button>
+      </Button>
     </form>
   );
 }

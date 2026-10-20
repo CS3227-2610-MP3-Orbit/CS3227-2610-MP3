@@ -17,6 +17,7 @@ const app = [
   ["sensitive-change classification", "npm", ["run", "check:sensitive"]],
   ["application unit tests", "npm", ["test"]],
   ["spec traceability", "npm", ["run", "check:spec"]],
+  ["no raw colours outside the ui kit", "npm", ["run", "check:colors"]],
   ["secret scan", "npm", ["run", "check:secrets"]],
   ["application build", "npm", ["run", "build"]],
 ];
