@@ -195,8 +195,8 @@ development environment a stable address.
 
 Vercel environment variables: **Preview** points to the dev Supabase project, **Production** to the
 prod project. `workflow/scripts/setup-vercel-env.sh <secrets-file>` sets them from the same file
-(`DEV_`/`PROD_SUPABASE_SECRET_KEY`, and unprefixed `SOC_LLM_*`). Both need `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
-`SUPABASE_SECRET_KEY`, `SOC_LLM_BASE_URL`, `SOC_LLM_API_KEY` and `SOC_LLM_MODEL`.
+(`DEV_`/`PROD_SUPABASE_SECRET_KEY`, and unprefixed `SOCLAAS_*`). Both need `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+`SUPABASE_SECRET_KEY`, `SOCLAAS_BASE_URL`, `SOCLAAS_API_KEY` and `SOCLAAS_MODEL`.
 
 ## Testing and workflow verification
 

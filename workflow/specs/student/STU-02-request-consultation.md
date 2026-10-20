@@ -43,7 +43,7 @@ Submission reserves the slot; opening a form does not.
 
 This is the first slice of the `STU-02` request/view/edit/cancel scope reserved in `PLAN.md`. It includes
 the request form, atomic creation, and a minimal owned submission confirmation/recovery result. Full
-My Bookings, edits, cancellation, Lecturer decisions, notifications, slot management, and `STU-03`
+My Bookings, edits, cancellation, Lecturer decisions, notifications, slot management, and `STU-05`
 improve-request AI are deferred. Existing IDs are not renumbered or repurposed.
 
 Depends on trusted sessions (`SH-01`), slot/course eligibility (`SH-02`, `SH-03`), and the creation,
@@ -251,7 +251,7 @@ deactivation. Do not add direct staff-profile/table reads. Sensitive migrations 
 ### STU-02-R10 — No AI in reservation
 
 - Classification: `confirmed`.
-- Source: user shared-AI rules; `SH-05-R9`; separate `STU-03` plan.
+- Source: user shared-AI rules; `SH-05-R9`; separate `STU-05` plan.
 
 Creation, lookup and recovery make no model call, construct no prompt, and read/write no `ai_usage`.
 Consultation descriptions containing malicious model instructions remain inert stored text. No model

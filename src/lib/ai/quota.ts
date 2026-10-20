@@ -1,40 +1,24 @@
-/** How many SoC LLM calls were made recently. Counted by the server from the ai_usage table. */
+/** Shared daily AI capacity, counted by trusted database time in Asia/Singapore. */
 export interface UsageCounts {
-  userLastMinute: number;
-  userLastDay: number;
-  globalLastMinute: number;
+  globalLastDay: number;
 }
 
 export interface QuotaLimits {
-  perUserPerMinute: number;
-  perUserPerDay: number;
   /** Shared by all users, because the whole app runs on one team API key. */
-  globalPerMinute: number;
+  globalPerDay: number;
 }
 
 export type QuotaDecision =
-  | { allowed: true }
-  | {
-      allowed: false;
-      reason: "user_minute" | "user_day" | "global_minute";
-      retryAfterSeconds: number;
-    };
+  { allowed: true } | { allowed: false; reason: "global_day"; retryAfterSeconds: number };
 
-// Placeholder values. Replace with limits derived from the SoC LLM documentation
-// (only readable on the NUS network) and record where they came from in the spec.
-export const DEFAULT_LIMITS: QuotaLimits = {
-  perUserPerMinute: 3,
-  perUserPerDay: 30,
-  globalPerMinute: 20,
-};
+export const DEFAULT_LIMITS: QuotaLimits = { globalPerDay: 100 };
 
 /**
- * Decides whether one more AI call is allowed.
- * Pure function: no I/O, so every rule can be unit-tested.
+ * Pure policy mirror for unit tests. Database RPC enforcement remains authoritative.
+ * There is deliberately no minute or per-user daily quota.
  */
 export function decideQuota(counts: UsageCounts, limits: QuotaLimits): QuotaDecision {
-  // TODO(johannsen): implement the quota rules. See workflow/specs/shared/SH-01-foundation.md (AC6).
-  void counts;
-  void limits;
-  throw new Error("decideQuota is not implemented yet");
+  if (counts.globalLastDay >= limits.globalPerDay)
+    return { allowed: false, reason: "global_day", retryAfterSeconds: 60 };
+  return { allowed: true };
 }

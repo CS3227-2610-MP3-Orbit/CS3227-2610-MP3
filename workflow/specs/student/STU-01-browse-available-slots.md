@@ -185,7 +185,7 @@ This feature has no AI action. Browsing and filtering are deterministic database
 - It must not call `generateText`, any model provider, or the `ai_usage` table.
 - Slot, lecturer, course, filter, or session data must not be sent to an LLM.
 - Model output must not determine visibility, availability, ordering, filtering, or authorization.
-- The Student “Improve my request” AI capability is a separate future feature (`STU-03`) and has no
+- The Student “Improve my request” AI capability is a separate future feature (`STU-05`) and has no
   authority in this browse flow.
 
 ### STU-01-R8 — Abuse and security cases
