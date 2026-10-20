@@ -1,11 +1,20 @@
 import { randomUUID } from "node:crypto";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import {
   createFixtureUser,
   deleteFixtureUser,
   FIXTURE_PASSWORD,
 } from "../integration/sh06-test-helpers.mjs";
+
+// With JavaScript running, the previous result stays on screen until the next one arrives, so
+// wait for the server action's response before checking the page or submitting again.
+async function submitPasswordForm(page: Page) {
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === "POST"),
+    page.getByRole("button", { name: /change password/i }).click(),
+  ]);
+}
 
 test("[SH-06-AC5] a signed-out visitor is sent to the login page, form never shown", async ({
   page,
@@ -37,7 +46,7 @@ test("[SH-06-AC1] [SH-06-AC2] [SH-06-AC6] a signed-in user changes their own pas
     await page.getByLabel(/current password/i).fill("definitely-the-wrong-password");
     await page.getByLabel("New password", { exact: true }).fill("a-fresh-new-password");
     await page.getByLabel(/confirm new password/i).fill("a-fresh-new-password");
-    await page.getByRole("button", { name: /change password/i }).click();
+    await submitPasswordForm(page);
     await expect(page.getByText(/current password is incorrect/i)).toBeVisible();
     await expect(page.getByLabel(/current password/i)).toHaveValue("");
 
@@ -46,7 +55,7 @@ test("[SH-06-AC1] [SH-06-AC2] [SH-06-AC6] a signed-in user changes their own pas
     await page.getByLabel(/current password/i).fill(FIXTURE_PASSWORD);
     await page.getByLabel("New password", { exact: true }).fill(newPassword);
     await page.getByLabel(/confirm new password/i).fill(newPassword);
-    await page.getByRole("button", { name: /change password/i }).click();
+    await submitPasswordForm(page);
     await expect(page.getByRole("status").getByText(/password changed/i)).toBeVisible();
     await expect(page).not.toHaveURL(/\/login$/);
 
@@ -86,7 +95,7 @@ test("[SH-06-AC9] [SH-06-AC10] a 6th wrong-current-password attempt within 15 mi
       await page.getByLabel(/current password/i).fill("definitely-the-wrong-password");
       await page.getByLabel("New password", { exact: true }).fill("a-fresh-new-password");
       await page.getByLabel(/confirm new password/i).fill("a-fresh-new-password");
-      await page.getByRole("button", { name: /change password/i }).click();
+      await submitPasswordForm(page);
       await expect(page.getByText(/current password is incorrect/i)).toBeVisible();
     }
 
@@ -95,7 +104,7 @@ test("[SH-06-AC9] [SH-06-AC10] a 6th wrong-current-password attempt within 15 mi
     await page.getByLabel(/current password/i).fill(FIXTURE_PASSWORD);
     await page.getByLabel("New password", { exact: true }).fill("a-fresh-new-password");
     await page.getByLabel(/confirm new password/i).fill("a-fresh-new-password");
-    await page.getByRole("button", { name: /change password/i }).click();
+    await submitPasswordForm(page);
     await expect(page.getByText(/too many attempts\. try again in \d+ minutes?\./i)).toBeVisible();
   } finally {
     await deleteFixtureUser(user.id);

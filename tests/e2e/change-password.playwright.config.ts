@@ -17,7 +17,9 @@ if (apiUrl.protocol !== "http:" || !["localhost", "127.0.0.1", "[::1]"].includes
   throw new Error("SH-06 e2e requires a local HTTP loopback Supabase instance, never hosted");
 
 const port = process.env.SH06_TEST_APP_PORT ?? "3107";
-const baseURL = `http://127.0.0.1:${port}`;
+// localhost, not 127.0.0.1: the Next dev server blocks its client scripts for other origins,
+// which would leave the page without JavaScript.
+const baseURL = `http://localhost:${port}`;
 
 export default defineConfig({
   testDir: ".",
