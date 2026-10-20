@@ -8,6 +8,9 @@
 
 The Requirements Analyst inspected the repository and prepared a draft for Lecturer consultation availability. It covers creating, viewing, editing, and deleting slots; Singapore-time validation; adjacent-slot support; confirmation and notifications for changes involving active bookings; hard deletion; `courses`/`course_lecturers` assignment; administrator access and audit records; RBAC/RLS; concurrency; duplicate submissions; database failures; and unit, integration, and E2E tests.
 
+| ID  | Criterion | Test reference |
+| --- | --------- | -------------- |
+
 ## Evidence
 
 - `src/app/lecturer/layout.tsx` currently protects the Lecturer route with `requireRole("lecturer")`.

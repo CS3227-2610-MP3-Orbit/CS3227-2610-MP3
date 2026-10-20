@@ -200,4 +200,5 @@ The migration must enable RLS and provide policies consistent with this specific
 
 | Date       | Change                                                                                | By                   |
 | ---------- | ------------------------------------------------------------------------------------- | -------------------- |
+| 2026-10-19 | Initial draft based on repository inspection                                          | Codex                |
 | 2026-10-19 | Replaced prior general availability draft with repository-grounded slot specification | Requirements Analyst |
