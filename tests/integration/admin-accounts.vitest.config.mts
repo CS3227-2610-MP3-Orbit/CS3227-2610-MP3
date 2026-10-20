@@ -7,7 +7,13 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: { tsconfigPaths: true },
   test: {
-    include: ["tests/integration/admin-accounts.test.ts"],
+    include: [
+      "tests/integration/admin-accounts.test.ts",
+      // Independent tester_verifier coverage (direct non-admin/signed-out calls for every
+      // action, ownership substitution, a real two-connection AC14 race, and
+      // requireUser()/getCurrentUser() against a deactivated user). See that file's header.
+      "tests/integration/admin-accounts-verification.test.ts",
+    ],
     environment: "node",
     testTimeout: 30000,
     hookTimeout: 30000,
