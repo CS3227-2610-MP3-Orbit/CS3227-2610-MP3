@@ -45,7 +45,7 @@ describe("STU-02 real PostgreSQL request invariants", () => {
     );
     await sql(`insert into auth.users(id) values (${quote(student)}),(${quote(other)}),(${quote(lecturer)});
       update public.profiles set role='lecturer' where id=${quote(lecturer)};
-      insert into public.courses(id,code,name) values (${quote(course)},'STU02','Verifier course');
+      insert into public.courses(id,code,name) values (${quote(course)},${quote(`STU02-${course.replaceAll("-", "").slice(0, 12).toUpperCase()}`)},'Verifier course');
       insert into public.course_lecturers(course_id,lecturer_id) values (${quote(course)},${quote(lecturer)});
       insert into public.consultation_slots(id,course_id,lecturer_id,starts_at,ends_at) values
       (${quote(slot)},${quote(course)},${quote(lecturer)},'2098-01-01 01:00Z','2098-01-01 02:00Z'),
