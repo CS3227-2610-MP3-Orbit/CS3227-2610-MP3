@@ -2,11 +2,13 @@
 
 import { useActionState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import { submitChangePassword, type ChangePasswordState } from "./actions";
 
 const initialState: ChangePasswordState = { result: null };
-
-const control = "mt-1 block w-full rounded-md border px-3 py-2";
 
 const fieldMessages: Record<string, string> = {
   currentPassword: "Enter your current password.",
@@ -22,10 +24,12 @@ export function ChangePasswordForm() {
 
   if (result?.kind === "success") {
     return (
-      <section role="status" className="space-y-2 rounded-md border px-3 py-2">
+      <section role="status" className="space-y-2 rounded-lg border bg-card px-4 py-3">
         <h2 className="text-lg font-semibold">Password changed</h2>
-        <p>Your password has been updated. You remain signed in on this session.</p>
-        <p>
+        <p className="text-sm text-muted-foreground">
+          Your password has been updated. You remain signed in on this session.
+        </p>
+        <p className="text-sm text-muted-foreground">
           {result.otherSessionsEnded
             ? "Your other devices were signed out."
             : "We could not confirm your other devices were signed out; sign out there manually if you suspect they were compromised."}
@@ -36,20 +40,20 @@ export function ChangePasswordForm() {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1">
-        Current password
-        <input
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="currentPassword">Current password</Label>
+        <Input
+          id="currentPassword"
           name="currentPassword"
           type="password"
           required
           autoComplete="current-password"
           aria-invalid={field === "currentPassword"}
-          className={control}
         />
-      </label>
-      <div className="flex flex-col gap-1">
-        <label htmlFor="newPassword">New password</label>
-        <input
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="newPassword">New password</Label>
+        <Input
           id="newPassword"
           name="newPassword"
           type="password"
@@ -59,44 +63,43 @@ export function ChangePasswordForm() {
           autoComplete="new-password"
           aria-invalid={field === "newPassword"}
           aria-describedby="newPassword-help"
-          className={control}
         />
-        <span id="newPassword-help" className="text-sm">
+        <span id="newPassword-help" className="text-sm text-muted-foreground">
           12–72 bytes, and different from your current password.
         </span>
       </div>
-      <label className="flex flex-col gap-1">
-        Confirm new password
-        <input
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="confirmPassword">Confirm new password</Label>
+        <Input
+          id="confirmPassword"
           name="confirmPassword"
           type="password"
           required
           autoComplete="new-password"
           aria-invalid={field === "confirmPassword"}
-          className={control}
         />
-      </label>
-      <div role="status" aria-live="polite">
+      </div>
+      <div role="status" aria-live="polite" className="text-sm">
         {pending && <p>Updating your password…</p>}
         {result?.kind === "validation_error" && <p>{fieldMessages[result.field]}</p>}
-        {result?.kind === "conflict" && <p>Current password is incorrect.</p>}
+        {result?.kind === "conflict" && (
+          <p className="text-destructive">Current password is incorrect.</p>
+        )}
         {result?.kind === "rate_limited" && (
-          <p>Too many attempts. Try again in {Math.ceil(result.retryAfterSeconds / 60)} minutes.</p>
+          <p className="text-destructive">
+            Too many attempts. Try again in {Math.ceil(result.retryAfterSeconds / 60)} minutes.
+          </p>
         )}
         {result?.kind === "temporarily_unavailable" && (
-          <p>
+          <p className="text-destructive">
             The service is temporarily unavailable. Please try again. Reference:{" "}
             {result.correlationId}
           </p>
         )}
       </div>
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-black px-4 py-2 text-white disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2"
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? "Updating…" : "Change password"}
-      </button>
+      </Button>
     </form>
   );
 }

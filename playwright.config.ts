@@ -29,6 +29,7 @@ export default defineConfig({
     "**/admin-accounts.spec.ts",
     "**/admin-courses.spec.ts",
     "**/change-password.spec.ts",
+    "**/ui-shell.spec.ts",
   ],
   workers: 1,
   timeout: 45000,

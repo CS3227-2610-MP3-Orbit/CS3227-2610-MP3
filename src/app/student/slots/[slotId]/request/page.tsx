@@ -16,7 +16,7 @@ export default async function RequestPage({ params }: { params: Promise<{ slotId
       {result.kind === "success" ? (
         <RequestForm initialSlot={result.slot} />
       ) : (
-        <div role="alert">
+        <div role="alert" className="rounded-lg border border-destructive p-4">
           <p>
             {result.kind === "temporarily_unavailable"
               ? "Slots are temporarily unavailable. Please retry."

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { listLecturerRequests } from "@/features/lecturer/requests-server";
 import { RequestCard } from "@/app/lecturer/request-card";
+import { buttonVariants } from "@/components/ui/button";
 
 export default async function AdminDashboardPage() {
   const result = await listLecturerRequests();
@@ -9,16 +10,10 @@ export default async function AdminDashboardPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Administrator dashboard</h1>
       <div className="flex flex-wrap gap-3">
-        <Link
-          href="/admin/accounts"
-          className="inline-flex rounded-md bg-black px-4 py-2 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
+        <Link href="/admin/accounts" className={buttonVariants({ variant: "default" })}>
           Manage accounts
         </Link>
-        <Link
-          href="/admin/courses"
-          className="inline-flex rounded-md bg-black px-4 py-2 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
+        <Link href="/admin/courses" className={buttonVariants({ variant: "default" })}>
           Manage courses
         </Link>
       </div>
