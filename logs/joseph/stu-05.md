@@ -299,3 +299,37 @@ Generated summary awaiting independent human verification.
   covered). The check was not weakened; this failure defines the required tester-owned next gate.
 
 Generated summary awaiting independent human verification.
+
+#Reflection
+
+Reflection on the Multi-Agent Implementation Workflow
+What went well
+The combined multi-agent workflow provided useful separation between specification, implementation, functional verification, and security review. The requirements architect challenged the original specification before implementation and identified important ambiguities involving daily quota reservation, midnight attribution, metadata retention, and AI-output validation. These decisions were escalated for human approval instead of being decided silently by an agent.
+The task decomposition also reduced conflicting edits. Because the AI gateway, quota accounting, database migration, server action, and UI depended on the same contract, they were assigned to one developer rather than several agents editing shared files simultaneously. Independent work, such as functional and security reviews, was performed in parallel where appropriate.
+The generator–verifier pattern found several genuine defects that ordinary happy-path testing might have missed. These included:
+- Invalid AI output being counted as a successful request.
+- Failed provider calls bypassing rolling rate limits.
+- Incorrect handling of oversized composed prompts.
+- Weak validation of the AI response format.
+- Locally edited AI suggestions bypassing field-length validation.
+- Suggestions disappearing after a failed regeneration.
+- Oversized raw model responses bypassing the limit because they were trimmed too early.
+The tester and security reviewer independently reproduced several of the same problems, increasing confidence that they were implementation defects rather than incorrect tests. Regression tests were added before fixes, and the final deterministic checks passed, including 77 application tests, 35 focused STU-05 tests, linting, type checking, formatting, specification traceability, secret scanning, and the production build.
+The workflow also maintained important security boundaries. The LLM credentials remained server-only, user input was labelled and escaped, generated content was rendered as plain text, and AI actions could not submit or modify a booking automatically. No deployment, merge, production access, or unapproved database push occurred.
+What went wrong
+The workflow consumed substantially more time, context, and agent budget than expected. Maintaining assignments, handoffs, review records, requirement digests, and logs created significant administrative overhead for a relatively small feature. The long conversation context also made the process harder to follow and contributed to repeated explanations and confusion about whether specification work, testing, or implementation was currently happening.
+Some verification work initially failed because of the test setup rather than the application. For example, a test imported server-only code without the required mock. Although the tester corrected its own setup before escalating defects, this still caused unnecessary delay.
+The final tester and security rechecks could not complete because the workspace agent spend limit was exhausted. Therefore, although the final application verification passed, the final integrated version did not receive the planned independent agent sign-off. Browser end-to-end testing was also blocked because a disposable authenticated test target was unavailable.
+Local configuration caused additional friction. The application initially expected SOC_LLM_* environment variables, while the actual service used the SOCLAAS_* convention. This made the feature appear unavailable even though the user had configured the provider correctly. The application and documentation had to be updated to use the official variable names.
+The 30-day AI usage-metadata deletion requirement also remains unresolved. A purge function exists, but there is no durable scheduled job proving that deletion will occur within the required period. This requires a hosting or deployment decision rather than another application-code fix.
+What I would improve next time
+For future features, I would keep the same role separation but use a smaller workflow:
+1. Start a fresh chat for each feature and provide only the approved specification, latest handoff, and relevant files.
+2. Use one requirements review, one developer, and two independent reviewers.
+3. Keep one consolidated handoff per feature instead of many small handoff files.
+4. Establish the disposable database and browser fixtures before implementation begins.
+5. Confirm provider environment-variable names and API response formats during specification review.
+6. Reserve multi-agent collaboration for genuinely independent tasks instead of using additional agents by default.
+7. Set an agent-call or token budget before starting and preserve capacity for the final verification round.
+8. Resolve operational requirements, such as scheduled data deletion, before claiming the feature is release-ready.
+Overall, the multi-agent workflow improved defect detection, traceability, and security review, but it did not automatically make development faster. Its main value was independent verification. The biggest lesson is that multi-agent work should be narrowly scoped and supported by prepared test infrastructure; otherwise, coordination overhead and context usage can outweigh the benefits.
