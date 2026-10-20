@@ -2,7 +2,7 @@
 id: LEC-05
 title: Lecturer consultation dashboard
 owner: lecturer
-status: draft
+status: approved
 ---
 
 # LEC-05: Lecturer consultation dashboard
@@ -15,8 +15,11 @@ status: draft
 - Parent/shared requirements: `SH-01`, `SH-03`, `SH-05`, `INT-01`; related Lecturer specs `LEC-01`, `LEC-02`, and `LEC-03`.
 - Related plan and latest handoff: `workflow/handoffs/analyst-to-developer-lec-05-dashboard.md`.
 - Confirmed requirements: a lecturer-facing dashboard should show lecturer-owned consultation bookings/slots as date/time blocks containing student name, topic, course/module code, and booking status; the screenshot is a visual reference only.
-- Proposed assumptions requiring review: the dashboard is read-only for this feature; existing request-decision controls remain available; Singapore time is used for display; the first version uses a responsive grouped list/timeline rather than a full weekly calendar.
-- Unresolved decisions: identifier collision with the existing `LEC-05-authorization-ai-security.md`; whether unbooked slots appear as blocks; exact date range, ordering, and pagination limits; whether administrators receive the dashboard.
+ - Confirmed decisions: the dashboard is read-only; existing request-decision controls remain available;
+   Singapore time is used; the first version uses a responsive grouped list/timeline; only bookings appear;
+   the default view contains the next 100 future consultations; rejected and cancelled records appear in a
+   separate history section; administrators do not receive this dashboard; and both course code and course
+   name are displayed.
 
 ## Product and feature description
 
@@ -276,23 +279,14 @@ No AI is used or authorized. Dashboard reads must not call `generateText`, const
 
 ## Review evidence
 
-- Challenge record: not run; this is the initial analyst draft.
+- Challenge record: human decision round completed on 2026-10-20.
 - Review type: independent repository inspection by the Requirements Analyst.
-- Open findings and disposition: identifier collision, result-bound policy, unbooked-slot visibility, and
-  administrator access remain unresolved.
-- Human input required: approval of the exact scope and all open questions before tests or implementation.
+- Open findings and disposition: resolved by the decisions recorded above.
+- Human approval: recorded from the Lecturer feature owner on 2026-10-20.
 
 ## Open questions blocking approval
 
-1. The repository already uses `LEC-05` for `Lecturer authorization and AI security`. Should this dashboard
-   become `LEC-06`, or should the existing security spec be renamed/re-numbered by the team?
-2. Should the dashboard show unbooked lecturer-created slots, or only slots with a student booking/request?
-3. What default date range should load: all future records, current day/week, or a bounded configurable range?
-4. What maximum row count and pagination/cursor behavior should be used?
-5. Should rejected and cancelled historical records appear in the default view, a separate history view, or both?
-6. Should administrators receive read-only access, and if yes, should it be a separate administrator projection?
-7. Should existing approve/reject controls remain in the dashboard blocks or remain in the current request section?
-8. Is `courseCode` the required module-code display, or should course name also appear?
+None.
 
 ## Change log
 
