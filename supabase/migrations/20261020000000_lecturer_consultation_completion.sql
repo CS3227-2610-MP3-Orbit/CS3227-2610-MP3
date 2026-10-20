@@ -1,4 +1,4 @@
--- LEC-03: authorized Lecturer/Admin consultation read model and deactivation notices.
+-- LEC-03: authorized Lecturer consultation read model and deactivation notices.
 -- Completion is display-derived; no new booking status or write side effect is needed.
 alter table public.consultation_slots add column if not exists is_active boolean not null default true;
 
@@ -80,7 +80,7 @@ declare
   v_role public.app_role := public.current_app_role();
   v_rows jsonb;
 begin
-  if v_role not in ('lecturer'::public.app_role, 'admin'::public.app_role) then
+  if v_role <> 'lecturer'::public.app_role then
     return jsonb_build_object('kind', 'forbidden_or_not_found');
   end if;
 
@@ -115,11 +115,11 @@ begin
   left join auth.users u on u.id = b.student_id
   where (p_history or b.status in ('pending', 'approved'))
     and (not p_history or b.status in ('rejected', 'cancelled', 'completed'))
-    and (v_role = 'admin'::public.app_role or s.lecturer_id = auth.uid())
-    and (v_role = 'admin'::public.app_role or exists (
+    and s.lecturer_id = auth.uid()
+    and exists (
       select 1 from public.course_lecturers cl
       where cl.course_id = s.course_id and cl.lecturer_id = auth.uid() and cl.is_active
-    ));
+    );
 
   return jsonb_build_object('kind', 'success', 'consultations', v_rows);
 exception when others then

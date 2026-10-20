@@ -1,14 +1,14 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { requireRole, type CurrentUser } from "@/lib/auth/session";
+import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { consultationResultSchema, type ConsultationResult } from "./validation";
 
 export async function listStaffConsultations(
-  role: CurrentUser["role"],
+  role: "lecturer",
   history = false,
 ): Promise<ConsultationResult | { kind: "temporarily_unavailable"; correlationId: string }> {
-  await requireRole(role);
+  await requireRole("lecturer");
   try {
     const { data, error } = await (
       await createClient()
