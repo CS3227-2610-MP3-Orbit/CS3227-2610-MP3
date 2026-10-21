@@ -1,9 +1,13 @@
+import { Inbox } from "lucide-react";
+
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { ConsultationList } from "@/components/consultation-list";
+import { StatTile, StatTileRow } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import { listStaffConsultations } from "@/features/lecturer/consultations/server";
 import { listLecturerRequests } from "@/features/lecturer/requests-server";
+import { greetingFor } from "@/lib/greeting";
 import { SlotForm } from "./slot-form";
 import { deleteSlot } from "./actions";
 import { RequestCard } from "./request-card";
@@ -25,11 +29,17 @@ export default async function LecturerDashboardPage() {
     listLecturerRequests(),
   ]);
 
+  const pendingRequestsCount = requests.kind === "success" ? requests.requests.length : null;
+
   return (
     <main className="space-y-8">
-      <section>
-        <h1 className="text-2xl font-semibold">Lecturer dashboard</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+      <section className="space-y-5">
+        <h1 className="text-2xl font-semibold">{greetingFor(new Date(), user.fullName)}</h1>
+        <StatTileRow>
+          <StatTile label="Your consultation slots" value={slots?.length ?? 0} />
+          <StatTile label="Pending requests" value={pendingRequestsCount} />
+        </StatTileRow>
+        <p className="text-sm text-muted-foreground">
           Consultation availability uses Singapore time. Slots must be created at least one hour
           before they start.
         </p>
@@ -107,7 +117,8 @@ export default async function LecturerDashboardPage() {
               ))}
             </ul>
           ) : (
-            <p role="status" className="mt-2">
+            <p role="status" className="mt-2 flex items-center gap-2 text-muted-foreground">
+              <Inbox aria-hidden="true" className="size-4" />
               No pending consultation requests.
             </p>
           )
