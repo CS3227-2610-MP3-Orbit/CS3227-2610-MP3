@@ -9,9 +9,14 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Administrator dashboard</h1>
-      <Link href="/admin/accounts" className={buttonVariants({ variant: "default" })}>
-        Manage accounts
-      </Link>
+      <div className="flex flex-wrap gap-3">
+        <Link href="/admin/accounts" className={buttonVariants({ variant: "default" })}>
+          Manage accounts
+        </Link>
+        <Link href="/admin/courses" className={buttonVariants({ variant: "default" })}>
+          Manage courses
+        </Link>
+      </div>
       <section className="space-y-5">
         <h2 className="text-xl font-semibold">Consultation requests</h2>
         {result.kind === "success" ? (

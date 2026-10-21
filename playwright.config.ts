@@ -25,7 +25,12 @@ if (process.env.NEXT_PUBLIC_SUPABASE_URL !== process.env.STU02_TEST_API_URL)
 export default defineConfig({
   testDir: "tests/e2e",
   // These specs have their own configs and run in the "Accounts and passwords" CI job.
-  testIgnore: ["**/admin-accounts.spec.ts", "**/change-password.spec.ts", "**/ui-shell.spec.ts"],
+  testIgnore: [
+    "**/admin-accounts.spec.ts",
+    "**/admin-courses.spec.ts",
+    "**/change-password.spec.ts",
+    "**/ui-shell.spec.ts",
+  ],
   workers: 1,
   timeout: 45000,
   use: { baseURL },
