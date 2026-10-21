@@ -40,3 +40,15 @@ export async function requireRole(role: Role): Promise<CurrentUser> {
   if (user.role !== role) redirect(homePathFor(user.role));
   return user;
 }
+
+/**
+ * Ends the request unless the caller is a signed-in, active user of ANY role.
+ * For actions that are legitimately role-agnostic (e.g. changing one's own password).
+ * Call this in every such layout AND every Server Action / Route Handler:
+ * layouts do not protect actions.
+ */
+export async function requireUser(): Promise<CurrentUser> {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  return user;
+}

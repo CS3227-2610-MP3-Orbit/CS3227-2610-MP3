@@ -24,6 +24,8 @@ if (process.env.NEXT_PUBLIC_SUPABASE_URL !== process.env.STU02_TEST_API_URL)
   throw new Error("App and fixture Supabase targets must match");
 export default defineConfig({
   testDir: "tests/e2e",
+  // These specs have their own configs and run in the "Accounts and passwords" CI job.
+  testIgnore: ["**/admin-accounts.spec.ts", "**/change-password.spec.ts"],
   workers: 1,
   timeout: 45000,
   use: { baseURL },
