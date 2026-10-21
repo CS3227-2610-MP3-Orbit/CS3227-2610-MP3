@@ -1,5 +1,6 @@
 import { CalendarCheck, CalendarSearch } from "lucide-react";
 
+import { AnnouncementsCard } from "@/components/announcements-card";
 import { QuickActionCard } from "@/components/quick-action-card";
 import { StatTile, StatTileRow } from "@/components/stat-tile";
 import { listMyBookings } from "@/features/student/bookings/manage-server";
@@ -44,6 +45,7 @@ export default async function StudentDashboardPage() {
         />
         <QuickActionCard href="/student/bookings" icon={CalendarCheck} label="My bookings" />
       </div>
+      <AnnouncementsCard />
     </div>
   );
 }
