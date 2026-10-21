@@ -1,0 +1,19 @@
+title: Orbit
+description: >-
+  Orbit is a consultation booking app for students, lecturers and administrators, with one
+  AI feature per role, spec-driven multi-agent development, and a dev/prod Supabase + Vercel
+  deployment.
+theme: jekyll-theme-cayman
+baseurl: "/CS3227-2610-MP3"
+show_downloads: false
+plugins:
+  - jekyll-relative-links
+  - jekyll-seo-tag
+  - jekyll-sitemap
+relative_links:
+  enabled: true
+  collections: false
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
