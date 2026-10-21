@@ -1,50 +1,24 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-
-import { assignedLecturerIds, courseStatusLabel } from "@/features/admin/courses/presentation";
+import { courseStatusLabel } from "@/features/admin/courses/presentation";
 import type { Course } from "@/features/admin/courses/validation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { statusBadgeVariant } from "@/lib/status-badge";
 
-import {
-  assignLecturerAction,
-  removeAssignmentAction,
-  setCourseActiveAction,
-  updateCourseAction,
-} from "./actions";
+import { useCourseRowController } from "./use-course-row";
 
 const selectClass =
   "mt-1 h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
-function describeMutateFailure(kind: string): string {
-  switch (kind) {
-    case "conflict_duplicate_code":
-      return "A course with that code already exists (active or deactivated).";
-    case "conflict_duplicate_assignment":
-      return "That lecturer is already currently assigned to this course.";
-    case "course_not_found":
-      return "This course is no longer available.";
-    case "course_inactive":
-      return "Reactivate this course before assigning a lecturer.";
-    case "lecturer_not_found":
-      return "That account is no longer available.";
-    case "lecturer_inactive":
-      return "That lecturer account is deactivated.";
-    case "lecturer_wrong_role":
-      return "That account does not have the lecturer role.";
-    case "forbidden_or_not_found":
-      return "This item is no longer available.";
-    case "validation_error":
-      return "Please correct the highlighted value and try again.";
-    default:
-      return "This action is temporarily unavailable. Please retry.";
-  }
-}
-
+/**
+ * SH-07-R14: the card presentation of one course, shown below `md`. Same row data, status
+ * pill, lecturer list, and actions as `CourseTableRow` -- both drive
+ * `useCourseRowController`. `role="group"`/`aria-label={course.code}` lets a test locator
+ * match whichever layout is on screen (SH-07-AC17).
+ */
 export default function CourseRow({
   course,
   eligibleLecturers,
@@ -52,80 +26,27 @@ export default function CourseRow({
   course: Course;
   eligibleLecturers: { id: string; label: string }[];
 }) {
-  const router = useRouter();
-  const [editing, setEditing] = useState(false);
-  const [code, setCode] = useState(course.code);
-  const [name, setName] = useState(course.name);
-  const [selectedLecturer, setSelectedLecturer] = useState("");
-  const [message, setMessage] = useState("");
-  const [pending, startTransition] = useTransition();
-
-  const assigned = assignedLecturerIds(course);
-  const assignable = eligibleLecturers.filter((lecturer) => !assigned.has(lecturer.id));
-
-  function saveEdit() {
-    setMessage("");
-    startTransition(async () => {
-      const result = await updateCourseAction({ courseId: course.id, code, name });
-      if (result.kind === "success") {
-        setMessage("Course updated.");
-        setEditing(false);
-        router.refresh();
-      } else {
-        setMessage(describeMutateFailure(result.kind));
-      }
-    });
-  }
-
-  function toggleActive() {
-    setMessage("");
-    startTransition(async () => {
-      const result = await setCourseActiveAction({
-        courseId: course.id,
-        isActive: !course.isActive,
-      });
-      if (result.kind === "success") {
-        setMessage(result.isActive ? "Course activated." : "Course deactivated.");
-        router.refresh();
-      } else {
-        setMessage(describeMutateFailure(result.kind));
-      }
-    });
-  }
-
-  function assign() {
-    if (!selectedLecturer) return;
-    setMessage("");
-    startTransition(async () => {
-      const result = await assignLecturerAction({
-        courseId: course.id,
-        lecturerId: selectedLecturer,
-      });
-      if (result.kind === "success") {
-        setMessage("Lecturer assigned.");
-        setSelectedLecturer("");
-        router.refresh();
-      } else {
-        setMessage(describeMutateFailure(result.kind));
-      }
-    });
-  }
-
-  function remove(assignmentId: string) {
-    setMessage("");
-    startTransition(async () => {
-      const result = await removeAssignmentAction({ assignmentId });
-      if (result.kind === "success") {
-        setMessage("Assignment removed.");
-        router.refresh();
-      } else {
-        setMessage(describeMutateFailure(result.kind));
-      }
-    });
-  }
+  const {
+    editing,
+    setEditing,
+    code,
+    setCode,
+    name,
+    setName,
+    selectedLecturer,
+    setSelectedLecturer,
+    message,
+    pending,
+    assignable,
+    saveEdit,
+    cancelEdit,
+    toggleActive,
+    assign,
+    remove,
+  } = useCourseRowController(course, eligibleLecturers);
 
   return (
-    <li className="min-w-0 rounded-lg border bg-card p-4">
+    <li role="group" aria-label={course.code} className="min-w-0 rounded-xl border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           {editing ? (
@@ -162,7 +83,9 @@ export default function CourseRow({
             </>
           )}
         </div>
-        <Badge variant={course.isActive ? "default" : "outline"}>{courseStatusLabel(course)}</Badge>
+        <Badge variant={statusBadgeVariant(course.isActive ? "active" : "deactivated")}>
+          {courseStatusLabel(course)}
+        </Badge>
       </div>
 
       <div className="mt-3 flex flex-wrap items-end gap-3">
@@ -176,11 +99,7 @@ export default function CourseRow({
               variant="outline"
               size="sm"
               disabled={pending}
-              onClick={() => {
-                setCode(course.code);
-                setName(course.name);
-                setEditing(false);
-              }}
+              onClick={cancelEdit}
             >
               Cancel
             </Button>
