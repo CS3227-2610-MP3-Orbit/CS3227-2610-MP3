@@ -71,3 +71,18 @@ parity with the original insert policy, `wrapUntrusted`, or the inline delete ac
 | F1: the old `courses` policy was not buggy, because `cl.course_id = id` resolves to `courses.id` | Low      | **Rejected, with evidence.** An unqualified column inside a subquery resolves to the nearest table that has it; `course_lecturers` has `id`, so `id` meant `cl.id`. `pg_policies` stores the policy as `cl.course_id = cl.id`. The comment stays.          |
 | F2: the write functions lacked the house handler for lock and serialization failures             | Low      | **Fixed.** `lecturer_create_slot`, `lecturer_update_slot` and `lecturer_delete_slot` now return `temporarily_unavailable` with a `correlationId`, like the ADM-02 functions. The action shows its generic "Please try again" message. pgTAP re-run: 43/43. |
 | F3: a confirmed edit of a booked slot can never succeed (STU-02 trigger)                         | Info     | Already listed under unresolved issues; not a release blocker.                                                                                                                                                                                             |
+
+## Independent tester review (22 Oct)
+
+A `tester_verifier` independently re-ran the new pgTAP suite (43/43), typecheck, lint, `check:spec`
+and the unit tests (269 passed), and compared every user-facing message with the previous
+`actions.ts`. **Passed**, with four gaps:
+
+| Finding                                                                          | Severity | Disposition                                                                                                                                        |
+| -------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1: confirmed edit of a booked slot always returns `reserved`; no test pinned it | Medium   | **Test added** that documents the current behaviour. The spec conflict between LEC-01-AC4/AC7 and STU-02's guard stays open for Jordan and Joseph. |
+| D2: no TypeScript unit tests for `actions.ts`, `page.tsx` or `ai-briefing.ts`    | Low      | **Open.** All proof is at the database layer plus the browser run. A follow-up should mock the RPC client and test the message mapping.            |
+| D3: no administrator or signed-out caller in the fixtures                        | Low      | **Tests added**: an administrator gets no slots, cannot create a slot or read briefing context; `anon` cannot execute the functions.               |
+| D4: only `select` privilege was asserted                                         | Low      | **Test added**: `authenticated` and `anon` have no insert, update or delete on the four tables.                                                    |
+
+pgTAP after the additions: **49/49**.
