@@ -127,12 +127,12 @@ stored.
 ### ADM-04-R10 — Quota admission for the admin feature
 
 `confirmed`. A new append-only migration re-creates `claim_ai_attempt` so it admits
-`admin.activity-summary` in addition to `student.improve-request`, with STU-05's behaviour
-otherwise unchanged: the same single shared 100-per-SGT-day count across both features,
-the same per-user in-flight guard, and every other feature still refused. Admin summaries
-therefore spend the same daily budget as student requests. If another feature's migration
-(e.g. LEC-04) also re-creates this function, whichever merges second must list every
-admitted feature.
+`admin.activity-summary` and LEC-04's `lecturer.ai-briefing` in addition to
+`student.improve-request`, with STU-05's behaviour otherwise unchanged: the same single
+shared 100-per-SGT-day count across all three features, the same per-user in-flight guard,
+and every other feature still refused. Admin summaries and lecturer briefings therefore
+spend the same daily budget as student requests. This migration owns the allowlist; any
+later re-creation must keep every feature listed here.
 
 ## Non-functional requirements
 
@@ -274,8 +274,8 @@ Planned tests, not results.
 - **ADM-04-AC14** (R4, R8, security; integration (security); live DB) Exercising only the
   report path (no summary click) leaves zero new `ai_usage` rows.
 - **ADM-04-AC15** (R10; integration (security); live DB) `claim_ai_attempt` admits
-  `admin.activity-summary` and `student.improve-request` against one shared daily count
-  (100 existing successes refuse both with `quota_exceeded`), keeps the per-user in-flight
+  `student.improve-request`, `admin.activity-summary` and `lecturer.ai-briefing` against one
+  shared daily count (100 existing successes refuse all three with `quota_exceeded`), keeps the per-user in-flight
   guard, and still returns `unavailable` for any other feature name.
 
 ## Review evidence
@@ -291,7 +291,8 @@ None.
 
 ## Change log
 
-| Date       | Change and reason                                                                                                                                                                                  | IDs affected                                    | Evidence invalidated    | By                     |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ----------------------- | ---------------------- |
-| 2026-10-20 | First draft from owner-confirmed scope and inspected code/migrations/AI gateway                                                                                                                    | R1–R9, AC1–AC14                                 | None; no prior approval | requirements_architect |
-| 2026-10-21 | Owner approval with decisions a–d; quota dependency resolved by STU-05; feature name aligned to `admin.activity-summary`; env names aligned to `SOCLAAS_*`; R10/AC15 added for the quota allowlist | R2, R5, R6, R8, R10, AC2, AC7, AC12, AC13, AC15 | None; no prior approval | Johannsen (owner)      |
+| Date       | Change and reason                                                                                                                                                                                  | IDs affected                                    | Evidence invalidated        | By                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | --------------------------- | ---------------------- |
+| 2026-10-20 | First draft from owner-confirmed scope and inspected code/migrations/AI gateway                                                                                                                    | R1–R9, AC1–AC14                                 | None; no prior approval     | requirements_architect |
+| 2026-10-21 | Owner approval with decisions a–d; quota dependency resolved by STU-05; feature name aligned to `admin.activity-summary`; env names aligned to `SOCLAAS_*`; R10/AC15 added for the quota allowlist | R2, R5, R6, R8, R10, AC2, AC7, AC12, AC13, AC15 | None; no prior approval     | Johannsen (owner)      |
+| 2026-10-21 | Allowlist also admits LEC-04's `lecturer.ai-briefing` so #33 works without a competing migration (owner decision)                                                                                  | R10, AC15                                       | AC15 pgTAP evidence; re-run | Johannsen (owner)      |

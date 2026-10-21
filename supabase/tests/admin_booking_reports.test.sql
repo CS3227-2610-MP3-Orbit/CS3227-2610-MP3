@@ -30,10 +30,12 @@ delete from public.ai_usage;
 -- role from that trigger is fine for both fixture identities below.
 insert into auth.users (id) values
   ('89000000-0000-4000-8000-000000000001'), -- student_actor (admits student.improve-request)
-  ('89000000-0000-4000-8000-000000000002'); -- admin_actor (admits admin.activity-summary)
+  ('89000000-0000-4000-8000-000000000002'), -- admin_actor (admits admin.activity-summary)
+  ('89000000-0000-4000-8000-000000000003'); -- lecturer_actor (admits lecturer.ai-briefing)
 
 select set_config('adm04.student', '89000000-0000-4000-8000-000000000001', true);
 select set_config('adm04.admin', '89000000-0000-4000-8000-000000000002', true);
+select set_config('adm04.lecturer', '89000000-0000-4000-8000-000000000003', true);
 
 -- ---------------------------------------------------------------------------
 -- [ADM-04-AC15] both admitted features share one daily count and keep the per-user in-flight
@@ -82,6 +84,11 @@ select is(
   'unavailable',
   '[ADM-04-AC15] an unlisted feature name is refused as unavailable, not admitted'
 );
+select is(
+  public.claim_ai_attempt(current_setting('adm04.lecturer')::uuid, 'lecturer.ai-briefing') ->> 'kind',
+  'admitted',
+  '[ADM-04-AC15] LEC-04''s lecturer.ai-briefing is admitted'
+);
 
 -- 100 existing successes (today, SGT) refuse BOTH admitted features with quota_exceeded.
 delete from public.ai_usage;
@@ -102,6 +109,11 @@ select is(
   public.claim_ai_attempt(current_setting('adm04.admin')::uuid, 'admin.activity-summary') ->> 'kind',
   'quota_exceeded',
   '[ADM-04-AC15] admin.activity-summary is refused by that SAME shared 100/day count'
+);
+select is(
+  public.claim_ai_attempt(current_setting('adm04.lecturer')::uuid, 'lecturer.ai-briefing') ->> 'kind',
+  'quota_exceeded',
+  '[ADM-04-AC15] lecturer.ai-briefing is refused by that SAME shared 100/day count'
 );
 
 -- ---------------------------------------------------------------------------

@@ -1,10 +1,10 @@
 -- ADM-04: database layer for the administrator booking report and its AI activity summary.
 -- Two independent pieces, append-only (no existing migration is edited):
 --   1. admin_get_booking_report: a new, admin-only, read-only aggregate RPC (R2/R3/R4/R9).
---   2. claim_ai_attempt is re-created (R10) to also admit "admin.activity-summary", keeping the
---      STU-05 single shared 100-per-SGT-day count, advisory lock, and in-flight guard unchanged.
---      If another feature's migration also re-creates this function, whichever merges second
---      must list every admitted feature -- this migration lists both known ones.
+--   2. claim_ai_attempt is re-created (R10) to also admit "admin.activity-summary" and LEC-04's
+--      "lecturer.ai-briefing", keeping the STU-05 single shared 100-per-SGT-day count, advisory
+--      lock, and in-flight guard unchanged. This migration is the single owner of the allowlist:
+--      any later re-creation must keep every feature listed here.
 
 -- ---------------------------------------------------------------------------
 -- ADM-04-R2/R3/R4/R9: admin_get_booking_report. Counts and catalogue labels only -- never a
@@ -147,7 +147,8 @@ grant execute on function public.admin_get_booking_report(text, text) to authent
 
 -- ---------------------------------------------------------------------------
 -- ADM-04-R10: re-create claim_ai_attempt (exactly as 20261020030000_student_improve_request_
--- daily_quota.sql) to also admit "admin.activity-summary". Everything else -- the single shared
+-- daily_quota.sql) to also admit "admin.activity-summary" and "lecturer.ai-briefing" (LEC-04,
+-- #33, which calls generateText with that feature but adds no allowlist migration). Everything else -- the single shared
 -- 100-per-SGT-day count across every admitted feature, the advisory lock, the per-user in-flight
 -- guard, and the refusal of every other feature name -- is unchanged.
 -- ---------------------------------------------------------------------------
@@ -163,7 +164,7 @@ declare
   v_attempt_id bigint;
 begin
   if p_user_id is null
-    or p_feature not in ('student.improve-request', 'admin.activity-summary')
+    or p_feature not in ('student.improve-request', 'admin.activity-summary', 'lecturer.ai-briefing')
   then
     return jsonb_build_object('kind', 'unavailable');
   end if;
