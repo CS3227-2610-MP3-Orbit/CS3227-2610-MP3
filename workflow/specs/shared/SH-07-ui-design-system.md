@@ -2,7 +2,7 @@
 id: SH-07
 title: Shared UI design system and app shell
 owner: team
-status: draft
+status: approved
 ---
 
 # SH-07: Shared UI design system and app shell
@@ -18,6 +18,10 @@ status: draft
   `SH-07-AC12`–`AC20`) invalidates the approval above per AGENTS.md ("material requirement changes
   invalidate approval"); status reset to `draft`. Author: `requirements_architect`; reviewed HEAD
   `0f25d6c` (branch `feature/ui-identity`).
+- Approval of the material revision: approved by Johannsen on 2026-10-21 (owner approval, "please
+  build it") with the coordinator's recommendations: greeting boundaries 05:00–11:59 morning,
+  12:00–17:59 afternoon, 18:00–04:59 evening (SGT); the student "available slots" tile omitted; the
+  carried-over sidebar-collapse, font and colour-check items as already approved.
 - Digests (`git hash-object`): `src/components/role-shell.tsx` = `1b86f259135583a530a52910ffb35a9d45378b12`; `src/components/app-sidebar.tsx` = `702aeea345301056c6eda5b803151a5eba881d97`; `src/components/app-nav.ts` = `eec08a7887eb329b0f99c0dc99101f73fdebee0e`; `src/app/globals.css` = `829e311faa2f60fa50693768cec6de126e5e919e`; `src/components/ui/badge.tsx` = `c444f0281cc48ce43c4f0e7492358d0fa7866f23`; `.github/CODEOWNERS` = `879f936455b52ea7910c1258ad92f4e25b57334a`.
 - Parent/shared requirements: `SH-01` (session/role resolution); `ADM-01`, `ADM-02`, `SH-06` (pages
   restyled/revised here — their accessible names/states, field names, and messages are the
@@ -106,7 +110,7 @@ Nav items come from the server-resolved `user.role` already passed into `RoleShe
 
 ### SH-07-R12 — Greeting header and stat tiles
 
-`confirmed` greeting + tiles; `proposed` exact boundary hours. Each role dashboard opens with "Good morning/afternoon/evening, {user.fullName}", where the morning/afternoon/evening bucket is computed by a new, unit-testable pure function from the current time in `Asia/Singapore`; the owner confirmed the greeting and SGT basis but not exact boundary hours, so this spec proposes 05:00–11:59 morning, 12:00–17:59 afternoon, 18:00–04:59 evening (the unit test in `SH-07-AC14` exercises exactly these boundaries) pending owner sign-off, followed by a row of stat tiles using only data already returned by an existing server function on that page: Admin — active accounts (`listAccounts({ activeFilter: "true" })`), active courses (`listCourses({ activeFilter: "true" })`), pending consultation requests (`listLecturerRequests()`, already fetched by `src/app/admin/page.tsx`); Student — upcoming/active bookings (`listMyBookings()`, counting `status` in `pending`/`approved`); Lecturer — own slots and pending requests (both already fetched by `src/app/lecturer/page.tsx`). Student "available slots" is a tile the owner asked for but is **omitted**: `browseAvailableSlots`/`browse_available_slots` is cursor-paginated (`limit 21`, capped at 20 per page), so it cannot price an accurate unfiltered total without a new query, which is out of scope. Existing "Manage accounts"/"Manage courses" quick-link buttons on the admin dashboard are unaffected.
+`confirmed` greeting + tiles; `proposed` exact boundary hours. Each role dashboard opens with "Good morning/afternoon/evening, {user.fullName}", where the morning/afternoon/evening bucket is computed by a new, unit-testable pure function from the current time in `Asia/Singapore`; the owner confirmed the greeting and SGT basis but not exact boundary hours, so this spec proposes 05:00–11:59 morning, 12:00–17:59 afternoon, 18:00–04:59 evening (the unit test in `SH-07-AC14` exercises exactly these boundaries) confirmed by the owner on 2026-10-21, followed by a row of stat tiles using only data already returned by an existing server function on that page: Admin — active accounts (`listAccounts({ activeFilter: "true" })`), active courses (`listCourses({ activeFilter: "true" })`), pending consultation requests (`listLecturerRequests()`, already fetched by `src/app/admin/page.tsx`); Student — upcoming/active bookings (`listMyBookings()`, counting `status` in `pending`/`approved`); Lecturer — own slots and pending requests (both already fetched by `src/app/lecturer/page.tsx`). Student "available slots" is a tile the owner asked for but is **omitted**: `browseAvailableSlots`/`browse_available_slots` is cursor-paginated (`limit 21`, capped at 20 per page), so it cannot price an accurate unfiltered total without a new query, which is out of scope. Existing "Manage accounts"/"Manage courses" quick-link buttons on the admin dashboard are unaffected.
 
 ### SH-07-R13 — Semantic status pills everywhere a status or role renders
 
@@ -207,11 +211,11 @@ Planned tests, not results.
 - Challenge record: none yet; not independently reviewed.
 - Review type: not yet reviewed.
 - Open findings and disposition: none recorded yet.
-- Human input required: re-approve this material revision; confirm the SGT greeting-boundary hours proposed in `SH-07-R12`; confirm the three carried-over proposed items (sidebar-collapse mechanism, font-hosting, `SH-07-AC5` lint/grep) before implementation starts.
+- Human input required: none; the material revision was approved on 2026-10-21 (see Document control).
 
 ## Open questions blocking approval
 
-None blocking. Proposed, needs confirmation: the exact SGT greeting-boundary hours (`SH-07-R12`/`AC14`); sidebar-collapse breakpoint/mechanism (`SH-07-R2`); keep system fonts or adopt a `next/font`-hosted font (`SH-07-R7`); the lint/grep implementation for `SH-07-AC5`.
+None. The proposed items were confirmed with the 2026-10-21 approval.
 
 ## Change log
 
@@ -220,3 +224,4 @@ None blocking. Proposed, needs confirmation: the exact SGT greeting-boundary hou
 | 2026-10-20 | First draft from owner decisions (shadcn kit, shared shell, full restyle, presentation-only constraint)                                                                                                                                                     | R1–R8, AC1–AC11   | None; no prior approval                                                                  | requirements_architect |
 | 2026-10-20 | Owner approval; proposed breakpoint, font and colour-check items accepted                                                                                                                                                                                   | R1–R8             | None                                                                                     | Johannsen              |
 | 2026-10-20 | `TASK-SH-07B` material revision: visual identity ("Orbit" brand, SuperCane-style nav, greeting + stat tiles, semantic status pills, responsive tables/cards + create dialog, friendlier empty states, removed redundant nav links); status reset to `draft` | R9–R16, AC12–AC20 | Prior approval above superseded for the amended scope; `R1`–`R8`/`AC1`–`AC11` unaffected | requirements_architect |
+| 2026-10-21 | Owner approval of the material revision; greeting boundaries and omitted student tile accepted                                                                                                                                                              | R9–R16            | None                                                                                     | Johannsen              |
