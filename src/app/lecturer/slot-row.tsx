@@ -12,7 +12,9 @@ type Slot = {
   course_id: string;
   starts_at: string;
   ends_at: string;
-  courses: { code: string; name: string } | { code: string; name: string }[] | null;
+  course_code?: string | null;
+  course_name?: string | null;
+  courses?: { code: string; name: string } | { code: string; name: string }[] | null;
 };
 
 const initial: ActionResult = { ok: false, message: "" };
@@ -37,6 +39,8 @@ function singaporeParts(value: string) {
 }
 
 function courseDetails(slot: Slot) {
+  if (slot.course_code && slot.course_name)
+    return { code: slot.course_code, name: slot.course_name };
   return Array.isArray(slot.courses) ? slot.courses[0] : slot.courses;
 }
 

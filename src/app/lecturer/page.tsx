@@ -22,15 +22,10 @@ export default async function LecturerDashboardPage({
   const user = await requireRole("lecturer");
   const supabase = await createClient();
   const params = await searchParams;
-  const [{ data: courseResult }, { data: slots }, [result, history], requests, briefings] =
+  const [{ data: courses }, { data: slotRows }, [result, history], requests, briefings] =
     await Promise.all([
-      supabase.rpc("list_lecturer_courses"),
-      supabase
-        .from("consultation_slots")
-        .select("id, course_id, starts_at, ends_at, courses(code, name)")
-        .eq("lecturer_id", user.id)
-        .eq("is_active", true)
-        .order("starts_at"),
+      supabase.rpc("lecturer_list_my_courses"),
+      supabase.rpc("lecturer_list_my_slots"),
       Promise.all([
         listStaffConsultations("lecturer", false),
         listStaffConsultations("lecturer", true),
@@ -39,10 +34,15 @@ export default async function LecturerDashboardPage({
       listLecturerBriefings(),
     ]);
 
-  const courses =
-    courseResult?.kind === "success" && Array.isArray(courseResult.courses)
-      ? (courseResult.courses as { id: string; code: string; name: string }[])
-      : [];
+  const courseRows = (courses ?? []) as { id: string; code: string; name: string }[];
+  const slots = (slotRows ?? []) as {
+    id: string;
+    course_id: string;
+    starts_at: string;
+    ends_at: string;
+    course_code: string;
+    course_name: string;
+  }[];
 
   const pendingRequestsCount = requests.kind === "success" ? requests.requests.length : null;
 
@@ -78,7 +78,7 @@ export default async function LecturerDashboardPage({
           Consultation availability uses Singapore time. Slots must be created at least one hour
           before they start.
         </p>
-        <SlotForm courses={(courses ?? []) as { id: string; code: string; name: string }[]} />
+        <SlotForm courses={courseRows} />
         <h2 className="mt-8 font-semibold">Your consultation slots</h2>
         {!slots?.length ? (
           <p className="mt-2 text-sm text-muted-foreground">No consultation slots yet.</p>
@@ -88,7 +88,7 @@ export default async function LecturerDashboardPage({
               <SlotRow
                 key={slot.id}
                 slot={slot}
-                courses={(courses ?? []) as { id: string; code: string; name: string }[]}
+                courses={courseRows}
               />
             ))}
           </ul>

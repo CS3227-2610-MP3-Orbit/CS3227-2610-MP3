@@ -8,6 +8,15 @@ import { UNTRUSTED_DATA_RULE, wrapUntrusted } from "@/lib/ai/untrusted";
 import { consultationResultSchema } from "./consultations/validation";
 
 const inputSchema = z.object({ bookingId: z.string().uuid() });
+const briefingContextSchema = z.object({
+  kind: z.literal("ok"),
+  bookingId: z.string().uuid(),
+  studentName: z.string(),
+  courseCode: z.string(),
+  courseName: z.string(),
+  topic: z.string(),
+  questions: z.string(),
+});
 export type BriefingResult =
   | { kind: "idle" }
   | { kind: "success"; briefingId: string; text: string }
@@ -72,27 +81,26 @@ export async function listLecturerBriefings(): Promise<StoredBriefing[]> {
   }));
 }
 
-export async function generateLecturerBriefing(
-  _previousState: BriefingResult,
-  formData: FormData,
-): Promise<BriefingResult> {
+export async function generateLecturerBriefing(formData: FormData): Promise<BriefingResult> {
   const user = await requireRole("lecturer");
   const input = inputSchema.safeParse({ bookingId: formData.get("bookingId") });
   if (!input.success) return { kind: "error", message: "Select a valid consultation." };
 
   const supabase = await createClient();
-  const { data: consultations, error: consultationsError } = await supabase.rpc(
-    "list_staff_consultations",
-    { p_history: false },
+  // LEC-04-AC7: direct table reads are revoked (STU-01-AC21), so the consultation details come
+  // from a role-checked function scoped to the caller's own approved, upcoming consultation.
+  const { data: context, error: contextError } = await supabase.rpc(
+    "lecturer_get_briefing_context",
+    { p_booking_id: input.data.bookingId },
   );
-  const listed = consultationResultSchema.safeParse(consultations);
-  const booking = listed.success
-    ? listed.data.consultations.find((item) => item.bookingId === input.data.bookingId)
-    : undefined;
-  if (consultationsError || !booking)
-    return { kind: "error", message: "Consultation details unavailable." };
-  if (booking.bookingStatus !== "approved" || booking.displayStatus !== "upcoming")
-    return { kind: "error", message: "Only upcoming approved consultations can be briefed." };
+  const consultation = contextError ? null : briefingContextSchema.safeParse(context);
+  if (!consultation?.success) {
+    const kind = (context as { kind?: unknown } | null)?.kind;
+    return kind === "not_upcoming"
+      ? { kind: "error", message: "Only upcoming approved consultations can be briefed." }
+      : { kind: "error", message: "Consultation unavailable." };
+  }
+  const booking = consultation.data;
 
   const inputText = [
     wrapUntrusted("student_name", booking.studentName),
@@ -121,11 +129,16 @@ export async function generateLecturerBriefing(
   if (!validateBriefing(result.text))
     return { kind: "error", message: "The briefing service returned an invalid briefing." };
 
-  const { data: saved, error: saveError } = await supabase
-    .from("lecturer_ai_briefings")
-    .insert({ lecturer_id: user.id, booking_id: booking.bookingId, content: result.text })
-    .select("id")
-    .single();
-  if (saveError || !saved) return { kind: "error", message: "Briefing could not be saved." };
-  return { kind: "success", briefingId: saved.id, text: result.text };
+  const { data: saved, error: saveError } = await supabase.rpc("lecturer_save_briefing", {
+    p_booking_id: booking.bookingId,
+    p_content: result.text,
+  });
+  const savedId = (saved as { kind?: unknown; id?: unknown } | null)?.id;
+  if (
+    saveError ||
+    (saved as { kind?: unknown } | null)?.kind !== "ok" ||
+    typeof savedId !== "string"
+  )
+    return { kind: "error", message: "Briefing could not be saved." };
+  return { kind: "success", briefingId: savedId, text: result.text };
 }
