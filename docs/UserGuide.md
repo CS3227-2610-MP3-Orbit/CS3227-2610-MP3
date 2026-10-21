@@ -57,11 +57,16 @@ sign-in expires (see [Known limitations](#known-limitations)).
 
 ## Student
 
-_This section is maintained by the Student feature owner._
+Students can view available consultation slots and submit consultation requests with a topic and
+questions. Their requests show a user-facing status, including rejection reasons when applicable.
 
 ## Lecturer
 
-_This section is maintained by the Lecturer feature owner._
+Lecturers can create, view, edit, and delete their own consultation slots; review and decide requests;
+view upcoming, ongoing, and completed consultations; and generate an AI briefing for an upcoming
+approved consultation. The briefing summarizes the consultation, groups question themes, and suggests
+preparation topics. Student email is excluded from the model prompt, and saved briefings are retained
+in the database while only the latest ten are displayed.
 
 ## Administrator
 
@@ -124,7 +129,9 @@ account to recover from. Its owner can still change its password with **Change p
 
 ## AI features
 
-_To be added with the AI features._
+AI output is generated from application data and should be reviewed by the Lecturer before use. Student
+topics and questions are treated as content, not instructions to the AI system. AI failures do not block
+ordinary booking features.
 
 ## Known limitations
 

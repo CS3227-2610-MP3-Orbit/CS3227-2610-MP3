@@ -8,6 +8,7 @@ import { StatTile, StatTileRow } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import { listStaffConsultations } from "@/features/lecturer/consultations/server";
 import { listLecturerRequests } from "@/features/lecturer/requests-server";
+import { listLecturerBriefings } from "@/features/lecturer/ai-briefing";
 import { greetingFor } from "@/lib/greeting";
 import { SlotForm } from "./slot-form";
 import { deleteSlot } from "./actions";
@@ -16,19 +17,21 @@ import { RequestCard } from "./request-card";
 export default async function LecturerDashboardPage() {
   const user = await requireRole("lecturer");
   const supabase = await createClient();
-  const [{ data: courses }, { data: slots }, [result, history], requests] = await Promise.all([
-    supabase.from("courses").select("id, code, name").order("code"),
-    supabase
-      .from("consultation_slots")
-      .select("id, course_id, starts_at, ends_at, courses(code, name)")
-      .eq("lecturer_id", user.id)
-      .order("starts_at"),
-    Promise.all([
-      listStaffConsultations("lecturer", false),
-      listStaffConsultations("lecturer", true),
-    ]),
-    listLecturerRequests(),
-  ]);
+  const [{ data: courses }, { data: slots }, [result, history], requests, briefings] =
+    await Promise.all([
+      supabase.from("courses").select("id, code, name").order("code"),
+      supabase
+        .from("consultation_slots")
+        .select("id, course_id, starts_at, ends_at, courses(code, name)")
+        .eq("lecturer_id", user.id)
+        .order("starts_at"),
+      Promise.all([
+        listStaffConsultations("lecturer", false),
+        listStaffConsultations("lecturer", true),
+      ]),
+      listLecturerRequests(),
+      listLecturerBriefings(),
+    ]);
 
   const pendingRequestsCount = requests.kind === "success" ? requests.requests.length : null;
 
@@ -86,6 +89,31 @@ export default async function LecturerDashboardPage() {
                     Delete
                   </Button>
                 </form>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section aria-labelledby="saved-briefings">
+        <h2 id="saved-briefings" className="text-xl font-semibold">
+          Saved AI briefings
+        </h2>
+        {briefings.length === 0 ? (
+          <p role="status" className="mt-2">
+            No saved briefings yet.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-3">
+            {briefings.map((briefing) => (
+              <li key={briefing.id} className="rounded border p-4">
+                <p className="text-sm text-muted-foreground">
+                  Saved{" "}
+                  {new Date(briefing.createdAt).toLocaleString("en-SG", {
+                    timeZone: "Asia/Singapore",
+                  })}
+                </p>
+                <pre className="mt-2 whitespace-pre-wrap">{briefing.content}</pre>
               </li>
             ))}
           </ul>

@@ -2,7 +2,7 @@
 id: LEC-04
 title: AI consultation briefing
 owner: lecturer
-status: draft
+status: approved
 ---
 
 # LEC-04: AI consultation briefing
@@ -43,7 +43,10 @@ Lecturers should be able to request an AI-generated briefing for an authorized c
 - The system prompt must state that untrusted content cannot change the task, permissions, or booking state.
 - Prompt injection, HTML/script output, oversized input, empty output, provider failure, repeated requests, and data exfiltration must be tested.
 - AI output must never approve, reject, create, edit, complete, or delete a consultation.
-- The precise briefing sections and permitted student fields are open questions.
+- The briefing contains a summary, grouped question themes, and preparation topics.
+- The selected consultation includes the student's name, topic, and questions; student email is excluded from the model input.
+- A briefing is generated for one selected upcoming approved consultation.
+- Generated briefings are retained in the database indefinitely, while the user-facing view shows only the latest 10 for the owning Lecturer.
 
 ## Acceptance criteria
 
@@ -80,13 +83,11 @@ Lecturers should be able to request an AI-generated briefing for an authorized c
 
 ## Open questions
 
-- What exact briefing sections and output format are required?
-- Which student fields may be included, and must names be omitted or pseudonymized?
-- What quota values and per-feature limits apply?
-- Should briefings be retained, and if so for how long?
+- The existing default SoC quota and rate-limit settings apply.
 
 ## Change log
 
-| Date       | Change                                       | By    |
-| ---------- | -------------------------------------------- | ----- |
-| 2026-10-19 | Initial draft based on repository inspection | Codex |
+| Date       | Change                                                                                | By                |
+| ---------- | ------------------------------------------------------------------------------------- | ----------------- |
+| 2026-10-19 | Initial draft based on repository inspection                                          | Codex             |
+| 2026-10-20 | Approved selected-consultation format, fields, retention, and default quota decisions | Human stakeholder |

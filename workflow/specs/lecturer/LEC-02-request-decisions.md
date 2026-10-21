@@ -16,12 +16,13 @@ status: draft
 - Related plan and latest handoff: `workflow/handoffs/analyst-to-developer.md`.
 - Confirmed requirements: owning lecturers decide their consultation requests; existing statuses are
   `pending`, `approved`, `rejected`, `cancelled`, and `completed`; terminal history is retained.
-- Proposed assumptions requiring review: exact Lecturer page path, rejection-reason bounds, notification
-  transport, and whether administrators may view or decide private request content.
-- Human decisions recorded: rejection reasons are required and selected from a controlled dropdown;
-  students can see the selected reason; decisions are allowed until the consultation starts;
-  administrators may view and manage requests; audit records remain minimal; notifications are
-  in-app only; and lecturers may view all currently stored request fields subject to privacy rules.
+- Human decisions recorded: rejection reasons are required and selected from a controlled dropdown
+  containing `Schedule unavailable`, `Insufficient information`, `Course mismatch`, `Feeling Unwell`,
+  and `Family emergency`; students can see the selected reason; decisions are allowed until the
+  consultation starts; administrators may view and manage requests; audit records store booking ID,
+  actor ID, decision, timestamp, and operation ID only; notifications are in-app only; and lecturers
+  may view all currently stored request fields subject to privacy rules. User-facing failures use safe
+  generic messages without database, provider, or authorization details.
 
 ## Product and feature description
 
@@ -260,16 +261,14 @@ approval/rejection may occur. Provider availability must not affect decision out
 
 ## Review evidence
 
-- Challenge record: not run; this is the initial analyst draft.
+- Challenge record: human decision round completed on 2026-10-20.
 - Review type: `independent` analyst inspection of repository state.
-- Open findings and disposition: all material unresolved decisions are listed below; implementation is blocked.
-- Human input required: rejection reason policy, decision deadline, notification contract, and administrator access.
+- Open findings and disposition: resolved by the decisions recorded above.
+- Human approval: recorded from the Lecturer feature owner on 2026-10-20.
 
 ## Open questions
 
-1. Which controlled rejection-reason options should the dropdown contain beyond the initial examples?
-2. What exact minimal audit fields should be retained for administrator decisions?
-3. What exact user-facing wording should be used for validation, authorization, conflict, and notification failures?
+None blocking approval. Exact wording may be refined without changing the security or state-transition contract.
 
 ## Change log
 

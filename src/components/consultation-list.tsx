@@ -2,6 +2,7 @@ import { Inbox } from "lucide-react";
 
 import type { Consultation } from "@/features/lecturer/consultations/validation";
 import { Badge } from "@/components/ui/badge";
+import { BriefingButton } from "./briefing-button";
 import { EmptyState } from "@/components/empty-state";
 import { statusBadgeVariant } from "@/lib/status-badge";
 
@@ -34,6 +35,7 @@ export function ConsultationList({ consultations }: { consultations: Consultatio
           </p>
           <p>Questions: {item.questions}</p>
           <p className="text-sm text-muted-foreground">{item.courseName}</p>
+          {item.displayStatus === "upcoming" && <BriefingButton bookingId={item.bookingId} />}
         </li>
       ))}
     </ul>
