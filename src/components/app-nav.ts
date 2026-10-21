@@ -22,6 +22,7 @@ export const NAV_ITEMS: Record<Role, NavItem[]> = {
     { label: "Accounts", href: "/admin/accounts" },
     // Arrives on another branch (ADM-02); linked here so admin nav is complete once it lands.
     { label: "Courses", href: "/admin/courses" },
+    { label: "Reports", href: "/admin/reports" },
   ],
 };
 

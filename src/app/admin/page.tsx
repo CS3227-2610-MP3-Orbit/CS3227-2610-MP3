@@ -16,6 +16,9 @@ export default async function AdminDashboardPage() {
         <Link href="/admin/courses" className={buttonVariants({ variant: "default" })}>
           Manage courses
         </Link>
+        <Link href="/admin/reports" className={buttonVariants({ variant: "default" })}>
+          View reports
+        </Link>
       </div>
       <section className="space-y-5">
         <h2 className="text-xl font-semibold">Consultation requests</h2>
