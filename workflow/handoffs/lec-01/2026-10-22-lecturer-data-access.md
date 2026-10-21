@@ -58,3 +58,16 @@ The pgTAP suites run as the table owner, so none of them noticed.
 ## Next decision
 
 Jordan to review the spec amendment, the functions and the code. Merge after #36, #37 and #38.
+
+## Independent security review (22 Oct)
+
+A read-only `security_reviewer` reviewed commit `35cefa2`: **passed with findings**. It found no
+problem with the role checks, identity from `auth.uid()`, `search_path`, function grants, the absence
+of table grants, cross-lecturer access, the briefing context (no student email), the save function's
+parity with the original insert policy, `wrapUntrusted`, or the inline delete action.
+
+| Finding                                                                                          | Severity | Disposition                                                                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F1: the old `courses` policy was not buggy, because `cl.course_id = id` resolves to `courses.id` | Low      | **Rejected, with evidence.** An unqualified column inside a subquery resolves to the nearest table that has it; `course_lecturers` has `id`, so `id` meant `cl.id`. `pg_policies` stores the policy as `cl.course_id = cl.id`. The comment stays.          |
+| F2: the write functions lacked the house handler for lock and serialization failures             | Low      | **Fixed.** `lecturer_create_slot`, `lecturer_update_slot` and `lecturer_delete_slot` now return `temporarily_unavailable` with a `correlationId`, like the ADM-02 functions. The action shows its generic "Please try again" message. pgTAP re-run: 43/43. |
+| F3: a confirmed edit of a booked slot can never succeed (STU-02 trigger)                         | Info     | Already listed under unresolved issues; not a release blocker.                                                                                                                                                                                             |
