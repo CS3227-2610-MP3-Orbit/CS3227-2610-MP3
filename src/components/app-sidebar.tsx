@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { NAV_GROUPS, ROLE_LABEL } from "@/components/app-nav";
+import { OrbitMark } from "@/components/orbit-mark";
 import {
   Sidebar,
   SidebarContent,
@@ -17,39 +18,6 @@ import {
 } from "@/components/ui/sidebar";
 import { EYEBROW_CLASS } from "@/lib/eyebrow";
 import { homePathFor, type Role } from "@/lib/auth/roles";
-
-/**
- * SH-07-R9: the decorative "Orbit" mark -- a centre dot with two orbiting rings/satellites.
- * `aria-hidden` throughout, and it shares the wordmark link's accessible name (the wordmark
- * text itself), per SH-07-AC12.
- */
-function OrbitMark() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" className="shrink-0">
-      <circle cx="12" cy="12" r="2.5" fill="currentColor" />
-      <ellipse
-        cx="12"
-        cy="12"
-        rx="10"
-        ry="4.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <ellipse
-        cx="12"
-        cy="12"
-        rx="4.5"
-        ry="10"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        transform="rotate(35 12 12)"
-      />
-      <circle cx="21.2" cy="12" r="1.4" fill="currentColor" />
-    </svg>
-  );
-}
 
 /**
  * SH-07-R2 / SH-07-AC2: renders only the nav items for the server-resolved `role` passed in by
