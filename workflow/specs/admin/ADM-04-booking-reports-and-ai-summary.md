@@ -2,7 +2,7 @@
 id: ADM-04
 title: Administrator booking reports and AI activity summary
 owner: johannsen
-status: draft
+status: approved
 ---
 
 # ADM-04: Administrator booking reports and AI activity summary
@@ -25,11 +25,15 @@ status: draft
   `workflow/handoffs/adm-04/2026-10-20-adm-04-requirements-architect.md`.
 - Confirmed requirements: owner-confirmed scope (Johannsen via coordinator, 2026-10-20) —
   see R1–R9.
-- Proposed, needs review: RPC/jsonb shape, `starts_at` vs. `created_at` anchor, zero-fill
-  vs. omit (all R2); model-input shape and 1,200-char bound (R5/R6); local
-  `not_configured` guard (R8).
-- Unresolved: none block this spec's approval; `decideQuota`/`SH-01-AC6` blocks only
-  R5–R8's implementation.
+- Owner decisions (Johannsen, 2026-10-21, "lets do a, b, c, d approve"): (a) count by the
+  slot's `starts_at`; (b) zero-fill `byDay` and `byStatus` only — `byCourse`/`byLecturer`
+  list only rows with ≥1 booking; (c) 1,200-character output bound; (d) local
+  `not_configured` guard before any provider call.
+- Approval: **approved** by Johannsen (owner), 2026-10-21, covering R1–R10 and AC1–AC15
+  as written below.
+- Quota dependency resolved on `develop` by STU-05 (#34): `claim_ai_attempt` enforces one
+  shared 100-successful-response SGT daily capacity and admits only listed features (R10).
+- Unresolved: none.
 
 ## Product and feature description
 
@@ -48,9 +52,8 @@ handled-failure/missing-config messaging; prompt-injection and data-minimization
 the summary; quota-bypassing retries; another role's AI feature.
 
 **Dependencies**: `SH-01`; `ADM-01`/`ADM-02`; existing
-`bookings`/`consultation_slots`/`courses`/`course_lecturers`/`profiles`. **AI half only**:
-`decideQuota` is unimplemented (owner's own TODO), so `generateText` fails closed today;
-R1–R4 do not depend on it.
+`bookings`/`consultation_slots`/`courses`/`course_lecturers`/`profiles`; STU-05's
+`claim_ai_attempt` quota RPC, extended by R10.
 
 ## Users, roles, and permissions
 
@@ -75,9 +78,10 @@ Out-of-bounds is refused before any query.
 
 `confirmed`; `proposed` shape. One admin-only RPC `admin_get_booking_report(p_start_date,
 p_end_date text)` returns `totalBookings`, `byStatus` (5 values, zero-filled),
-`byCourse`/`byLecturer` (≥1 booking, no zero-fill), `byDay` (SGT days active) — grouped by
-the slot's `course_id`/`lecturer_id`. **Flagged**: counted by slot `starts_at`, not
-booking `created_at` (may suit non-terminal statuses better).
+`byCourse`/`byLecturer` (≥1 booking, no zero-fill), `byDay` (every SGT day in the
+range, zero-filled, ascending) — grouped by the slot's `course_id`/`lecturer_id`. A booking
+is counted by its slot's `starts_at` SGT day, not the booking's `created_at` (owner
+decision a/b).
 
 ### ADM-04-R3 — Report excludes private booking content
 
@@ -95,7 +99,7 @@ write.
 `confirmed`; `proposed` shape. "Summarise this period" calls the RPC twice (shown +
 preceding period), building the model input **only** from those results; staff
 course/lecturer names are still wrapped with `wrapUntrusted()`/`UNTRUSTED_DATA_RULE`.
-`feature: "admin_activity_summary"`.
+`feature: "admin.activity-summary"` (matches the `student.improve-request` convention).
 
 ### ADM-04-R6 — AI output handling
 
@@ -109,15 +113,26 @@ report is produced independently of any summary request.
 
 ### ADM-04-R8 — AI quota, timeout, and unavailable-config handling
 
-`confirmed`; **blocked**. A local guard checks `SOC_LLM_*` config first; absent, returns
-`ai_unavailable: not_configured`, no provider call. Typed failures map to the same
-friendly family; report unaffected. `decideQuota` is unimplemented, so R5–R8 wait on
-`SH-01-AC6`; no retry may bypass a quota refusal.
+`confirmed`. A local guard checks `SOCLAAS_BASE_URL`/`SOCLAAS_API_KEY` first; absent,
+returns `ai_unavailable: not_configured`, no quota claim and no provider call (owner
+decision d). Every typed `generateText` failure maps to the same friendly family; report
+unaffected. Quota is `claim_ai_attempt`'s shared daily capacity (R10); no retry may bypass
+a quota refusal.
 
 ### ADM-04-R9 — No new tables
 
 `confirmed`. No new table/column; the RPC reads only existing tables; the summary is never
 stored.
+
+### ADM-04-R10 — Quota admission for the admin feature
+
+`confirmed`. A new append-only migration re-creates `claim_ai_attempt` so it admits
+`admin.activity-summary` in addition to `student.improve-request`, with STU-05's behaviour
+otherwise unchanged: the same single shared 100-per-SGT-day count across both features,
+the same per-user in-flight guard, and every other feature still refused. Admin summaries
+therefore spend the same daily budget as student requests. If another feature's migration
+(e.g. LEC-04) also re-creates this function, whichever merges second must list every
+admitted feature.
 
 ## Non-functional requirements
 
@@ -149,11 +164,11 @@ merely hidden.
 No `createAdminClient` needed; `requireRole("admin")` then the RPC, matching
 `ADM-01`/`ADM-02`. Zod `.strict()` validates both actions' inputs first. Proposed layout
 mirrors `src/features/admin/courses`, with a prompt-builder kept separate from I/O. One
-append-only migration; nothing existing edited.
+append-only migration (the report RPC plus the R10 quota allowlist); nothing existing edited.
 
 ## Data model and integrity rules
 
-No new table/column (R9). One migration adds `admin_get_booking_report(p_start_date text,
+No new table/column (R9). One migration re-creates `claim_ai_attempt` (R10) and adds `admin_get_booking_report(p_start_date text,
 p_end_date text)` — `security definer`, `set search_path=''`, admin-only; refuses
 (`validation_error`, field `range`) past 92 days or `end < start`; `execute` to
 `authenticated` only. Writes nothing beyond `generateText`'s own `ai_usage` insert.
@@ -168,8 +183,8 @@ byStatus, byCourse, byLecturer, byDay}` or `validation_error` (field) /
   `forbidden_or_not_found`.
 - `generateActivitySummary({startDate, endDate})` → `{kind:'success', summary, truncated}`
   or `validation_error` / `forbidden_or_not_found` / `ai_unavailable` (`reason`, optional
-  `retryAfterSeconds`); `reason` ∈
-  `not_configured|input_too_long|quota_exceeded|timeout|rate_limited|unavailable|empty_response`.
+  `retryAfterSeconds`); `reason` is `not_configured` or any `AiFailure` returned by
+  `generateText`.
 
 No caller-supplied field/SQL selector; non-admin/signed-out direct calls get
 `forbidden_or_not_found`, no data, no model call.
@@ -183,7 +198,7 @@ No caller-supplied field/SQL selector; non-admin/signed-out direct calls get
 - Disclosure: the RPC returns counts and catalogue labels only — no student
   id/name/contact/`topic`/`questions`/`rejection_reason`.
 - Limits: 92-day bound enforced in schema and RPC; one `generateText` call per click, no
-  auto-retry; quota is `decideQuota`'s job once it exists.
+  auto-retry; quota is `claim_ai_attempt`'s shared daily capacity (R10).
 - Logging: the existing `ai_usage` row is the only record; no prompt/response text logged;
   errors logged only as bounded categories.
 - Needs independent human review before merge (new RPC, first Administrator AI feature),
@@ -201,8 +216,8 @@ No caller-supplied field/SQL selector; non-admin/signed-out direct calls get
 - **Output/rendering**: trimmed, capped at 1,200 characters, rendered as plain text,
   labelled advisory.
 - **Authorization order**: `requireRole` → range validation → `not_configured` check →
-  `decideQuota` (once implemented) → prompt build → provider call.
-- **Quota/failure**: `feature: "admin_activity_summary"` in `ai_usage`; every handled
+  prompt build → `generateText` (quota claim, then provider call).
+- **Quota/failure**: `feature: "admin.activity-summary"` in `ai_usage`; every handled
   failure and a missing key show the same friendly family; the report is unaffected either
   way.
 
@@ -215,7 +230,7 @@ No caller-supplied field/SQL selector; non-admin/signed-out direct calls get
 | Non-admin/signed-out direct call                         | `forbidden_or_not_found`, no data, no model call                                                       | Only active admins reach this feature                               |
 | Instruction-like course/lecturer name                    | Appears only inside the untrusted wrapper                                                              | Prompt injection cannot change behavior                             |
 | SoC LLM key missing, or a handled `generateText` failure | `ai_unavailable` (`not_configured` or the mapped reason); no/returned provider call; report unaffected | AI failure never blocks the report / dev without a key never throws |
-| `decideQuota` not yet implemented                        | AI summary cannot ship; report unaffected                                                              | R1–R4 ship independently of R5–R8                                   |
+| Shared daily AI capacity already used up                 | `ai_unavailable: quota_exceeded` with `retryAfterSeconds`; report unaffected                           | AI cost stays within the team's shared daily budget                 |
 | Model output >1,200 chars or has markup                  | Truncated at a word boundary / rendered as inert text                                                  | Output stays bounded and inert                                      |
 
 ## Acceptance criteria and verification
@@ -227,8 +242,9 @@ Planned tests, not results.
   `validation_error`.
 - **ADM-04-AC2** (R2; integration; live DB) Seeded bookings across
   statuses/courses/lecturers/days produce a zero-filled five-row `byStatus` summing to
-  `totalBookings` and exact `byCourse`/`byLecturer`/`byDay` counts; an empty period
-  returns all-zero, not an error.
+  `totalBookings`, exact `byCourse`/`byLecturer` counts (no zero rows), and a `byDay` with
+  one ascending row per SGT day in the range, zero-filled; an empty period returns all-zero,
+  not an error.
 - **ADM-04-AC3** (R2; integration; live DB) A booking is counted by its slot's `starts_at`
   SGT day, not its own `created_at`, when the two differ.
 - **ADM-04-AC4** (R3; integration (security); live DB) Seeded student
@@ -239,7 +255,7 @@ Planned tests, not results.
 - **ADM-04-AC6** (R5, security; unit; mocked) With fixture data containing student
   names/topics in other tables, the constructed model input contains none of them.
 - **ADM-04-AC7** (R5; unit; mocked) The `generateText` request has `feature:
-"admin_activity_summary"` and a system prompt including `UNTRUSTED_DATA_RULE`.
+"admin.activity-summary"` and a system prompt including `UNTRUSTED_DATA_RULE`.
 - **ADM-04-AC8** (R5, security; unit; mocked, plus optional live) An instruction-like name
   sits only inside an unclosable `wrapUntrusted()` block; a mocked reply changes no
   behavior; a live check is not-run without a key.
@@ -251,32 +267,31 @@ Planned tests, not results.
 - **ADM-04-AC11** (R7; unit plus integration; mocked + live DB) No booking, slot, course,
   assignment, or profile row changes regardless of model output.
 - **ADM-04-AC12** (R8; unit; mocked) Each handled `generateText` failure, and
-  `SOC_LLM_API_KEY` unset, shows the matching `ai_unavailable` reason without calling the
+  `SOCLAAS_API_KEY` unset, shows the matching `ai_unavailable` reason without calling the
   provider.
-- **ADM-04-AC13** (R8; unit; mocked, blocked until `decideQuota` is implemented) At the
-  configured limit, the result is `ai_unavailable: quota_exceeded` with
-  `retryAfterSeconds`; cannot run until `SH-01-AC6`'s `decideQuota` exists.
+- **ADM-04-AC13** (R8; unit; mocked) When `generateText` returns `quota_exceeded`, the
+  result is `ai_unavailable: quota_exceeded` with `retryAfterSeconds`, and no retry is made.
 - **ADM-04-AC14** (R4, R8, security; integration (security); live DB) Exercising only the
   report path (no summary click) leaves zero new `ai_usage` rows.
+- **ADM-04-AC15** (R10; integration (security); live DB) `claim_ai_attempt` admits
+  `admin.activity-summary` and `student.improve-request` against one shared daily count
+  (100 existing successes refuse both with `quota_exceeded`), keeps the per-user in-flight
+  guard, and still returns `unavailable` for any other feature name.
 
 ## Review evidence
 
 - Challenge record: none yet; not independently reviewed.
 - Review type: not yet reviewed.
 - Open findings: none recorded yet.
-- Human input required: the RPC/jsonb shape, the counting anchor, zero-fill convention
-  (R2), and the 1,200-character bound (R6); none block drafting.
+- Human input required: none; owner decisions a–d recorded in Document control.
 
 ## Open questions blocking approval
 
-None blocking this spec's draft-to-review path.
-
-Non-blocking: zero-fill vs. omit for `byCourse`/`byLecturer`; `starts_at` vs. `created_at`
-anchor; output bound/marker (R2/R6). **Blocking implementation, not approval**: R5–R8 need
-`decideQuota`/`SH-01-AC6`; R1–R4 do not.
+None.
 
 ## Change log
 
-| Date       | Change and reason                                                               | IDs affected    | Evidence invalidated    | By                     |
-| ---------- | ------------------------------------------------------------------------------- | --------------- | ----------------------- | ---------------------- |
-| 2026-10-20 | First draft from owner-confirmed scope and inspected code/migrations/AI gateway | R1–R9, AC1–AC14 | None; no prior approval | requirements_architect |
+| Date       | Change and reason                                                                                                                                                                                  | IDs affected                                    | Evidence invalidated    | By                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ----------------------- | ---------------------- |
+| 2026-10-20 | First draft from owner-confirmed scope and inspected code/migrations/AI gateway                                                                                                                    | R1–R9, AC1–AC14                                 | None; no prior approval | requirements_architect |
+| 2026-10-21 | Owner approval with decisions a–d; quota dependency resolved by STU-05; feature name aligned to `admin.activity-summary`; env names aligned to `SOCLAAS_*`; R10/AC15 added for the quota allowlist | R2, R5, R6, R8, R10, AC2, AC7, AC12, AC13, AC15 | None; no prior approval | Johannsen (owner)      |
