@@ -2,7 +2,7 @@
 id: ADM-03
 title: Administrator-published guidelines and announcements
 owner: johannsen
-status: draft
+status: approved
 ---
 
 # ADM-03: Administrator-published guidelines and announcements
@@ -56,15 +56,15 @@ status: draft
   publish, and unpublish guidelines and announcements; no hard delete; any active signed-in user
   (student, lecturer, or admin) reads only published items; no AI. See `ADM-03-R1`–`R10` below for
   the exact classification of every other detail.
-- Proposed assumptions requiring review: title/body bounds and trimming rule (`R1`); a new item
-  starts unpublished (draft) and must be explicitly published (`R1`); the read path uses direct
-  RLS-protected table reads instead of a new RPC, for both the admin list and the reader
-  projection (`R4`/`R5`/`R9`); the exact reader ordering/cap rule — all published guidelines, then
-  the 5 newest published announcements, both newest-first (`R9`); extending the reader card to the
-  Lecturer dashboard, which goes beyond what `PRODUCT-SPEC.md`'s Lecturer section currently states
-  (`R10`); the "Communications" nav group placement (UI description).
-- Unresolved decisions: none blocking drafting; see "Open questions blocking approval" and the
-  decisions flagged for owner confirmation in the handoff.
+- Owner decisions (Johannsen, 2026-10-21, "go" on the five recommendations): (1) `title` 1–120 and
+  `body` 1–2000 trimmed characters (`R1`); (2) a new item starts unpublished and must be explicitly
+  published (`R1`); (3) direct RLS-protected table reads, no new read RPC, for the admin list and the
+  reader projection (`R4`/`R5`/`R9`); (4) the reader card appears on both the Student and the
+  Lecturer dashboards (`R10`); (5) a "Communications" sidebar group with a `Megaphone`
+  "Announcements" item. The reader ordering/cap in `R9` (all published guidelines, then the 5
+  newest published announcements, newest first) is accepted as written.
+- Approval: **approved** by Johannsen (owner), 2026-10-21, covering R1–R10 and AC1–AC15 as written.
+- Unresolved decisions: none.
 
 ## Product and feature description
 
@@ -391,27 +391,17 @@ Planned tests, not results.
 - Challenge record: none yet; not independently reviewed.
 - Review type: not yet reviewed.
 - Open findings and disposition: none recorded yet.
-- Human input required: owner review of every item tagged `proposed` above — most materially the
-  bounds/default-draft-on-create (`R1`), the RLS-only (no new RPC) read-path choice (`R4`/`R5`/
-  `R9`), the exact reader ordering/cap (`R9`), and extending the reader card to the Lecturer
-  dashboard beyond `PRODUCT-SPEC.md`'s current wording (`R10`); none of these block drafting
-  further.
+- Human input required: none; owner decisions recorded in Document control. `src/app/student/**`
+  and `src/app/lecturer/**` changes still need Joseph's and Jordan's review at PR time.
 
 ## Open questions blocking approval
 
-None blocking.
-
-Non-blocking: this spec proposes closing `PRODUCT-SPEC.md`'s open question "What maximum lengths
-should apply to ... announcements?" with the `title`/`body` bounds in `ADM-03-R1`, without editing
-`PRODUCT-SPEC.md` itself (out of this agent's allowed scope) — a human maintainer updates that
-document separately if the proposal is accepted. Whether the Lecturer dashboard card is in scope
-for this half-day pass, given issue #25 is explicitly marked "lower priority; cut if short on
-time" and `PRODUCT-SPEC.md`'s Lecturer section does not yet mention it, stays open for the owner;
-cutting it would only remove `ADM-03-R10`'s Lecturer half and `ADM-03-AC14`'s Lecturer assertion,
-not any other requirement.
+None. `PRODUCT-SPEC.md`'s open question on maximum announcement length is answered by `R1`'s bounds;
+`PRODUCT-SPEC.md` itself is updated separately.
 
 ## Change log
 
-| Date       | Change and reason                                                                                              | IDs affected     | Evidence invalidated    | By                     |
-| ---------- | -------------------------------------------------------------------------------------------------------------- | ---------------- | ----------------------- | ---------------------- |
-| 2026-10-21 | First draft from `PRODUCT-SPEC.md`, issues #25/#9, and inspected `ADM-02`/`ADM-04`/`SH-07` code and migrations | R1–R10, AC1–AC15 | None; no prior approval | requirements_architect |
+| Date       | Change and reason                                                                                              | IDs affected        | Evidence invalidated    | By                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------- | ------------------- | ----------------------- | ---------------------- |
+| 2026-10-21 | First draft from `PRODUCT-SPEC.md`, issues #25/#9, and inspected `ADM-02`/`ADM-04`/`SH-07` code and migrations | R1–R10, AC1–AC15    | None; no prior approval | requirements_architect |
+| 2026-10-21 | Owner approval of all five proposed decisions                                                                  | R1, R4, R5, R9, R10 | None; no prior approval | Johannsen (owner)      |
