@@ -258,8 +258,8 @@ describe("[ADM-01-AC14] real two-connection concurrent demotion (not a sequentia
   // (service-role write, restored in `finally` no matter the outcome) so the zero-admin
   // invariant is driven by our two fresh fixtures alone, not diluted by unrelated admins.
   const SEED_ADMIN_IDS = [
-    "12000000-0000-4000-8000-000000000001",
-    "12000000-0000-4000-8000-000000000002",
+    "14000000-0000-4000-8000-000000000001",
+    "14000000-0000-4000-8000-000000000002",
   ];
 
   it("two real connections, each demoting the other via admin_set_role at the same time: at most one commits, at least one admin always remains", async () => {
