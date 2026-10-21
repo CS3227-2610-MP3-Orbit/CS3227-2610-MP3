@@ -18,14 +18,11 @@ import { RequestCard } from "./request-card";
 export default async function LecturerDashboardPage() {
   const user = await requireRole("lecturer");
   const supabase = await createClient();
-  const [{ data: courses }, { data: slots }, [result, history], requests, briefings] =
+  const [{ data: courseRows }, { data: slotRows }, [result, history], requests, briefings] =
     await Promise.all([
-      supabase.from("courses").select("id, code, name").order("code"),
-      supabase
-        .from("consultation_slots")
-        .select("id, course_id, starts_at, ends_at, courses(code, name)")
-        .eq("lecturer_id", user.id)
-        .order("starts_at"),
+      // LEC-01 "Data access path": direct table reads are revoked (STU-01-AC21).
+      supabase.rpc("lecturer_list_my_courses"),
+      supabase.rpc("lecturer_list_my_slots"),
       Promise.all([
         listStaffConsultations("lecturer", false),
         listStaffConsultations("lecturer", true),
@@ -33,6 +30,8 @@ export default async function LecturerDashboardPage() {
       listLecturerRequests(),
       listLecturerBriefings(),
     ]);
+  const courses = (courseRows ?? []) as { id: string; code: string; name: string }[];
+  const slots = (slotRows ?? []) as { id: string; starts_at: string; ends_at: string }[];
 
   const pendingRequestsCount = requests.kind === "success" ? requests.requests.length : null;
 
@@ -58,9 +57,9 @@ export default async function LecturerDashboardPage() {
           Consultation availability uses Singapore time. Slots must be created at least one hour
           before they start.
         </p>
-        <SlotForm courses={(courses ?? []) as { id: string; code: string; name: string }[]} />
+        <SlotForm courses={courses} />
         <h2 className="mt-8 font-semibold">Your consultation slots</h2>
-        {!slots?.length ? (
+        {!slots.length ? (
           <p className="mt-2 text-sm text-muted-foreground">No consultation slots yet.</p>
         ) : (
           <ul className="mt-3 grid gap-2">
@@ -82,6 +81,7 @@ export default async function LecturerDashboardPage() {
                 </span>
                 <form
                   action={async (formData) => {
+                    "use server";
                     await deleteSlot(formData);
                   }}
                 >

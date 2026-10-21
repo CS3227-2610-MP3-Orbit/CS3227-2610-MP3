@@ -7,6 +7,15 @@ import { generateText } from "@/lib/ai/client";
 import { UNTRUSTED_DATA_RULE, wrapUntrusted } from "@/lib/ai/untrusted";
 
 const inputSchema = z.object({ bookingId: z.string().uuid() });
+const briefingContextSchema = z.object({
+  kind: z.literal("ok"),
+  bookingId: z.string().uuid(),
+  studentName: z.string(),
+  courseCode: z.string(),
+  courseName: z.string(),
+  topic: z.string(),
+  questions: z.string(),
+});
 export type BriefingResult =
   | { kind: "idle" }
   | { kind: "success"; briefingId: string; text: string }
@@ -55,32 +64,24 @@ export async function generateLecturerBriefing(formData: FormData): Promise<Brie
   if (!input.success) return { kind: "error", message: "Select a valid consultation." };
 
   const supabase = await createClient();
-  const { data: booking, error: bookingError } = await supabase
-    .from("bookings")
-    .select(
-      "id, student_id, status, topic, questions, consultation_slots!inner(id, lecturer_id, course_id, starts_at, ends_at)",
-    )
-    .eq("id", input.data.bookingId)
-    .eq("status", "approved")
-    .eq("consultation_slots.lecturer_id", user.id)
-    .single();
-  if (bookingError || !booking) return { kind: "error", message: "Consultation unavailable." };
-
-  const slot = Array.isArray(booking.consultation_slots)
-    ? booking.consultation_slots[0]
-    : booking.consultation_slots;
-  if (!slot || new Date(slot.starts_at) <= new Date())
-    return { kind: "error", message: "Only upcoming approved consultations can be briefed." };
-
-  const [{ data: student }, { data: course }] = await Promise.all([
-    supabase.from("profiles").select("full_name").eq("id", booking.student_id).single(),
-    supabase.from("courses").select("code, name").eq("id", slot.course_id).single(),
-  ]);
-  if (!student || !course) return { kind: "error", message: "Consultation details unavailable." };
+  // LEC-04-AC7: direct table reads are revoked (STU-01-AC21), so the consultation details come
+  // from a role-checked function scoped to the caller's own approved, upcoming consultation.
+  const { data: context, error: contextError } = await supabase.rpc(
+    "lecturer_get_briefing_context",
+    { p_booking_id: input.data.bookingId },
+  );
+  const consultation = contextError ? null : briefingContextSchema.safeParse(context);
+  if (!consultation?.success) {
+    const kind = (context as { kind?: unknown } | null)?.kind;
+    return kind === "not_upcoming"
+      ? { kind: "error", message: "Only upcoming approved consultations can be briefed." }
+      : { kind: "error", message: "Consultation unavailable." };
+  }
+  const booking = consultation.data;
 
   const inputText = [
-    wrapUntrusted("student_name", student.full_name),
-    wrapUntrusted("course", `${course.code} ${course.name}`),
+    wrapUntrusted("student_name", booking.studentName),
+    wrapUntrusted("course", `${booking.courseCode} ${booking.courseName}`),
     wrapUntrusted("topic", booking.topic),
     wrapUntrusted("questions", booking.questions),
   ].join("\n");
@@ -105,11 +106,16 @@ export async function generateLecturerBriefing(formData: FormData): Promise<Brie
   if (!validateBriefing(result.text))
     return { kind: "error", message: "The briefing service returned an invalid briefing." };
 
-  const { data: saved, error: saveError } = await supabase
-    .from("lecturer_ai_briefings")
-    .insert({ lecturer_id: user.id, booking_id: booking.id, content: result.text })
-    .select("id")
-    .single();
-  if (saveError || !saved) return { kind: "error", message: "Briefing could not be saved." };
-  return { kind: "success", briefingId: saved.id, text: result.text };
+  const { data: saved, error: saveError } = await supabase.rpc("lecturer_save_briefing", {
+    p_booking_id: booking.bookingId,
+    p_content: result.text,
+  });
+  const savedId = (saved as { kind?: unknown; id?: unknown } | null)?.id;
+  if (
+    saveError ||
+    (saved as { kind?: unknown } | null)?.kind !== "ok" ||
+    typeof savedId !== "string"
+  )
+    return { kind: "error", message: "Briefing could not be saved." };
+  return { kind: "success", briefingId: savedId, text: result.text };
 }
