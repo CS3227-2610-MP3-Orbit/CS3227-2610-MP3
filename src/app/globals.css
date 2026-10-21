@@ -61,24 +61,33 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  /* One shared accent (a blue) on an otherwise neutral grey palette, per SH-07's visual direction. */
-  --primary: oklch(0.52 0.17 260);
+  /* Visual-identity polish pass: --primary now matches the sidebar's Orbit teal (same hue as
+     --sidebar-primary/--sidebar-accent below) instead of the kit's default blue, so buttons,
+     focus rings, and the active-nav accent read as one brand. L tuned so the white
+     --primary-foreground text clears WCAG AA (verified by src/lib/sh07-contrast.test.ts). */
+  --primary: oklch(0.42 0.13 196);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  /* A faint teal tint (not a flat grey) so hover/focus "accent" surfaces echo the brand too. */
+  --accent: oklch(0.96 0.015 196);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  /* Darkened slightly from the kit default so bg-destructive/10 + text-destructive (the actual
+     rendered badge/button chip, not the solid token alone) clears WCAG AA 4.5:1 -- the previous
+     value only passed when checked as solid text against the page background. */
+  --destructive: oklch(0.52 0.22 27.325);
   /* SH-07-R13: semantic status-pill tokens, joining the existing destructive (red) and
-     default/secondary (blue/teal) Badge variants. Chosen for >= 4.5:1 contrast against
-     --background in both themes -- verified by src/lib/sh07-contrast.test.ts (SH-07-AC19). */
-  --success: oklch(0.45 0.14 148);
-  --warning: oklch(0.47 0.15 85);
+     default/secondary (blue/teal) Badge variants. Values tuned so the *rendered* pill (text
+     over its own translucent bg-success/10 / bg-warning/10 fill, not just the solid token
+     against --background) clears >= 4.5:1 -- verified by src/lib/sh07-contrast.test.ts
+     (SH-07-AC19). */
+  --success: oklch(0.42 0.15 150);
+  --warning: oklch(0.44 0.16 83);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.52 0.17 260 / 50%);
+  --ring: oklch(0.42 0.13 196 / 50%);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -111,20 +120,20 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.72 0.15 260);
+    --primary: oklch(0.76 0.13 196);
     --primary-foreground: oklch(0.145 0 0);
     --secondary: oklch(0.269 0 0);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
     --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
+    --accent: oklch(0.269 0.02 196);
     --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --success: oklch(0.78 0.16 148);
-    --warning: oklch(0.8 0.16 85);
+    --destructive: oklch(0.74 0.19 22.216);
+    --success: oklch(0.82 0.15 150);
+    --warning: oklch(0.84 0.16 83);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.72 0.15 260 / 50%);
+    --ring: oklch(0.76 0.13 196 / 50%);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);

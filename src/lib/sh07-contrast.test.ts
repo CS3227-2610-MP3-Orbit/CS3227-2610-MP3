@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { contrastRatio, type Oklch } from "./color-contrast";
+import { blendOklab, contrastRatio, type Oklch } from "./color-contrast";
 
 // Reads the real, live tokens from globals.css (the same file SH-07-AC5's check:colors scans)
 // rather than duplicating literal numbers here, so this test tracks the actual shipped values.
@@ -56,4 +56,32 @@ describe.each([
     const ratio = contrastRatio(token(block, "warning"), token(block, "background"));
     expect(ratio).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
   });
+
+  it("the primary button/badge text meets WCAG AA against the primary background", () => {
+    const ratio = contrastRatio(token(block, "primary-foreground"), token(block, "primary"));
+    expect(ratio).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+  });
+
+  // The real failure mode a solid-token-vs-solid-background check misses: every status Badge
+  // (src/components/ui/badge.tsx) and the destructive Button draw text in the status colour
+  // over a *translucent* fill of that same colour (`bg-success/10`, `dark:bg-success/20`,
+  // etc.), composited over the card it sits on -- not over a solid token swatch. This is the
+  // chip a person actually reads (e.g. the "Active" badge), so it is what AC19 must cover.
+  const PILL_ALPHA = { light: 0.1, dark: 0.2 } as const;
+
+  it.each([
+    ["success", "success"],
+    ["warning", "warning"],
+    ["destructive", "destructive"],
+  ])(
+    "the rendered %s pill (text over its own translucent fill on a card) meets WCAG AA",
+    (_label, tokenName) => {
+      const alpha = dark ? PILL_ALPHA.dark : PILL_ALPHA.light;
+      const text = token(block, tokenName);
+      const cardBackground = token(block, "card");
+      const renderedFill = blendOklab(text, alpha, cardBackground);
+      const ratio = contrastRatio(text, renderedFill);
+      expect(ratio).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+    },
+  );
 });

@@ -46,3 +46,28 @@ export function contrastRatio(a: Oklch, b: Oklch): number {
   const darker = Math.min(l1, l2);
   return (lighter + 0.05) / (darker + 0.05);
 }
+
+/**
+ * The colour a translucent `foreground` (e.g. a Badge's `bg-success/10`) actually renders as
+ * once composited over an opaque `background`, blended in OKLab -- the space Tailwind v4's
+ * `color-mix(in oklab, ...)` opacity modifier uses for a CSS-variable colour. Used so a
+ * contrast check can verify the *rendered pill* (translucent fill + solid text), not just the
+ * raw token against a solid background, which is what actually determines legibility
+ * (SH-07-AC19).
+ */
+export function blendOklab(foreground: Oklch, alpha: number, background: Oklch): Oklch {
+  const fgRad = (foreground.h * Math.PI) / 180;
+  const bgRad = (background.h * Math.PI) / 180;
+  const fgA = foreground.c * Math.cos(fgRad);
+  const fgB = foreground.c * Math.sin(fgRad);
+  const bgA = background.c * Math.cos(bgRad);
+  const bgB = background.c * Math.sin(bgRad);
+  const l = foreground.l * alpha + background.l * (1 - alpha);
+  const a = fgA * alpha + bgA * (1 - alpha);
+  const b = fgB * alpha + bgB * (1 - alpha);
+  // Re-derive an equivalent (c, h) pair so the result stays a plain Oklch for contrastRatio/
+  // relativeLuminance -- h is irrelevant when c is ~0, which chroma() guards against NaN for.
+  const c = Math.sqrt(a * a + b * b);
+  const h = (Math.atan2(b, a) * 180) / Math.PI;
+  return { l, c, h };
+}
