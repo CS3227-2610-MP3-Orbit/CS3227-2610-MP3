@@ -4,6 +4,7 @@ import {
   CalendarCheck,
   CalendarSearch,
   LayoutDashboard,
+  Megaphone,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -55,6 +56,10 @@ export const NAV_GROUPS: Record<Role, NavGroup[]> = {
     {
       label: "Teaching",
       items: [{ label: "Courses", href: "/admin/courses", icon: BookOpen }],
+    },
+    {
+      label: "Communications",
+      items: [{ label: "Announcements", href: "/admin/announcements", icon: Megaphone }],
     },
     {
       label: "Insights",
