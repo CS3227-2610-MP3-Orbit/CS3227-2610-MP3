@@ -96,9 +96,21 @@ Blue steps are done by administrators, green by lecturers and orange by students
 
 Signed-out visitors can only see the sign-in page. Every other address sends you to `/login`.
 
-> **TODO (team):** confirm the production URL and development deployment link are still current
-> before publishing this guide, and add any test-account guidance the team wants peer testers to
-> use beyond the local seed accounts documented in `DeveloperGuide.md`.
+#### Test accounts for markers and peer testers
+
+Use these accounts to try every role. The data in both environments is fictional.
+
+| Environment | Role          | Email                    | Password           |
+| ----------- | ------------- | ------------------------ | ------------------ |
+| Production  | Student       | `student@example.com`    | `BkYvP6a2wVVzgwqG` |
+| Production  | Lecturer      | `lecturer@example.com`   | `kiNXGd2ukYKiqYaz` |
+| Production  | Administrator | `peer-admin@example.com` | `6LRkZU_CTw9NUmJl` |
+| Development | Student       | `student@example.com`    | `mBp77HI0zXExqCzV` |
+| Development | Lecturer      | `lecturer@example.com`   | `yYp2YY2uXslWEoUq` |
+
+Please do not change these passwords or deactivate these accounts, so that other testers can keep
+using them. To try **Change password**, **Reset password** or **Deactivate**, first create your own
+account as the administrator and use it instead.
 
 ![Sign-in page](images/login.png)
 
