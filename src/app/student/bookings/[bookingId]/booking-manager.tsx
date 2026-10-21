@@ -3,10 +3,12 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Booking, BookingResult } from "@/features/student/bookings/manage-validation";
 import { formatSingaporeDateTime } from "@/features/student/slots/format";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { statusBadgeVariant } from "@/lib/status-badge";
 import { submitBookingCancellation, submitBookingUpdate } from "../actions";
 type Attempt =
   | {
@@ -102,7 +104,9 @@ export default function BookingManager({ booking: initial }: { booking: Booking 
         <p>Lecturer: {booking.lecturerName}</p>
         <p>Starts: {formatSingaporeDateTime(booking.startsAt)} (SGT)</p>
         <p>Ends: {formatSingaporeDateTime(booking.endsAt)} (SGT)</p>
-        <p>Status: {booking.status}</p>
+        <p>
+          Status: <Badge variant={statusBadgeVariant(booking.status)}>{booking.status}</Badge>
+        </p>
         <p className="mt-3 whitespace-pre-wrap">Topic: {booking.topic}</p>
         <p className="whitespace-pre-wrap">Questions: {booking.questions}</p>
         {booking.rejectionReason && (

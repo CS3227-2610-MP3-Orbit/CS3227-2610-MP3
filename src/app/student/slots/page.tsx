@@ -30,13 +30,7 @@ export default async function StudentSlotsPage({
   return (
     <div className="space-y-8">
       <header>
-        <Link
-          href="/student"
-          className="text-sm underline focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
-          Back to dashboard
-        </Link>
-        <h1 className="mt-3 text-2xl font-semibold">Available consultation slots</h1>
+        <h1 className="text-2xl font-semibold">Available consultation slots</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Times are shown in Singapore Time (SGT). Availability is checked when this page loads and
           will be checked again when you request a slot.
