@@ -46,7 +46,7 @@
 
 - ADM-01 approved on 19 Oct with R1 to R9. Decisions are recorded in the spec's "Document control".
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Build, security fixes, and bugs caught by re-running tests (20 Oct)
 
@@ -109,7 +109,7 @@ _Human verification: pending._
   unit tests, ADM-01 and SH-06 integration 11/11 each, browser tests, traceability 0 errors, and the
   secret scan.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Independent review, CI fix, and merge, PR #30 (20 to 21 Oct)
 
@@ -148,4 +148,4 @@ _Human verification: pending._
 - Handoffs: `workflow/handoffs/adm-01/2026-10-20-adm-01-sh-06-tester.md` and
   `2026-10-20-adm-01-sh-06-security-reviewer.md`.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._

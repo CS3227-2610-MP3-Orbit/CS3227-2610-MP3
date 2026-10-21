@@ -34,7 +34,7 @@
 
 - Spec approved on 20 Oct. Decisions are in its "Document control".
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Build, two bugs, and a CI failure, PR #32 (20 to 21 Oct)
 
@@ -76,7 +76,7 @@ courses_code_normalized_idx`: the test data reused course codes, which the new u
   traceability 0 errors.
 - Joseph reviewed ("Looks good!"). PR #32 merged on 21 Oct.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Independent tester and security review (21 Oct)
 
@@ -105,4 +105,4 @@ _Human verification: pending._
 
 - ADM-02 has a developer, tester and security handoff. The clean-up fix is in PR #38.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._

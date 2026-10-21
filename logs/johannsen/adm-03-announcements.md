@@ -33,7 +33,7 @@
 
 - Spec approved on 21 Oct (`847a6b4`) with R1 to R10 and AC1 to AC15.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Build, a slow run, and a CI fix, PR #38 (21 Oct, open)
 
@@ -72,7 +72,7 @@ _Human verification: pending._
 - One accounts test fails locally only, because Jordan's seed-ID fix changed the admin IDs and my
   local database had not been reset. CI resets its database and passes.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Independent review and fixes (21 Oct)
 
@@ -99,4 +99,4 @@ _Human verification: pending._
 
 - PR #38 is open with CI 8/8 green. Merge order: #36, then #37, then #38, then the release.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._

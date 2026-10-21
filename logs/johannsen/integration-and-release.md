@@ -31,7 +31,7 @@
 
 - All four merged into `develop` on 19 Oct. Jordan also approved #4.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Reviewing Joseph's student AI feature, PR #34 (20 Oct)
 
@@ -42,7 +42,7 @@ _Human verification: pending._
 - This quota later replaced my own planned quota work (issue #21). See
   `adm-04-reports-and-ai-summary.md`.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Merging the admin and UI work, and opening release PR #35 (21 Oct)
 
@@ -73,7 +73,7 @@ _Human verification: pending._
 - #30, #31 and #32 merged on 21 Oct. #35 is open. It now has to wait for #36, #37 and #38, so that
   production does not ship a lecturer briefing that always says "unavailable".
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Reviewing Jordan's lecturer AI briefing, PR #33 (21 Oct)
 
@@ -106,7 +106,7 @@ _Human verification: pending._
 
 - PR #33 merged on 21 Oct (`b7eb3b4`).
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## CI fixes during integration (20 to 21 Oct)
 
@@ -118,4 +118,4 @@ _Human verification: pending._
 - **21 Oct, PR #38 ("fix the ci").** The new admin browser spec ran in the student job. Fixed by
   ignoring `admin-*.spec.ts` by pattern (`1f588fe`).
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._

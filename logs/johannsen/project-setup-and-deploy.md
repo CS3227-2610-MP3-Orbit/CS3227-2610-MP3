@@ -39,7 +39,7 @@
   CI/CD, SoC LLM for AI.
 - Roles: Student (Joseph), Lecturer (Jordan), Administrator (Johannsen).
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Repository skeleton and CI/CD (17 Oct)
 
@@ -92,7 +92,7 @@ _Human verification: pending._
 
 - Initial commit `dad427f` "Set up project skeleton".
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Accounts, secrets, and the first deployment (17 Oct)
 
@@ -135,7 +135,7 @@ _Human verification: pending._
 
 - Both environments deploy through Actions, and `vercel env ls` lists the variables for each.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Branch model and pipeline hardening, PRs #1 to #3 (17 Oct)
 
@@ -192,7 +192,7 @@ _Human verification: pending._
 - PRs #1, #2 and #3 merged on 17 Oct. Both develop deployments succeeded, including the new
   post-deploy site check.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Leak check (17 Oct)
 
@@ -213,7 +213,7 @@ _Human verification: pending._
 
 - No secrets in the repository or deployed site. The gaps it listed became later tasks.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Planning SDD and the Claude Code role agents, PR #26 (19 Oct)
 
@@ -255,4 +255,4 @@ _Human verification: pending._
 
 - PR #26 merged on 19 Oct after Joseph's review ("All good").
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._

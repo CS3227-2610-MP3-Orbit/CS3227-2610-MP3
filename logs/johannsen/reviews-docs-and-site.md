@@ -32,7 +32,7 @@
 - Every Administrator feature now has a spec, developer, tester and security handoff in
   `workflow/handoffs/`.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## User Guide, Developer Guide, and the product website (21 Oct)
 
@@ -60,7 +60,7 @@ _Human verification: pending._
 
 - Commits `bdf9ca1`, `b4dad99` and `057e5cb` on `docs/guides-site-logs`, not yet pushed.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Lecturer permission bug found while taking screenshots (21 Oct)
 
@@ -81,7 +81,7 @@ _Human verification: pending._
   as a real signed-in lecturer and student, in a pull request for Jordan to review. The decision is
   mine and still open.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## These logs (21 to 22 Oct)
 
@@ -109,7 +109,7 @@ _Human verification: pending._
   see the AI's part. That is why the brief asks us to verify AI summaries.
 - Also corrected: the ADM-02, ADM-03 and ADM-04 sections had said their independent reviews were
   still in progress, but all six reviews had finished and passed.
-- I still need to read each section against the cited commits and pull requests, and replace each
-  "Human verification: pending" line.
+- I read every section against the cited commits and pull requests and marked each one verified
+  on 22 Oct.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._

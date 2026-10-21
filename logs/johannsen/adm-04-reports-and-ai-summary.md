@@ -37,7 +37,7 @@
 
 - Spec approved on 21 Oct (`b6de978`) with R1 to R10 and AC1 to AC15.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Quota allowlist gap found while reviewing Jordan's PR #33 (21 Oct)
 
@@ -69,7 +69,7 @@ _Human verification: pending._
 - PR #33 merged on 21 Oct. Lecturer briefings show "temporarily unavailable" until ADM-04 (#37)
   merges.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Build, PR #37 (21 Oct, open)
 
@@ -106,7 +106,7 @@ _Human verification: pending._
   tests 15/15.
 - Not run: a live AI call, because there was no key locally.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Completed-booking count bug, R11 and AC16 (21 Oct)
 
@@ -138,7 +138,7 @@ _Human verification: pending._
 - Integration 8/8, 230 unit tests, pgTAP, lint, typecheck and traceability all passed. Commit
   `9db775e`.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Independent tester and security review (21 Oct)
 
@@ -165,4 +165,4 @@ _Human verification: pending._
 - PR #37 is open with CI 8/8 green, waiting for teammate review. It must merge before release #35,
   or production would ship a lecturer briefing that only says "unavailable".
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._

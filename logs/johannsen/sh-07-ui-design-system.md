@@ -37,7 +37,7 @@
 
 - SH-07 approved on 20 Oct.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Building the kit and restyling every page, PR #31 (20 to 21 Oct)
 
@@ -75,7 +75,7 @@ _Human verification: pending._
   browser test failed both with and without the change, so it was recorded as pre-existing.
 - Joseph reviewed ("Looks good!"). PR #31 merged on 21 Oct.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
 
 ## Orbit visual identity, PR #36 (20 to 21 Oct, open)
 
@@ -124,4 +124,4 @@ _Human verification: pending._
 - PR #36 is open with CI 8/8 green. Joseph needs to review the student page changes, and Jordan
   the lecturer ones.
 
-_Human verification: pending._
+_Verified by Johannsen on 22 Oct._
