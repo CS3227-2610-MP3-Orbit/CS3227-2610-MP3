@@ -82,6 +82,7 @@ jobs:
           eval "$(supabase status -o json | node tests/integration/local-supabase-env.mjs)"
           npm run test:admin:integration
           npm run test:admin-courses:integration
+          npm run test:admin-reports:integration
           npx vitest run --config tests/integration/sh06.vitest.config.mts
           npx playwright test --config tests/e2e/admin.playwright.config.ts
           npx playwright test --config tests/e2e/change-password.playwright.config.ts
