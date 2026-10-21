@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 /**
  * Shared one-time credential panel for account creation (ADM-01-R1) and password reset
  * (ADM-01-R9). The credential lives only in this component's props/local state -- never in a
@@ -30,33 +34,23 @@ export default function OneTimePasswordPanel({
   }
 
   return (
-    <div role="status" className="mt-3 space-y-2 rounded-md border border-black p-3">
-      <label htmlFor="initial-credential" className="block text-sm font-medium">
-        {label} (copy it now — it cannot be shown again)
-      </label>
-      <input
+    <div role="status" className="mt-3 space-y-2 rounded-lg border bg-card p-3">
+      <Label htmlFor="initial-credential">{label} (copy it now — it cannot be shown again)</Label>
+      <Input
         id="initial-credential"
         type="text"
         readOnly
         value={credential}
         onFocus={(event) => event.currentTarget.select()}
-        className="w-full rounded-md border px-3 py-2 font-mono text-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="font-mono"
       />
       <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={() => void copy()}
-          className="rounded-md border px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
+        <Button type="button" variant="outline" onClick={() => void copy()}>
           {copied ? "Copied" : "Copy"}
-        </button>
-        <button
-          type="button"
-          onClick={onDone}
-          className="rounded-md bg-black px-3 py-2 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
+        </Button>
+        <Button type="button" onClick={onDone}>
           Done
-        </button>
+        </Button>
       </div>
     </div>
   );

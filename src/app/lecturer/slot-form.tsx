@@ -2,8 +2,14 @@
 
 import { useActionState } from "react";
 import { createSlot } from "./actions";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 const initial = { ok: false, message: "" };
+const selectClass =
+  "ml-2 h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+const timeClass =
+  "ml-2 h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 export function SlotForm({ courses }: { courses: { id: string; code: string; name: string }[] }) {
   const [state, action, pending] = useActionState(
@@ -13,13 +19,13 @@ export function SlotForm({ courses }: { courses: { id: string; code: string; nam
   return (
     <form
       action={action}
-      className="mt-6 grid gap-3 rounded border p-4"
+      className="mt-6 grid gap-3 rounded-lg border bg-card p-4"
       aria-label="Create consultation slot"
     >
       <h2 className="font-semibold">Create consultation slot</h2>
-      <label>
+      <Label className="font-normal">
         Course
-        <select name="courseId" required className="ml-2 border p-1">
+        <select name="courseId" required className={selectClass}>
           <option value="">Select course</option>
           {courses.map((course) => (
             <option key={course.id} value={course.id}>
@@ -27,27 +33,24 @@ export function SlotForm({ courses }: { courses: { id: string; code: string; nam
             </option>
           ))}
         </select>
-      </label>
-      <label>
+      </Label>
+      <Label className="font-normal">
         Date
-        <input name="date" type="date" required className="ml-2 border p-1" />
-      </label>
-      <label>
+        <input name="date" type="date" required className={timeClass} />
+      </Label>
+      <Label className="font-normal">
         Start time
-        <input name="startTime" type="time" required className="ml-2 border p-1" />
-      </label>
-      <label>
+        <input name="startTime" type="time" required className={timeClass} />
+      </Label>
+      <Label className="font-normal">
         End time
-        <input name="endTime" type="time" required className="ml-2 border p-1" />
-      </label>
-      <button
-        disabled={pending}
-        className="w-fit rounded bg-black px-3 py-1 text-white disabled:opacity-50"
-      >
+        <input name="endTime" type="time" required className={timeClass} />
+      </Label>
+      <Button type="submit" disabled={pending} className="w-fit">
         {pending ? "Saving…" : "Create slot"}
-      </button>
+      </Button>
       {state.message && (
-        <p role="status" className={state.ok ? "text-green-700" : "text-red-700"}>
+        <p role="status" className={state.ok ? "text-primary" : "text-destructive"}>
           {state.message}
         </p>
       )}

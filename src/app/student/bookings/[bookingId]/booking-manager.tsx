@@ -3,9 +3,11 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Booking, BookingResult } from "@/features/student/bookings/manage-validation";
 import { formatSingaporeDateTime } from "@/features/student/slots/format";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { submitBookingCancellation, submitBookingUpdate } from "../actions";
-const control =
-  "mt-1 block w-full rounded border p-2 focus-visible:outline-2 focus-visible:outline-offset-2";
 type Attempt =
   | {
       kind: "update";
@@ -91,7 +93,7 @@ export default function BookingManager({ booking: initial }: { booking: Booking 
   }
   return (
     <section className="space-y-4" aria-busy={pending}>
-      <section className="rounded border p-4 break-words">
+      <section className="rounded-lg border bg-card p-4 break-words">
         <p>
           <strong>
             {booking.courseCode} — {booking.courseName}
@@ -111,23 +113,14 @@ export default function BookingManager({ booking: initial }: { booking: Booking 
         {message}
       </div>
       {attempt && !pending && (
-        <button
-          type="button"
-          className="rounded border px-3 py-2 focus-visible:outline-2"
-          onClick={() => void run(attempt.kind)}
-        >
+        <Button type="button" variant="outline" onClick={() => void run(attempt.kind)}>
           Retry {attempt.kind === "update" ? "update" : "cancellation"}
-        </button>
+        </Button>
       )}
       {booking.status === "pending" && !editing && (
-        <button
-          type="button"
-          className="rounded border px-3 py-2 focus-visible:outline-2"
-          onClick={() => setEditing(true)}
-          disabled={pending}
-        >
+        <Button type="button" variant="outline" onClick={() => setEditing(true)} disabled={pending}>
           Edit booking
-        </button>
+        </Button>
       )}
       {editing && (
         <form
@@ -138,9 +131,9 @@ export default function BookingManager({ booking: initial }: { booking: Booking 
           }}
           className="space-y-3"
         >
-          <div>
-            <label htmlFor="topic">Topic</label>
-            <input
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="topic">Topic</Label>
+            <Input
               id="topic"
               name="topic"
               value={topic}
@@ -149,12 +142,11 @@ export default function BookingManager({ booking: initial }: { booking: Booking 
                 setAttempt(null);
               }}
               disabled={pending}
-              className={control}
             />
           </div>
-          <div>
-            <label htmlFor="questions">Questions</label>
-            <textarea
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="questions">Questions</Label>
+            <Textarea
               id="questions"
               name="questions"
               value={questions}
@@ -163,36 +155,36 @@ export default function BookingManager({ booking: initial }: { booking: Booking 
                 setAttempt(null);
               }}
               disabled={pending}
-              className={control}
             />
           </div>
-          <button
-            className="rounded bg-black px-3 py-2 text-white focus-visible:outline-2"
-            disabled={pending}
-          >
-            Save changes
-          </button>
-          <button
-            type="button"
-            className="ml-2 underline"
-            disabled={pending}
-            onClick={() => setEditing(false)}
-          >
-            Cancel edit
-          </button>
+          <div className="flex items-center gap-3">
+            <Button type="submit" disabled={pending}>
+              Save changes
+            </Button>
+            <Button
+              type="button"
+              variant="link"
+              disabled={pending}
+              onClick={() => setEditing(false)}
+            >
+              Cancel edit
+            </Button>
+          </div>
         </form>
       )}
       {actionable && (
         <div className="space-y-2 border-t pt-4">
-          <p>Cancellation cannot be undone and is available only before the scheduled start.</p>
-          <button
+          <p className="text-sm text-muted-foreground">
+            Cancellation cannot be undone and is available only before the scheduled start.
+          </p>
+          <Button
             type="button"
-            className="rounded border px-3 py-2 focus-visible:outline-2"
+            variant="outline"
             disabled={pending}
             onClick={() => void run("cancel")}
           >
             Cancel booking
-          </button>
+          </Button>
         </div>
       )}
     </section>

@@ -2,16 +2,14 @@ import Link from "next/link";
 
 import { listLecturerRequests } from "@/features/lecturer/requests-server";
 import { RequestCard } from "@/app/lecturer/request-card";
+import { buttonVariants } from "@/components/ui/button";
 
 export default async function AdminDashboardPage() {
   const result = await listLecturerRequests();
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Administrator dashboard</h1>
-      <Link
-        href="/admin/accounts"
-        className="inline-flex rounded-md bg-black px-4 py-2 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2"
-      >
+      <Link href="/admin/accounts" className={buttonVariants({ variant: "default" })}>
         Manage accounts
       </Link>
       <section className="space-y-5">

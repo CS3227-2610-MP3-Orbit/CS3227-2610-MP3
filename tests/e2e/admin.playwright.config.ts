@@ -9,7 +9,9 @@ import { defineConfig, devices } from "@playwright/test";
 // accounts, never a secret key -- so it needs no disposable stack of its own. Runs its own dev
 // server on a non-default port so it does not collide with anything already on :3000.
 const port = Number(process.env.ADMIN_E2E_PORT ?? 3104);
-const baseURL = `http://127.0.0.1:${port}`;
+// localhost, not 127.0.0.1: the Next dev server blocks its client scripts for other origins,
+// which would leave the page without JavaScript.
+const baseURL = `http://localhost:${port}`;
 
 // The spawned dev server needs the public Supabase URL/key. These come from the local CLI's own
 // status output (never a .env file, and never the secret key) so this config works whether or
@@ -25,7 +27,10 @@ export default defineConfig({
   // Relative to this config file's own directory (tests/e2e), not the cwd -- unlike the root
   // playwright.config.ts, which lives at the project root where "tests/e2e" is correct.
   testDir: ".",
-  testMatch: /admin-.*\.spec\.ts$/,
+  // SH-07 added ui-shell.spec.ts here too: it needs the same already-running local Supabase
+  // instance and local-only seed accounts as the admin-accounts spec, so it shares this config
+  // rather than the root playwright.config.ts (which requires a disposable STU02_TEST_* stack).
+  testMatch: /(admin-.*|ui-shell)\.spec\.ts$/,
   workers: 1,
   timeout: 45000,
   use: { baseURL },

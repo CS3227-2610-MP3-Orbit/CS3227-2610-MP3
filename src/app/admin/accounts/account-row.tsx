@@ -4,15 +4,16 @@ import { useState, useTransition } from "react";
 
 import { isAccountLocked } from "@/features/admin/accounts/presentation";
 import type { Account } from "@/features/admin/accounts/validation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 import { resetPasswordAction, setActiveAction, setRoleAction } from "./actions";
 import OneTimePasswordPanel from "./one-time-password-panel";
 
 const ROLE_LABEL = { student: "Student", lecturer: "Lecturer", admin: "Administrator" } as const;
-const control =
-  "mt-1 rounded-md border px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2";
-const button =
-  "rounded-md border px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50";
+const selectClass =
+  "mt-1 h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 function describeMutateFailure(kind: string): string {
   switch (kind) {
@@ -114,17 +115,15 @@ export default function AccountRow({
   }
 
   return (
-    <li className="min-w-0 rounded-lg border p-4">
+    <li className="min-w-0 rounded-lg border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="break-words font-semibold">{account.email}</p>
-          <p className="break-words text-sm text-gray-600">{account.fullName || "(no name)"}</p>
+          <p className="break-words text-sm text-muted-foreground">
+            {account.fullName || "(no name)"}
+          </p>
         </div>
-        {account.isProtected && (
-          <span className="rounded-full border border-amber-600 px-2 py-1 text-xs font-medium text-amber-700">
-            Protected
-          </span>
-        )}
+        {account.isProtected && <Badge variant="outline">Protected</Badge>}
       </div>
 
       <dl className="mt-2 grid gap-1 text-sm">
@@ -139,7 +138,7 @@ export default function AccountRow({
       </dl>
 
       {locked ? (
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-sm text-muted-foreground">
           {isSelf
             ? "This is your own account. Role, deactivation and password-reset controls are not available here."
             : "This is the protected recovery administrator. Its role, active status and password cannot be changed by any administrator."}
@@ -147,35 +146,42 @@ export default function AccountRow({
       ) : (
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <div>
-            <label htmlFor={`role-${account.id}`} className="block text-xs font-medium">
+            <Label htmlFor={`role-${account.id}`} className="text-xs">
               Role
-            </label>
+            </Label>
             <select
               id={`role-${account.id}`}
               value={role}
               disabled={pending}
               onChange={(event) => setRoleValue(event.target.value as Account["role"])}
-              className={control}
+              className={selectClass}
             >
               <option value="student">Student</option>
               <option value="lecturer">Lecturer</option>
               <option value="admin">Administrator</option>
             </select>
           </div>
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             disabled={pending || role === account.role}
             onClick={applyRole}
-            className={button}
           >
             Change role
-          </button>
-          <button type="button" disabled={pending} onClick={toggleActive} className={button}>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={toggleActive}
+          >
             {isActive ? "Deactivate" : "Activate"}
-          </button>
-          <button type="button" disabled={pending} onClick={reset} className={button}>
+          </Button>
+          <Button type="button" variant="outline" size="sm" disabled={pending} onClick={reset}>
             Reset password
-          </button>
+          </Button>
         </div>
       )}
 
