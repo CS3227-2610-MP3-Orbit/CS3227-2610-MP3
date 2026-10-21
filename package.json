@@ -14,6 +14,7 @@
     "test:admin:integration": "vitest run --config tests/integration/admin-accounts.vitest.config.mts",
     "test:admin-courses:integration": "vitest run --config tests/integration/admin-courses.vitest.config.mts",
     "test:admin-reports:integration": "vitest run --config tests/integration/admin-reports.vitest.config.mts",
+    "test:admin-announcements:integration": "vitest run --config tests/integration/admin-announcements.vitest.config.mts",
     "test:e2e": "playwright test",
     "test:hooks": "node --test workflow/hooks/hooks.test.mjs",
     "test:workflow": "npm run test:hooks && vitest run workflow/hooks/hook-integration.test.mjs workflow/scripts/*.test.mjs",
