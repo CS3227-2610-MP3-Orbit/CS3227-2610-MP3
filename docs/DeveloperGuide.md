@@ -23,7 +23,7 @@ description: Architecture, data model, the AI gateway, security and the developm
 4. [Key flows](#4-key-flows)
 5. [Data model and access rules](#5-data-model-and-access-rules)
 6. [AI features and the SoC LLM gateway](#6-ai-features-and-the-soc-llm-gateway)
-7. [UI design system (SH-07)](#7-ui-design-system-sh-07)
+7. [UI design system](#7-ui-design-system)
 8. [Security](#8-security)
 9. [Non-functional requirements](#9-non-functional-requirements)
 10. [Spec-driven development](#10-spec-driven-development)
@@ -164,7 +164,7 @@ flowchart LR
     exception: both Student and Lecturer dashboards read it through the shared
     `AnnouncementsCard` component.
   - Every role's pages are built from one committed UI kit and one shared app shell — see
-    [UI design system](#7-ui-design-system-sh-07).
+    [UI design system](#7-ui-design-system).
 - **Shared library code**, owned by the whole team (`src/lib/`, changes need a spec and review,
   per `AGENTS.md`):
   - `src/lib/auth/session.ts` — `getCurrentUser()`, `requireRole(role)` and `requireUser()`. Every
@@ -262,7 +262,9 @@ sequenceDiagram
     A-->>U: Friendly message or updated page
 ```
 
-### 4.2 Student requests a consultation (STU-02)
+### 4.2 Student requests a consultation
+
+Spec: [`STU-02`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/student/STU-02-request-consultation.md).
 
 The request form carries an idempotency key and the slot's `request_version`, so a retry after a
 lost response recovers the original booking instead of creating a second one, and a slot that
@@ -291,7 +293,9 @@ sequenceDiagram
     Note over St,A: If the result is uncertain, "Retry same request" calls recover_consultation
 ```
 
-### 4.3 Lecturer decides a request (LEC-02)
+### 4.3 Lecturer decides a request
+
+Spec: [`LEC-02`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-02-request-decisions.md).
 
 ```mermaid
 sequenceDiagram
@@ -314,7 +318,9 @@ sequenceDiagram
     end
 ```
 
-### 4.4 Administrator creates an account (ADM-01)
+### 4.4 Administrator creates an account
+
+Spec: [`ADM-01`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/admin/ADM-01-manage-accounts.md).
 
 ```mermaid
 sequenceDiagram
@@ -474,7 +480,9 @@ code that is currently deployed:
   `claim_ai_attempt` was re-created by three migrations; the latest (`20261021100000`) is the
   one that counts, and it must keep every feature on the allowlist (`ADM-04-R10`).
 
-### 5.4 Accounts, roles and passwords (ADM-01, SH-06)
+### 5.4 Accounts, roles and passwords
+
+Specs: [`ADM-01`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/admin/ADM-01-manage-accounts.md), [`SH-06`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/shared/SH-06-change-own-password.md).
 
 `public.profiles` holds each user's `role`, `is_active` and `is_protected`. Signed-in users cannot
 update `profiles` at all: migration `20261020100000_admin_account_management.sql` drops the old
@@ -520,7 +528,9 @@ the password, and then signs out the user's other sessions. Failed attempts are 
 service-role client): each attempt is inserted before counting, so parallel requests cannot pass the
 limit of five failures in 15 minutes, and a successful attempt removes its own row.
 
-### 5.5 Student slots and bookings (STU-01, STU-02, STU-04)
+### 5.5 Student slots and bookings
+
+Specs: [`STU-01`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/student/STU-01-browse-available-slots.md), [`STU-02`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/student/STU-02-request-consultation.md), [`STU-04`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/student/STU-04-manage-my-bookings.md).
 
 Students never read `consultation_slots` or `bookings` directly. Every student path goes through a
 `security definer` function that returns only what a student may see:
@@ -533,7 +543,9 @@ Students never read `consultation_slots` or `bookings` directly. Every student p
 | `list_my_bookings`, `get_my_booking`           | My bookings, booking details | Projection through `my_booking_projection`                                     |
 | `update_my_booking`, `cancel_my_booking`       | Edit and cancel              | Optimistic `manage_version`; idempotent operation keys                         |
 
-### 5.6 Lecturer availability, decisions and history (LEC-01 to LEC-04)
+### 5.6 Lecturer availability, decisions and history
+
+Specs: [`LEC-01`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-01-availability.md), [`LEC-02`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-02-request-decisions.md), [`LEC-03`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-03-consultation-completion.md), [`LEC-04`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-04-ai-briefing.md).
 
 - **Availability (LEC-01).** `src/app/lecturer/actions.ts` creates, updates and deletes slots with
   the lecturer's own client after `requireRole("lecturer")`, checking the course assignment, the
@@ -546,7 +558,7 @@ Students never read `consultation_slots` or `bookings` directly. Every student p
   `in_app_notifications` when a slot or assignment is deactivated.
 - **AI briefing (LEC-04).** See section 6.
 
-### 5.7 Courses and lecturer assignments (ADM-02)
+### 5.7 Courses and lecturer assignments
 
 Spec:
 [`ADM-02-manage-courses-and-assignments.md`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/admin/ADM-02-manage-courses-and-assignments.md).
@@ -583,7 +595,7 @@ checking `current_app_role() = 'admin'` before touching anything: `admin_create_
   `admin_list_accounts`), not a client-side filter, so search/active-filtering happens server-side
   against the real row set.
 
-### 5.8 Guidelines and announcements (ADM-03)
+### 5.8 Guidelines and announcements
 
 Spec:
 [`ADM-03-guidelines-and-announcements.md`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/admin/ADM-03-guidelines-and-announcements.md).
@@ -617,7 +629,7 @@ admin list shows a one-line preview of at most 140 characters. Neither uses
 `dangerouslySetInnerHTML` or a Markdown renderer, so stored `<script>`/HTML-like content can never
 execute.
 
-### 5.9 Booking reports RPC (ADM-04)
+### 5.9 Booking reports RPC
 
 Spec:
 [`ADM-04-booking-reports-and-ai-summary.md`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/admin/ADM-04-booking-reports-and-ai-summary.md).
@@ -814,7 +826,7 @@ dev environment with no key), the admin report path short-circuits to `ai_unavai
 not_configured` **before** any quota claim or provider call — the local screenshot in
 `docs/UserGuide.md`'s Reports section shows exactly this state.
 
-## 7. UI design system (SH-07)
+## 7. UI design system
 
 Spec:
 [`SH-07-ui-design-system.md`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/shared/SH-07-ui-design-system.md).
@@ -1435,24 +1447,24 @@ All application and tooling code in `src/`, `supabase/`, and `workflow/scripts/`
 this project. It is built on the following open-source libraries and services, used under their
 own licences via `package.json`:
 
-| Library                                                                                    | Used for                                                                                                                         |
-| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| [Next.js](https://nextjs.org/) 16 (App Router)                                             | The application framework — routing, layouts, Server Actions, Route Handlers                                                     |
-| [React](https://react.dev/) 19                                                             | UI rendering                                                                                                                     |
-| [Supabase](https://supabase.com/) (`@supabase/ssr`, `@supabase/supabase-js`, Supabase CLI) | Postgres database, Auth, row-level security, local dev stack, migrations                                                         |
-| [shadcn/ui](https://ui.shadcn.com/) + [Base UI](https://base-ui.com/) (`@base-ui/react`)   | The committed `src/components/ui/` kit — Button, Dialog, Select, Table, etc. (see [UI design system](#7-ui-design-system-sh-07)) |
-| [Tailwind CSS](https://tailwindcss.com/) v4                                                | Styling and design tokens                                                                                                        |
-| [lucide-react](https://lucide.dev/)                                                        | Nav and status icons throughout the app                                                                                          |
-| [class-variance-authority](https://cva.style/)                                             | Typed style variants for shared UI components (e.g. badge/button variants)                                                       |
-| [Zod](https://zod.dev/)                                                                    | Runtime input/output validation for every Server Action and AI response                                                          |
-| [OpenAI SDK](https://github.com/openai/openai-node) (`openai`)                             | The HTTP client used to call the SoC LLM gateway (OpenAI-compatible API) from `src/lib/ai/client.ts`                             |
-| [Vitest](https://vitest.dev/)                                                              | Unit and integration tests                                                                                                       |
-| [Playwright](https://playwright.dev/) (`@playwright/test`)                                 | Browser end-to-end tests                                                                                                         |
-| [pgTAP](https://pgtap.org/) (via `supabase test db`)                                       | Database-rule tests — RLS, grants, concurrency                                                                                   |
-| [ESLint](https://eslint.org/) / [Prettier](https://prettier.io/)                           | Linting and formatting, including this documentation                                                                             |
-| [Secretlint](https://github.com/secretlint/secretlint)                                     | Scans changed files for accidentally committed secrets                                                                           |
-| [Mermaid](https://mermaid.js.org/)                                                         | The diagrams in this guide and the User Guide                                                                                    |
-| [Jekyll](https://jekyllrb.com/) with the Cayman theme                                      | The GitHub Pages product website                                                                                                 |
+| Library                                                                                    | Used for                                                                                                                   |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| [Next.js](https://nextjs.org/) 16 (App Router)                                             | The application framework — routing, layouts, Server Actions, Route Handlers                                               |
+| [React](https://react.dev/) 19                                                             | UI rendering                                                                                                               |
+| [Supabase](https://supabase.com/) (`@supabase/ssr`, `@supabase/supabase-js`, Supabase CLI) | Postgres database, Auth, row-level security, local dev stack, migrations                                                   |
+| [shadcn/ui](https://ui.shadcn.com/) + [Base UI](https://base-ui.com/) (`@base-ui/react`)   | The committed `src/components/ui/` kit — Button, Dialog, Select, Table, etc. (see [UI design system](#7-ui-design-system)) |
+| [Tailwind CSS](https://tailwindcss.com/) v4                                                | Styling and design tokens                                                                                                  |
+| [lucide-react](https://lucide.dev/)                                                        | Nav and status icons throughout the app                                                                                    |
+| [class-variance-authority](https://cva.style/)                                             | Typed style variants for shared UI components (e.g. badge/button variants)                                                 |
+| [Zod](https://zod.dev/)                                                                    | Runtime input/output validation for every Server Action and AI response                                                    |
+| [OpenAI SDK](https://github.com/openai/openai-node) (`openai`)                             | The HTTP client used to call the SoC LLM gateway (OpenAI-compatible API) from `src/lib/ai/client.ts`                       |
+| [Vitest](https://vitest.dev/)                                                              | Unit and integration tests                                                                                                 |
+| [Playwright](https://playwright.dev/) (`@playwright/test`)                                 | Browser end-to-end tests                                                                                                   |
+| [pgTAP](https://pgtap.org/) (via `supabase test db`)                                       | Database-rule tests — RLS, grants, concurrency                                                                             |
+| [ESLint](https://eslint.org/) / [Prettier](https://prettier.io/)                           | Linting and formatting, including this documentation                                                                       |
+| [Secretlint](https://github.com/secretlint/secretlint)                                     | Scans changed files for accidentally committed secrets                                                                     |
+| [Mermaid](https://mermaid.js.org/)                                                         | The diagrams in this guide and the User Guide                                                                              |
+| [Jekyll](https://jekyllrb.com/) with the Cayman theme                                      | The GitHub Pages product website                                                                                           |
 
 ### 16.2 Process and agent tooling
 
