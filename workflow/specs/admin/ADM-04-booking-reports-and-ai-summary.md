@@ -30,7 +30,8 @@ status: approved
   list only rows with ≥1 booking; (c) 1,200-character output bound; (d) local
   `not_configured` guard before any provider call.
 - Approval: **approved** by Johannsen (owner), 2026-10-21, covering R1–R10 and AC1–AC15
-  as written below.
+  as written below; R11/AC16 added and approved by Johannsen (owner), 2026-10-21 ("also fix
+  the bug").
 - Quota dependency resolved on `develop` by STU-05 (#34): `claim_ai_attempt` enforces one
   shared 100-successful-response SGT daily capacity and admits only listed features (R10).
 - Unresolved: none.
@@ -133,6 +134,15 @@ shared 100-per-SGT-day count across all three features, the same per-user in-fli
 and every other feature still refused. Admin summaries and lecturer briefings therefore
 spend the same daily budget as student requests. This migration owns the allowlist; any
 later re-creation must keep every feature listed here.
+
+### ADM-04-R11 — Completed status follows LEC-03
+
+`confirmed`. LEC-03-R4 makes completion display-derived: an `approved` booking whose slot
+has ended (database time `>= ends_at`) is shown as `completed`, while the stored
+`status` stays `approved`. `byStatus` counts such a booking as `completed`, not `approved`,
+so the report and the AI summary match what Lecturers see. Stored `completed` rows still
+count as `completed`; no booking row is written. A later re-creation of
+`admin_get_booking_report` must keep this rule.
 
 ## Non-functional requirements
 
@@ -278,6 +288,11 @@ Planned tests, not results.
   shared daily count (100 existing successes refuse all three with `quota_exceeded`), keeps the per-user in-flight
   guard, and still returns `unavailable` for any other feature name.
 
+- **ADM-04-AC16** (R11; integration; live DB) An `approved` booking on a slot that has
+  already ended counts under `completed`, an `approved` booking on a future slot counts
+  under `approved`, `byStatus` still sums to `totalBookings`, and both stored rows stay
+  `approved`.
+
 ## Review evidence
 
 - Challenge record: none yet; not independently reviewed.
@@ -291,8 +306,9 @@ None.
 
 ## Change log
 
-| Date       | Change and reason                                                                                                                                                                                  | IDs affected                                    | Evidence invalidated        | By                     |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | --------------------------- | ---------------------- |
-| 2026-10-20 | First draft from owner-confirmed scope and inspected code/migrations/AI gateway                                                                                                                    | R1–R9, AC1–AC14                                 | None; no prior approval     | requirements_architect |
-| 2026-10-21 | Owner approval with decisions a–d; quota dependency resolved by STU-05; feature name aligned to `admin.activity-summary`; env names aligned to `SOCLAAS_*`; R10/AC15 added for the quota allowlist | R2, R5, R6, R8, R10, AC2, AC7, AC12, AC13, AC15 | None; no prior approval     | Johannsen (owner)      |
-| 2026-10-21 | Allowlist also admits LEC-04's `lecturer.ai-briefing` so #33 works without a competing migration (owner decision)                                                                                  | R10, AC15                                       | AC15 pgTAP evidence; re-run | Johannsen (owner)      |
+| Date       | Change and reason                                                                                                                                                                                  | IDs affected                                    | Evidence invalidated             | By                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------- | ---------------------- |
+| 2026-10-20 | First draft from owner-confirmed scope and inspected code/migrations/AI gateway                                                                                                                    | R1–R9, AC1–AC14                                 | None; no prior approval          | requirements_architect |
+| 2026-10-21 | Owner approval with decisions a–d; quota dependency resolved by STU-05; feature name aligned to `admin.activity-summary`; env names aligned to `SOCLAAS_*`; R10/AC15 added for the quota allowlist | R2, R5, R6, R8, R10, AC2, AC7, AC12, AC13, AC15 | None; no prior approval          | Johannsen (owner)      |
+| 2026-10-21 | Allowlist also admits LEC-04's `lecturer.ai-briefing` so #33 works without a competing migration (owner decision)                                                                                  | R10, AC15                                       | AC15 pgTAP evidence; re-run      | Johannsen (owner)      |
+| 2026-10-21 | `byStatus` derives `completed` for ended `approved` bookings, matching LEC-03-R4; stored status alone always reported 0 completed (owner decision)                                                 | R11, AC16                                       | AC2 integration evidence; re-run | Johannsen (owner)      |
