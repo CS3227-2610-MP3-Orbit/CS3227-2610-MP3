@@ -202,3 +202,17 @@ rotating this shared local stack's keys; then proceed to `tester_verifier`/`secu
 review per the normal workflow. All automated checks already pass.
 
 Handoff evidence: workflow/handoffs/adm-04/2026-10-21-adm-04-developer.md
+
+## Coordinator addendum: R11 derived completion (2026-10-21)
+
+- Defect: LEC-03-R4 shows ended `approved` bookings as `completed` without writing the row, so
+  `byStatus` counted from stored status always reported 0 completed.
+- Order followed: spec (R11/AC16 and change log, owner-approved) → failing test
+  (`[ADM-04-AC16]`, failed with completed delta 0 against 1) → new migration
+  `20261021110000_admin_booking_reports_derived_completion.sql` (no existing migration edited).
+- Results after the fix: admin-reports integration 8/8; unit 230/230; pgTAP pass; prettier,
+  lint, typecheck and `check:spec` pass; `supabase db lint` adds no warning for
+  `admin_get_booking_report` (pre-existing LEC-03 warnings unchanged).
+- Local apply: the shared stack holds other branches' migrations, so `migration up` refused;
+  the `create or replace` file was applied directly with `psql`, and migration history was
+  not repaired. CI applies it through `db reset`.

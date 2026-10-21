@@ -343,6 +343,60 @@ describe("ADM-04 admin booking report: real Postgres + real Auth", () => {
     }
   });
 
+  it("[ADM-04-AC16] an approved booking whose slot has ended counts as completed, matching LEC-03's derived status", async () => {
+    const lecturer = await createFixtureUser("lecturer", "ADM-04 AC16 Lecturer");
+    const student = await createFixtureUser("student");
+    const course = await createFixtureCourse(
+      `D04${randomUUID().slice(0, 6)}`,
+      "ADM-04 AC16 Course",
+    );
+
+    // Two days inside one report window: the first slot has already ended, the second has not.
+    const today = new Date();
+    const pastStart = new Date(today.getTime() - 2 * 86_400_000);
+    const futureStart = new Date(today.getTime() + 2 * 86_400_000);
+    const sgtDay = (d: Date) => new Date(d.getTime() + 8 * 3_600_000).toISOString().slice(0, 10);
+
+    const window = { startDate: sgtDay(pastStart), endDate: sgtDay(futureStart) };
+    const statusCounts = async () => {
+      const report = await getBookingReport(window);
+      if (report.kind !== "success") throw new Error("must succeed");
+      return Object.fromEntries(report.byStatus.map((row) => [row.status, row.count]));
+    };
+
+    const slotIds: string[] = [];
+    const bookingIds: string[] = [];
+    try {
+      // Seed or other data may share this window, so compare against a baseline taken first.
+      const before = await statusCounts();
+      const pastSlot = await createFixtureSlot(course, lecturer.id, pastStart.toISOString());
+      const futureSlot = await createFixtureSlot(course, lecturer.id, futureStart.toISOString());
+      slotIds.push(pastSlot, futureSlot);
+      bookingIds.push(
+        await createFixtureBooking(pastSlot, student.id, "approved"),
+        await createFixtureBooking(futureSlot, student.id, "approved"),
+      );
+
+      const after = await statusCounts();
+      expect(after.completed - before.completed).toBe(1);
+      expect(after.approved - before.approved).toBe(1);
+      expect(after.pending - before.pending).toBe(0);
+
+      const result = await getBookingReport(window);
+      if (result.kind !== "success") throw new Error("must succeed");
+      expect(result.byStatus.reduce((total, row) => total + row.count, 0)).toBe(
+        result.totalBookings,
+      );
+
+      // No booking row is written: both stay stored as approved.
+      const stored = await serviceClient.from("bookings").select("status").in("id", bookingIds);
+      expect(stored.data?.map((row) => row.status)).toEqual(["approved", "approved"]);
+    } finally {
+      await deleteBookings(bookingIds);
+      await deleteSlots(slotIds);
+    }
+  });
+
   it("[ADM-04-AC5] a signed-out, Student, or Lecturer caller is refused, both through the action and a direct RPC call", async () => {
     const lecturer = await createFixtureUser("lecturer");
     const student = await createFixtureUser("student");
