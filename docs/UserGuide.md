@@ -123,7 +123,7 @@ course, lecturer, start time, status badge and topic, and a **View booking** lin
 page. If you have none yet, the page shows **You have no consultation bookings yet.** with a link
 to browse slots.
 
-![My bookings (empty state)](images/student-bookings.png)
+![My bookings, showing each status](images/student-bookings.png)
 
 On a booking's detail page (`/student/bookings/[bookingId]`) you can see its full course, lecturer,
 start/end time, status, topic, questions and, if rejected, the lecturer's **Rejection reason**.
@@ -334,7 +334,7 @@ each course.
 - Assigning a lecturer is refused for an inactive course, a deactivated account, or an account that
   is not a lecturer; assigning the same active pairing twice is refused as a duplicate.
 
-![Administrator courses (filtered to one course)](images/admin-courses.png)
+![Administrator courses](images/admin-courses.png)
 
 ### Guidelines and announcements
 
@@ -356,7 +356,7 @@ each course.
 - If nothing has been created yet, the page shows **No guidelines or announcements yet.** with a
   **Create one** link that opens the same dialog.
 
-![Administrator announcements (empty) and the New announcement dialog](images/admin-announcements.png)
+![Administrator announcements, with published items and a draft](images/admin-announcements.png)
 ![Create guideline or announcement dialog](images/admin-new-announcement-dialog.png)
 
 ### Reports and AI activity summary
