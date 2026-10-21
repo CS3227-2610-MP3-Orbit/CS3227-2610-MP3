@@ -24,7 +24,7 @@ export default function AccountsList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Account</TableHead>
+              <TableHead className="w-[15rem]">Account</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>

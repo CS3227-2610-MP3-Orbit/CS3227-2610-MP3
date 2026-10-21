@@ -46,8 +46,13 @@ export default function AccountTableRow({
   return (
     <TableRow aria-label={account.email} className="align-top">
       <TableCell className="whitespace-normal">
-        <p className="break-words font-semibold">{account.email}</p>
-        <p className="break-words text-sm text-muted-foreground">
+        <p className="max-w-[14rem] truncate font-semibold" title={account.email}>
+          {account.email}
+        </p>
+        <p
+          className="max-w-[14rem] truncate text-sm text-muted-foreground"
+          title={account.fullName || undefined}
+        >
           {account.fullName || "(no name)"}
         </p>
         {account.isProtected && (
@@ -72,44 +77,48 @@ export default function AccountTableRow({
               : "This is the protected recovery administrator. Its role, active status and password cannot be changed by any administrator."}
           </p>
         ) : (
-          <div className="flex flex-wrap items-end gap-3">
-            <div>
-              <Label htmlFor={`role-table-${account.id}`} className="text-xs">
-                Role
-              </Label>
-              <select
-                id={`role-table-${account.id}`}
-                value={role}
-                disabled={pending}
-                onChange={(event) => setRoleValue(event.target.value as Account["role"])}
-                className={`mt-1 ${selectClass}`}
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-end gap-2">
+              <div>
+                <Label htmlFor={`role-table-${account.id}`} className="text-xs">
+                  Role
+                </Label>
+                <select
+                  id={`role-table-${account.id}`}
+                  value={role}
+                  disabled={pending}
+                  onChange={(event) => setRoleValue(event.target.value as Account["role"])}
+                  className={`mt-1 ${selectClass}`}
+                >
+                  <option value="student">Student</option>
+                  <option value="lecturer">Lecturer</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={pending || role === account.role}
+                onClick={applyRole}
               >
-                <option value="student">Student</option>
-                <option value="lecturer">Lecturer</option>
-                <option value="admin">Administrator</option>
-              </select>
+                Change role
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={pending || role === account.role}
-              onClick={applyRole}
-            >
-              Change role
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={pending}
-              onClick={toggleActive}
-            >
-              {isActive ? "Deactivate" : "Activate"}
-            </Button>
-            <Button type="button" variant="outline" size="sm" disabled={pending} onClick={reset}>
-              Reset password
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={pending}
+                onClick={toggleActive}
+              >
+                {isActive ? "Deactivate" : "Activate"}
+              </Button>
+              <Button type="button" variant="outline" size="sm" disabled={pending} onClick={reset}>
+                Reset password
+              </Button>
+            </div>
           </div>
         )}
         <div role="status" aria-live="polite" className="mt-2 text-sm">

@@ -46,7 +46,9 @@ export default function AccountRow({
     <li role="group" aria-label={account.email} className="min-w-0 rounded-xl border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="break-words font-semibold">{account.email}</p>
+          <p className="break-words font-semibold" title={account.email}>
+            {account.email}
+          </p>
           <p className="break-words text-sm text-muted-foreground">
             {account.fullName || "(no name)"}
           </p>
@@ -78,44 +80,48 @@ export default function AccountRow({
             : "This is the protected recovery administrator. Its role, active status and password cannot be changed by any administrator."}
         </p>
       ) : (
-        <div className="mt-3 flex flex-wrap items-end gap-3">
-          <div>
-            <Label htmlFor={`role-${account.id}`} className="text-xs">
-              Role
-            </Label>
-            <select
-              id={`role-${account.id}`}
-              value={role}
-              disabled={pending}
-              onChange={(event) => setRoleValue(event.target.value as Account["role"])}
-              className={selectClass}
+        <div className="mt-3 flex flex-col gap-2">
+          <div className="flex flex-wrap items-end gap-2">
+            <div>
+              <Label htmlFor={`role-${account.id}`} className="text-xs">
+                Role
+              </Label>
+              <select
+                id={`role-${account.id}`}
+                value={role}
+                disabled={pending}
+                onChange={(event) => setRoleValue(event.target.value as Account["role"])}
+                className={selectClass}
+              >
+                <option value="student">Student</option>
+                <option value="lecturer">Lecturer</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={pending || role === account.role}
+              onClick={applyRole}
             >
-              <option value="student">Student</option>
-              <option value="lecturer">Lecturer</option>
-              <option value="admin">Administrator</option>
-            </select>
+              Change role
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={pending || role === account.role}
-            onClick={applyRole}
-          >
-            Change role
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={pending}
-            onClick={toggleActive}
-          >
-            {isActive ? "Deactivate" : "Activate"}
-          </Button>
-          <Button type="button" variant="outline" size="sm" disabled={pending} onClick={reset}>
-            Reset password
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={pending}
+              onClick={toggleActive}
+            >
+              {isActive ? "Deactivate" : "Activate"}
+            </Button>
+            <Button type="button" variant="outline" size="sm" disabled={pending} onClick={reset}>
+              Reset password
+            </Button>
+          </div>
         </div>
       )}
 
