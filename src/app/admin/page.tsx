@@ -1,4 +1,4 @@
-import { BookOpen, Inbox, Users } from "lucide-react";
+import { BarChart3, BookOpen, Inbox, Users } from "lucide-react";
 
 import { RequestCard } from "@/app/lecturer/request-card";
 import { EmptyState } from "@/components/empty-state";
@@ -44,9 +44,10 @@ export default async function AdminDashboardPage() {
           tone="warning"
         />
       </StatTileRow>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
         <QuickActionCard href="/admin/accounts" icon={Users} label="Manage accounts" />
         <QuickActionCard href="/admin/courses" icon={BookOpen} label="Manage courses" />
+        <QuickActionCard href="/admin/reports" icon={BarChart3} label="View reports" />
       </div>
       <section className="space-y-5">
         <h2 className="text-xl font-semibold">Consultation requests</h2>

@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   BookOpen,
   CalendarCheck,
   CalendarSearch,
@@ -53,8 +54,11 @@ export const NAV_GROUPS: Record<Role, NavGroup[]> = {
     { label: "People", items: [{ label: "Accounts", href: "/admin/accounts", icon: Users }] },
     {
       label: "Teaching",
-      // Arrives on another branch (ADM-02); linked here so admin nav is complete once it lands.
       items: [{ label: "Courses", href: "/admin/courses", icon: BookOpen }],
+    },
+    {
+      label: "Insights",
+      items: [{ label: "Reports", href: "/admin/reports", icon: BarChart3 }],
     },
   ],
 };
