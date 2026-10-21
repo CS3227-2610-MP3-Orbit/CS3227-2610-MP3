@@ -124,6 +124,9 @@ begin
   values (v_uid, v_id, 'created', 'success');
 
   return jsonb_build_object('kind', 'ok', 'id', v_id);
+exception
+  when lock_not_available or deadlock_detected or serialization_failure or query_canceled then
+    return jsonb_build_object('kind', 'temporarily_unavailable', 'correlationId', gen_random_uuid());
 end;
 $$;
 
@@ -207,6 +210,9 @@ begin
   from unnest(v_students) as student_id;
 
   return jsonb_build_object('kind', 'ok');
+exception
+  when lock_not_available or deadlock_detected or serialization_failure or query_canceled then
+    return jsonb_build_object('kind', 'temporarily_unavailable', 'correlationId', gen_random_uuid());
 end;
 $$;
 
@@ -260,6 +266,9 @@ begin
   end;
 
   return jsonb_build_object('kind', 'ok');
+exception
+  when lock_not_available or deadlock_detected or serialization_failure or query_canceled then
+    return jsonb_build_object('kind', 'temporarily_unavailable', 'correlationId', gen_random_uuid());
 end;
 $$;
 
