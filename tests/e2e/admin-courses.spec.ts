@@ -1,3 +1,6 @@
+import { execFileSync } from "node:child_process";
+
+import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page } from "@playwright/test";
 
 // Uses the repo's documented local-only seed accounts (password LocalOnly!123), the same ones
@@ -10,6 +13,34 @@ const ACTOR_EMAIL = "demo-admin2@localhost.test";
 const ACTOR_PASSWORD = "LocalOnly!123";
 const LECTURER_NAME = "Demo Lecturer";
 const LECTURER_EMAIL = "demo-lecturer@localhost.test";
+
+// Course codes this spec creates, removed in afterAll so repeated runs leave no rows on the
+// shared local stack. Same no-print key loading as admin-announcements.spec.ts.
+const createdCodes: string[] = [];
+
+test.afterAll(async () => {
+  if (createdCodes.length === 0) return;
+  const status = JSON.parse(
+    execFileSync("npx", ["supabase", "status", "-o", "json"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }),
+  );
+  const apiUrl = status.API_URL;
+  const secretKey = status.SECRET_KEY ?? status.SERVICE_ROLE_KEY;
+  if (!apiUrl || !secretKey) return;
+  const serviceClient = createClient(apiUrl, secretKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data: courses } = await serviceClient
+    .from("courses")
+    .select("id")
+    .in("code", createdCodes);
+  const ids = (courses ?? []).map((course) => course.id as string);
+  if (ids.length === 0) return;
+  await serviceClient.from("course_lecturers").delete().in("course_id", ids);
+  await serviceClient.from("courses").delete().in("id", ids);
+});
 
 // SH-07-R14/AC17: courses render as a `Table` row at `>= md` and a `Card` below it, both
 // always in the DOM -- `.or(...)` matches whichever layout is actually on screen (and so in
@@ -24,6 +55,7 @@ test("[ADM-02-AC1] [ADM-02-AC6] [ADM-02-AC7] [ADM-02-AC8] [ADM-02-AC12] [ADM-02-
   page,
 }) => {
   const code = `E2E${Date.now().toString().slice(-8)}`;
+  createdCodes.push(code);
   const name = `Playwright Course ${code}`;
 
   await page.goto("/login");

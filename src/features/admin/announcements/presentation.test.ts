@@ -17,11 +17,18 @@ describe("ADM-03 announcement presentation helpers", () => {
     expect(announcementKindLabel("announcement")).toBe("Announcement");
   });
 
-  it("[ADM-03-AC12] truncatedAnnouncementBody never drops a word, only shortens plain text", () => {
+  it("truncatedAnnouncementBody never drops a word, only shortens plain text", () => {
     expect(truncatedAnnouncementBody("Short body.")).toBe("Short body.");
     const long = "x".repeat(200);
     const truncated = truncatedAnnouncementBody(long, 140);
     expect(truncated.length).toBe(141); // 140 chars plus the ellipsis
     expect(truncated.endsWith("…")).toBe(true);
+  });
+
+  it("[ADM-03-AC12] the admin list preview collapses line breaks but keeps markup as literal text", () => {
+    const body = 'Line one\n\n<script>alert("x")</script>\n<b>bold</b>';
+    expect(truncatedAnnouncementBody(body)).toBe(
+      'Line one <script>alert("x")</script> <b>bold</b>',
+    );
   });
 });

@@ -137,3 +137,12 @@ concurrency test for `ADM-02-AC11`, and (b) add an `afterAll` cleanup to
 `tests/e2e/admin-courses.spec.ts` so repeated runs stop accumulating stray rows on the shared stack.
 
 Handoff evidence: workflow/handoffs/adm-02/2026-10-21-adm-02-tester-verifier.md
+
+## Coordinator follow-up (2026-10-21)
+
+- Finding "admin-courses.spec.ts has no cleanup": resolved. The spec records each course code it
+  creates and an `afterAll` deletes those courses and their `course_lecturers` rows with the local
+  secret key (same no-print loading as `admin-announcements.spec.ts`). Re-run: 3/3 passed; `E2E%`
+  course rows on the shared stack were 0 before and 0 after.
+- Finding "AC11 concurrency is a sequential proxy": left open, accepted as Low; the partial unique
+  index remains the authority and is checked directly.

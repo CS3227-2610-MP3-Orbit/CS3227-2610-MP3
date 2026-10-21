@@ -119,3 +119,12 @@ the developer's own report. Optionally ask for finding 1's test label to be corr
 finding 2 to be either fixed or explicitly accepted by the spec owner.
 
 Handoff evidence: workflow/handoffs/adm-03/2026-10-21-adm-03-tester-verifier.md
+
+## Coordinator follow-up (2026-10-21)
+
+- Finding 1 (mislabelled `[ADM-03-AC12]` test): resolved. The truncation test is now untagged, and a
+  new `[ADM-03-AC12]` test proves the admin preview keeps `<script>`/`<b>` markup as literal text
+  while collapsing line breaks. Unit run: 19/19 in `src/features/admin/announcements`.
+- Finding 2 (admin list collapses line breaks): resolved spec-side. R8, AC12 and the edge-case table
+  now state that the admin list shows a one-line preview (≤140 characters, whitespace collapsed,
+  `…` on a cut) and that full-text views keep line breaks; owner-approved, change log updated.

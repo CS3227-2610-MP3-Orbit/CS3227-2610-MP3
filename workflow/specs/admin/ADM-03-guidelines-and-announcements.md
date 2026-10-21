@@ -63,7 +63,8 @@ status: approved
   Lecturer dashboards (`R10`); (5) a "Communications" sidebar group with a `Megaphone`
   "Announcements" item. The reader ordering/cap in `R9` (all published guidelines, then the 5
   newest published announcements, newest first) is accepted as written.
-- Approval: **approved** by Johannsen (owner), 2026-10-21, covering R1–R10 and AC1–AC15 as written.
+- Approval: **approved** by Johannsen (owner), 2026-10-21, covering R1–R10 and AC1–AC15 as written;
+  the R8/AC12 admin-list preview clarification approved by Johannsen (owner), 2026-10-21 ("fix").
 - Unresolved decisions: none.
 
 ## Product and feature description
@@ -186,12 +187,14 @@ unpublish, admin-list, or reader-read operation calls a model, builds a prompt, 
 
 ### ADM-03-R8 — Plain-text rendering; no stored HTML/script execution
 
-`confirmed`. `title` and `body` are always rendered as plain text with line breaks preserved
-(`whitespace-pre-wrap`), on both the admin list and the reader card, and never through
+`confirmed`. `title` and `body` are always rendered as plain text, and never through
 `dangerouslySetInnerHTML`, a Markdown renderer, or any other HTML-interpreting path — the same
 plain-`<pre>` pattern already used for the lecturer's saved AI briefings. An admin-entered
 `<script>`/HTML-bearing title or body therefore always displays as inert literal text to every
-later reader, including the admin's own list.
+later reader, including the admin's own list. The reader card and the admin Edit dialog show the
+full body with line breaks preserved (`whitespace-pre-wrap` / native textarea); the admin list
+shows a one-line preview of at most 140 characters in which whitespace, including line breaks, is
+collapsed to single spaces and a cut is marked with `…`.
 
 ### ADM-03-R9 — Reader content and ordering
 
@@ -253,7 +256,7 @@ with `SH-07`'s existing per-role dashboard layout), listing every published guid
   card shows both guidelines (unlimited) and only the 5 newest announcements; the admin list still
   shows all 8 items.
 - **UC3 Stored-XSS attempt**: an admin enters a title or body containing a `<script>` tag or other
-  markup; it renders as inert literal text, with line breaks preserved, on both the admin list and
+  markup; it renders as inert literal text (line breaks preserved on the reader card) on both the admin list and
   every reader card — never executed, never interpreted as HTML.
 - **UC4 Non-admin direct access attempt**: a lecturer, student, or signed-out caller calls any
   `admin_*` RPC or Server Action directly; refused, no data, no mutation. The same caller's direct
@@ -354,17 +357,17 @@ unpublish, admin-list, or reader-read path.
 
 ## Edge cases and failure paths
 
-| Condition                                                        | Required outcome                                                     | Invariant preserved                                          |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Invalid `kind`, or `title`/`body` out of bounds                  | `validation_error` naming the field, no row changed                  | No malformed item created/updated                            |
-| Unknown item id on edit/publish toggle                           | `forbidden_or_not_found`, no change                                  | No action on a nonexistent target                            |
-| Admin unpublishes an item                                        | Row preserved; immediately excluded from every reader query          | Archive-over-delete; no destructive operation exists         |
-| Title/body contains `<script>`/HTML markup                       | Renders as inert literal text with line breaks preserved, everywhere | Stored content can never execute as markup                   |
-| More than 5 published announcements exist                        | Reader sees only the 5 newest; admin list still shows all            | Reader scope stays small; nothing is lost from the record    |
-| Zero published items exist                                       | Reader card shows a friendly empty state, not an error               | Empty state is not treated as a failure                      |
-| Non-admin/signed-out direct RPC or admin-list call               | `forbidden_or_not_found`, no data, no mutation                       | Only active admins reach admin-only paths                    |
-| Student/Lecturer direct PostgREST `select` against a draft row   | No row returned                                                      | RLS enforces visibility independent of the app               |
-| A user is deactivated after a publish they could previously read | That user's next read returns nothing, published or not              | `current_app_role()` nulls out access the instant it's false |
+| Condition                                                        | Required outcome                                                           | Invariant preserved                                          |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Invalid `kind`, or `title`/`body` out of bounds                  | `validation_error` naming the field, no row changed                        | No malformed item created/updated                            |
+| Unknown item id on edit/publish toggle                           | `forbidden_or_not_found`, no change                                        | No action on a nonexistent target                            |
+| Admin unpublishes an item                                        | Row preserved; immediately excluded from every reader query                | Archive-over-delete; no destructive operation exists         |
+| Title/body contains `<script>`/HTML markup                       | Renders as inert literal text everywhere; full-text views keep line breaks | Stored content can never execute as markup                   |
+| More than 5 published announcements exist                        | Reader sees only the 5 newest; admin list still shows all                  | Reader scope stays small; nothing is lost from the record    |
+| Zero published items exist                                       | Reader card shows a friendly empty state, not an error                     | Empty state is not treated as a failure                      |
+| Non-admin/signed-out direct RPC or admin-list call               | `forbidden_or_not_found`, no data, no mutation                             | Only active admins reach admin-only paths                    |
+| Student/Lecturer direct PostgREST `select` against a draft row   | No row returned                                                            | RLS enforces visibility independent of the app               |
+| A user is deactivated after a publish they could previously read | That user's next read returns nothing, published or not                    | `current_app_role()` nulls out access the instant it's false |
 
 ## Acceptance criteria and verification
 
@@ -381,7 +384,7 @@ Planned tests, not results.
 - **ADM-03-AC9** (R6, security; integration; live DB) Given a signed-out, Student, or Lecturer caller, when they invoke any `admin_*` write RPC or its Server Action directly, then the call returns `forbidden_or_not_found` and performs no mutation.
 - **ADM-03-AC10** (R6, security; pgTAP; live DB) Given the `announcements` table, when `insert`/`update`/`delete` privilege is checked for `anon`/`authenticated`, then neither role holds it and every `admin_*` function's `execute` privilege is granted only to `authenticated`.
 - **ADM-03-AC11** (R7; unit plus database before/after; mocked) Given any create/edit/publish/unpublish/list/read operation, when it runs successfully or fails, then it makes no model/provider call and writes no `ai_usage` row.
-- **ADM-03-AC12** (R8, security; unit; mocked) Given a title or body containing `<script>` or other HTML markup, when it is rendered on the admin list or a reader card, then it appears as inert literal text with line breaks preserved, never via `dangerouslySetInnerHTML` or a Markdown renderer.
+- **ADM-03-AC12** (R8, security; unit; mocked) Given a title or body containing `<script>` or other HTML markup, when it is rendered on the admin list or a reader card, then it appears as inert literal text, never via `dangerouslySetInnerHTML` or a Markdown renderer; the reader card preserves line breaks, and the admin list preview collapses them to single spaces without altering the markup characters.
 - **ADM-03-AC13** (R9; integration; live DB) Given 2 published guidelines and 6 published announcements, when the reader projection is read, then it returns both guidelines and exactly the 5 newest announcements, all newest-first.
 - **ADM-03-AC14** (R10; e2e; live) Given published guidelines/announcements, when a Student or a Lecturer opens their dashboard, then the "Guidelines and announcements" card shows the same published content described in `AC13`.
 - **ADM-03-AC15** (R5; integration (security); live DB) Given a user an admin deactivates, when that user's session attempts to read the reader projection again, then it returns no items regardless of publication state.
@@ -401,7 +404,8 @@ None. `PRODUCT-SPEC.md`'s open question on maximum announcement length is answer
 
 ## Change log
 
-| Date       | Change and reason                                                                                              | IDs affected        | Evidence invalidated    | By                     |
-| ---------- | -------------------------------------------------------------------------------------------------------------- | ------------------- | ----------------------- | ---------------------- |
-| 2026-10-21 | First draft from `PRODUCT-SPEC.md`, issues #25/#9, and inspected `ADM-02`/`ADM-04`/`SH-07` code and migrations | R1–R10, AC1–AC15    | None; no prior approval | requirements_architect |
-| 2026-10-21 | Owner approval of all five proposed decisions                                                                  | R1, R4, R5, R9, R10 | None; no prior approval | Johannsen (owner)      |
+| Date       | Change and reason                                                                                              | IDs affected        | Evidence invalidated       | By                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------- | ------------------- | -------------------------- | ---------------------- |
+| 2026-10-21 | First draft from `PRODUCT-SPEC.md`, issues #25/#9, and inspected `ADM-02`/`ADM-04`/`SH-07` code and migrations | R1–R10, AC1–AC15    | None; no prior approval    | requirements_architect |
+| 2026-10-21 | Owner approval of all five proposed decisions                                                                  | R1, R4, R5, R9, R10 | None; no prior approval    | Johannsen (owner)      |
+| 2026-10-21 | Tester finding: admin list preview collapses line breaks; R8/AC12 now state the one-line preview explicitly    | R8, AC12            | AC12 unit evidence; re-run | Johannsen (owner)      |
