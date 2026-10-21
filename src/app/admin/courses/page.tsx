@@ -5,6 +5,7 @@ import { listAccounts } from "@/features/admin/accounts/server";
 import { listCourses } from "@/features/admin/courses/server";
 import { requireRole } from "@/lib/auth/session";
 import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
@@ -117,15 +118,15 @@ export default async function AdminCoursesPage({
           </p>
         )}
         {result.kind === "success" && result.courses.length === 0 && (
-          <div className="flex flex-col items-start gap-2 rounded-xl border bg-card p-6">
-            <p role="status" className="flex items-center gap-2 text-muted-foreground">
-              <SearchX aria-hidden="true" className="size-4" />
-              No courses match these filters.
-            </p>
-            <Link href="/admin/courses" className="text-sm underline focus-visible:outline-2">
-              Clear filters
-            </Link>
-          </div>
+          <EmptyState
+            icon={SearchX}
+            message="No courses match these filters."
+            action={
+              <Link href="/admin/courses" className="text-sm underline focus-visible:outline-2">
+                Clear filters
+              </Link>
+            }
+          />
         )}
         {result.kind === "success" && result.courses.length > 0 && (
           <CoursesList courses={result.courses} eligibleLecturers={eligibleLecturers} />

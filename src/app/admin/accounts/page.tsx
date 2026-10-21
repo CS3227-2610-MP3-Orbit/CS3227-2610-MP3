@@ -4,6 +4,7 @@ import Link from "next/link";
 import { listAccounts } from "@/features/admin/accounts/server";
 import { requireRole } from "@/lib/auth/session";
 import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
@@ -116,15 +117,15 @@ export default async function AdminAccountsPage({
           </p>
         )}
         {result.kind === "success" && result.accounts.length === 0 && (
-          <div className="flex flex-col items-start gap-2 rounded-xl border bg-card p-6">
-            <p role="status" className="flex items-center gap-2 text-muted-foreground">
-              <SearchX aria-hidden="true" className="size-4" />
-              No accounts match these filters.
-            </p>
-            <Link href="/admin/accounts" className="text-sm underline focus-visible:outline-2">
-              Clear filters
-            </Link>
-          </div>
+          <EmptyState
+            icon={SearchX}
+            message="No accounts match these filters."
+            action={
+              <Link href="/admin/accounts" className="text-sm underline focus-visible:outline-2">
+                Clear filters
+              </Link>
+            }
+          />
         )}
         {result.kind === "success" && result.accounts.length > 0 && (
           <AccountsList accounts={result.accounts} currentUserId={me.id} />

@@ -1,8 +1,9 @@
-import { Inbox } from "lucide-react";
+import { CalendarClock, Inbox } from "lucide-react";
 
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { ConsultationList } from "@/components/consultation-list";
+import { EmptyState } from "@/components/empty-state";
 import { StatTile, StatTileRow } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import { listStaffConsultations } from "@/features/lecturer/consultations/server";
@@ -36,8 +37,18 @@ export default async function LecturerDashboardPage() {
       <section className="space-y-5">
         <h1 className="text-2xl font-semibold">{greetingFor(new Date(), user.fullName)}</h1>
         <StatTileRow>
-          <StatTile label="Your consultation slots" value={slots?.length ?? 0} />
-          <StatTile label="Pending requests" value={pendingRequestsCount} />
+          <StatTile
+            label="Your consultation slots"
+            value={slots?.length ?? 0}
+            icon={CalendarClock}
+            tone="primary"
+          />
+          <StatTile
+            label="Pending requests"
+            value={pendingRequestsCount}
+            icon={Inbox}
+            tone="warning"
+          />
         </StatTileRow>
         <p className="text-sm text-muted-foreground">
           Consultation availability uses Singapore time. Slots must be created at least one hour
@@ -117,10 +128,7 @@ export default async function LecturerDashboardPage() {
               ))}
             </ul>
           ) : (
-            <p role="status" className="mt-2 flex items-center gap-2 text-muted-foreground">
-              <Inbox aria-hidden="true" className="size-4" />
-              No pending consultation requests.
-            </p>
+            <EmptyState icon={Inbox} message="No pending consultation requests." className="mt-2" />
           )
         ) : (
           <p role="alert" className="mt-2">

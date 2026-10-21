@@ -1,7 +1,7 @@
-import Link from "next/link";
+import { CalendarCheck, CalendarSearch } from "lucide-react";
 
+import { QuickActionCard } from "@/components/quick-action-card";
 import { StatTile, StatTileRow } from "@/components/stat-tile";
-import { buttonVariants } from "@/components/ui/button";
 import { listMyBookings } from "@/features/student/bookings/manage-server";
 import { greetingFor } from "@/lib/greeting";
 import { requireRole } from "@/lib/auth/session";
@@ -29,15 +29,20 @@ export default async function StudentDashboardPage() {
         </p>
       </div>
       <StatTileRow>
-        <StatTile label="Upcoming or active bookings" value={activeBookingsCount} />
+        <StatTile
+          label="Upcoming or active bookings"
+          value={activeBookingsCount}
+          icon={CalendarCheck}
+          tone="primary"
+        />
       </StatTileRow>
-      <div className="flex flex-wrap gap-3">
-        <Link href="/student/slots" className={buttonVariants({ variant: "default" })}>
-          Browse consultation slots
-        </Link>
-        <Link href="/student/bookings" className={buttonVariants({ variant: "outline" })}>
-          My bookings
-        </Link>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <QuickActionCard
+          href="/student/slots"
+          icon={CalendarSearch}
+          label="Browse consultation slots"
+        />
+        <QuickActionCard href="/student/bookings" icon={CalendarCheck} label="My bookings" />
       </div>
     </div>
   );

@@ -2,16 +2,12 @@ import { Inbox } from "lucide-react";
 
 import type { Consultation } from "@/features/lecturer/consultations/validation";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/empty-state";
 import { statusBadgeVariant } from "@/lib/status-badge";
 
 export function ConsultationList({ consultations }: { consultations: Consultation[] }) {
   if (consultations.length === 0)
-    return (
-      <p role="status" className="flex items-center gap-2 text-muted-foreground">
-        <Inbox aria-hidden="true" className="size-4" />
-        No consultations found.
-      </p>
-    );
+    return <EmptyState icon={Inbox} message="No consultations found." />;
   return (
     <ul aria-label="Consultations" className="grid gap-4">
       {consultations.map((item) => (

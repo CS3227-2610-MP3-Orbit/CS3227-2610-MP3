@@ -1,8 +1,8 @@
-import { Inbox } from "lucide-react";
-import Link from "next/link";
+import { BookOpen, Inbox, Users } from "lucide-react";
 
 import { RequestCard } from "@/app/lecturer/request-card";
-import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
+import { QuickActionCard } from "@/components/quick-action-card";
 import { StatTile, StatTileRow } from "@/components/stat-tile";
 import { listAccounts } from "@/features/admin/accounts/server";
 import { listCourses } from "@/features/admin/courses/server";
@@ -28,20 +28,25 @@ export default async function AdminDashboardPage() {
         <StatTile
           label="Active accounts"
           value={accountsResult.kind === "success" ? accountsResult.accounts.length : null}
+          icon={Users}
+          tone="primary"
         />
         <StatTile
           label="Active courses"
           value={coursesResult.kind === "success" ? coursesResult.courses.length : null}
+          icon={BookOpen}
+          tone="secondary"
         />
-        <StatTile label="Pending consultation requests" value={pendingRequestsCount} />
+        <StatTile
+          label="Pending consultation requests"
+          value={pendingRequestsCount}
+          icon={Inbox}
+          tone="warning"
+        />
       </StatTileRow>
-      <div className="flex flex-wrap gap-3">
-        <Link href="/admin/accounts" className={buttonVariants({ variant: "default" })}>
-          Manage accounts
-        </Link>
-        <Link href="/admin/courses" className={buttonVariants({ variant: "default" })}>
-          Manage courses
-        </Link>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <QuickActionCard href="/admin/accounts" icon={Users} label="Manage accounts" />
+        <QuickActionCard href="/admin/courses" icon={BookOpen} label="Manage courses" />
       </div>
       <section className="space-y-5">
         <h2 className="text-xl font-semibold">Consultation requests</h2>
@@ -53,10 +58,7 @@ export default async function AdminDashboardPage() {
               ))}
             </ul>
           ) : (
-            <p role="status" className="flex items-center gap-2 text-muted-foreground">
-              <Inbox aria-hidden="true" className="size-4" />
-              No pending consultation requests.
-            </p>
+            <EmptyState icon={Inbox} message="No pending consultation requests." />
           )
         ) : (
           <p role="alert">Requests are temporarily unavailable. Please retry.</p>

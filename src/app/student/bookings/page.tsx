@@ -1,9 +1,11 @@
-import { Inbox } from "lucide-react";
+import { CalendarSearch } from "lucide-react";
 import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { listMyBookings } from "@/features/student/bookings/manage-server";
 import { formatSingaporeDateTime } from "@/features/student/slots/format";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
 import { statusBadgeVariant } from "@/lib/status-badge";
 export default async function MyBookingsPage() {
   await requireRole("student");
@@ -15,10 +17,15 @@ export default async function MyBookingsPage() {
       </header>
       {result.kind === "success" ? (
         result.bookings.length === 0 ? (
-          <p role="status" className="flex items-center gap-2 text-muted-foreground">
-            <Inbox aria-hidden="true" className="size-4" />
-            You have no consultation bookings yet.
-          </p>
+          <EmptyState
+            icon={CalendarSearch}
+            message="You have no consultation bookings yet."
+            action={
+              <Link href="/student/slots" className={buttonVariants({ variant: "default" })}>
+                Browse available slots
+              </Link>
+            }
+          />
         ) : (
           <ul className="space-y-3">
             {result.bookings.map((b) => (
