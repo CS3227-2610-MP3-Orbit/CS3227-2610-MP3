@@ -1,11 +1,11 @@
 ---
-id: LEC-05
+id: LEC-06
 title: Lecturer authorization and AI security
 owner: lecturer
 status: draft
 ---
 
-# LEC-05: Lecturer authorization and AI security
+# LEC-06: Lecturer authorization and AI security
 
 ## Context
 
@@ -40,16 +40,22 @@ Lecturer features must be protected consistently at page, server-operation, data
 
 - The authenticated session, not client input, determines the acting user and role.
 - AI cannot make authorization or booking-state decisions.
-- Exact retention, audit-log, quota, and administrator-access rules remain open questions.
+- Administrators do not receive the Lecturer dashboard or private Lecturer consultation view unless a
+  separate administrator projection is approved.
+- Security logs store event category, user ID, feature ID, correlation ID, outcome, and timestamp;
+  prompts, secrets, and generated content are never logged.
+- Lecturer AI features use the existing shared input, output, quota, and timeout limits.
+- CI enforces authorization, ownership/RLS, prompt-injection, output-safety, quota/failure, and
+  specification-traceability tests.
 
 ## Acceptance criteria
 
-- **LEC-05-AC1** Given any Lecturer server operation, when it is invoked without an active lecturer session, then it refuses before protected data access.
-- **LEC-05-AC2** Given an active lecturer, when they request another lecturer's protected record, then the operation returns no protected data and does not mutate it.
-- **LEC-05-AC3** Given user-controlled text reaching an AI feature, when the request is constructed, then the text is wrapped as untrusted data and cannot close the wrapper or override system instructions.
-- **LEC-05-AC4** Given AI output containing an attempted command, permission change, booking mutation, HTML, or script, when the application handles it, then it is treated as text and cannot perform the attempted action.
-- **LEC-05-AC5** Given provider failure, timeout, quota exhaustion, or malformed output, when a Lecturer AI operation runs, then it fails closed for AI while ordinary non-AI functionality remains available.
-- **LEC-05-AC6** Given a security-sensitive requirement change, when it is proposed, then it remains unapproved until a human records a decision.
+- **LEC-06-AC1** Given any Lecturer server operation, when it is invoked without an active lecturer session, then it refuses before protected data access.
+- **LEC-06-AC2** Given an active lecturer, when they request another lecturer's protected record, then the operation returns no protected data and does not mutate it.
+- **LEC-06-AC3** Given user-controlled text reaching an AI feature, when the request is constructed, then the text is wrapped as untrusted data and cannot close the wrapper or override system instructions.
+- **LEC-06-AC4** Given AI output containing an attempted command, permission change, booking mutation, HTML, or script, when the application handles it, then it is treated as text and cannot perform the attempted action.
+- **LEC-06-AC5** Given provider failure, timeout, quota exhaustion, or malformed output, when a Lecturer AI operation runs, then it fails closed for AI while ordinary non-AI functionality remains available.
+- **LEC-06-AC6** Given a security-sensitive requirement change, when it is proposed, then it remains unapproved until a human records a decision.
 
 ## Error and edge cases
 
@@ -76,10 +82,7 @@ Lecturer features must be protected consistently at page, server-operation, data
 
 ## Open questions
 
-- What access, if any, should administrators receive?
-- What security events must be logged and retained?
-- What exact input/output and quota limits apply per Lecturer feature?
-- Which controls must be automated in CI versus documented as human review gates?
+None blocking approval.
 
 ## Change log
 

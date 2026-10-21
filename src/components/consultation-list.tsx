@@ -1,5 +1,6 @@
 import type { Consultation } from "@/features/lecturer/consultations/validation";
 import { Badge } from "@/components/ui/badge";
+import { BriefingButton } from "./briefing-button";
 
 export function ConsultationList({ consultations }: { consultations: Consultation[] }) {
   if (consultations.length === 0) return <p role="status">No consultations found.</p>;
@@ -26,6 +27,7 @@ export function ConsultationList({ consultations }: { consultations: Consultatio
           </p>
           <p>Questions: {item.questions}</p>
           <p className="text-sm text-muted-foreground">{item.courseName}</p>
+          {item.displayStatus === "upcoming" && <BriefingButton bookingId={item.bookingId} />}
         </li>
       ))}
     </ul>
