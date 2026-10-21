@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { ConsultationList } from "@/components/consultation-list";
+import { Button } from "@/components/ui/button";
 import { listStaffConsultations } from "@/features/lecturer/consultations/server";
 import { listLecturerRequests } from "@/features/lecturer/requests-server";
 import { listLecturerBriefings } from "@/features/lecturer/ai-briefing";
@@ -31,18 +32,21 @@ export default async function LecturerDashboardPage() {
     <main className="space-y-8">
       <section>
         <h1 className="text-2xl font-semibold">Lecturer dashboard</h1>
-        <p className="mt-2 text-sm">
+        <p className="mt-2 text-sm text-muted-foreground">
           Consultation availability uses Singapore time. Slots must be created at least one hour
           before they start.
         </p>
         <SlotForm courses={(courses ?? []) as { id: string; code: string; name: string }[]} />
         <h2 className="mt-8 font-semibold">Your consultation slots</h2>
         {!slots?.length ? (
-          <p className="mt-2 text-sm">No consultation slots yet.</p>
+          <p className="mt-2 text-sm text-muted-foreground">No consultation slots yet.</p>
         ) : (
           <ul className="mt-3 grid gap-2">
             {slots.map((slot) => (
-              <li key={slot.id} className="flex items-center justify-between rounded border p-3">
+              <li
+                key={slot.id}
+                className="flex items-center justify-between rounded-lg border bg-card p-3"
+              >
                 <span>
                   {new Date(slot.starts_at).toLocaleString("en-SG", {
                     timeZone: "Asia/Singapore",
@@ -60,9 +64,9 @@ export default async function LecturerDashboardPage() {
                   }}
                 >
                   <input type="hidden" name="slotId" value={slot.id} />
-                  <button className="text-red-700 underline" type="submit">
+                  <Button variant="link" className="text-destructive" type="submit">
                     Delete
-                  </button>
+                  </Button>
                 </form>
               </li>
             ))}

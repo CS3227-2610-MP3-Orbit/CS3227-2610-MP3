@@ -23,7 +23,7 @@ export default async function BookingPage({ params }: { params: Promise<{ bookin
             Back to My Bookings
           </Link>
         </nav>
-        <div role="alert">
+        <div role="alert" className="rounded-lg border border-destructive p-4">
           {result.kind === "temporarily_unavailable"
             ? "Booking details are temporarily unavailable. Please retry."
             : "This booking is unavailable."}

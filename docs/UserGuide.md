@@ -1,48 +1,143 @@
 # User Guide
 
+Orbit is a consultation booking system. Students book consultation slots with their lecturers,
+lecturers publish their availability and decide requests, and administrators manage accounts and
+courses.
+
 ## Getting started
 
-Start the application with the project’s normal development command and sign in with an account
-that has the required role. The available pages and actions depend on the authenticated user’s
-permissions. Do not use real student data in local testing.
+### Opening the app
+
+| Environment | Address                                       | Purpose                            |
+| ----------- | --------------------------------------------- | ---------------------------------- |
+| Production  | <https://cs3227-2610-mp3.vercel.app>          | The released version               |
+| Development | The latest deployment of the `develop` branch | Features under test before release |
+
+Signed-out visitors can only see the sign-in page. Every other address sends you to `/login`.
+
+### Accounts
+
+There is no self-registration. An administrator creates every account and gives you a one-time
+password (see [Administrator](#administrator)). Each account has exactly one role: **Student**,
+**Lecturer** or **Administrator**.
+
+### Signing in
+
+1. Open the app and enter your **Email** and **Password**.
+2. Select **Sign in**.
+3. You arrive at the page for your role: `/student`, `/lecturer` or `/admin`.
+
+If the email or password is wrong, the page shows **Incorrect email or password.** It does not say
+which of the two was wrong. A deactivated account cannot sign in, and an account that is
+deactivated while signed in is signed out on its next request.
+
+To sign out, select **Sign out**.
+
+### Changing your password
+
+Every signed-in user can change their own password. You should do this after your first sign-in,
+because the administrator saw your one-time password.
+
+1. Select **Change password** in the navigation.
+2. Enter your **Current password**, a **New password** and **Confirm new password**.
+3. Select **Change password**.
+
+Rules:
+
+- The new password must be 12–72 bytes long and different from your current password. Most
+  characters count as one byte; some accented and non-Latin characters count as two or more.
+- If the current password is wrong, the page shows **Current password is incorrect.** and you
+  re-enter all three fields.
+- After **5 wrong current passwords within 15 minutes**, further attempts are refused with **Too
+  many attempts. Try again in N minutes.** This applies even if the next attempt is correct.
+
+When the change succeeds, the page shows **Password changed**. You stay signed in on this device,
+and your other devices are signed out. They may keep working for up to an hour until their current
+sign-in expires (see [Known limitations](#known-limitations)).
 
 ## Student
 
 Students can view available consultation slots and submit consultation requests with a topic and
-questions. Their requests show a user-facing status. A rejected request includes the rejection
-reason alongside the status, for example `Rejected: schedule unavailable`.
+questions. Their requests show a user-facing status, including rejection reasons when applicable.
 
 ## Lecturer
 
-Lecturers can:
-
-- create, view, edit, and delete their own consultation slots;
-- review consultation requests for their slots and approve or reject them;
-- provide a rejection reason from the available reasons;
-- view upcoming, ongoing, and completed consultations; and
-- generate an AI briefing for a selected upcoming approved consultation.
-
-The AI briefing contains a summary, grouped question themes, and preparation topics. It uses the
-student’s name, topic, and questions where required by the feature, but excludes email from the
-model prompt. Generated briefings are retained in the database, while the user interface displays
-only the latest ten. A briefing may fail when the consultation is not eligible, the user lacks
-access, the quota is exhausted, or the AI provider is unavailable.
+Lecturers can create, view, edit, and delete their own consultation slots; review and decide requests;
+view upcoming, ongoing, and completed consultations; and generate an AI briefing for an upcoming
+approved consultation. The briefing summarizes the consultation, groups question themes, and suggests
+preparation topics. Student email is excluded from the model prompt, and saved briefings are retained
+in the database while only the latest ten are displayed.
 
 ## Administrator
 
-Administrator capabilities are documented and controlled separately from the Lecturer workflow.
-They may include oversight of consultation records, but users must not assume that an administrator
-action is available unless it is enabled by the deployed application and access policy.
+The administrator dashboard (`/admin`) links to **Manage accounts**. It also lists pending
+consultation requests.
+
+### Finding accounts
+
+**Manage accounts** (`/admin/accounts`) lists every account with its name, email, role and status
+(**Active** or **Deactivated**).
+
+- **Search** by part of an email address or name.
+- Filter by **Role** (All roles, Student, Lecturer, Administrator) and **Status** (All statuses,
+  Active, Deactivated), then select **Search**.
+- **Clear filters** shows every account again.
+
+If nothing matches, the page shows **No accounts match these filters.**
+
+### Creating an account
+
+1. In **Create account**, enter the **Email**, **Full name** and **Role**.
+2. Select **Create account**.
+3. The page shows a **One-time password (copy it now — it cannot be shown again)**. Select
+   **Copy**, give the password to the new user through a private channel, then select **Done**.
+
+After **Done**, or if you leave the page, the password cannot be shown again. If it is lost, reset
+the password (below). The email must not already be in use; otherwise the page shows **An account
+with that email already exists.**
+
+### Changing a role
+
+Choose the new role for the account and select **Change role**. The page shows **Role updated.**
+Administrators can make other users administrators.
+
+### Deactivating and reactivating an account
+
+Select **Deactivate** to block an account immediately: the user is signed out on their next request
+and cannot sign in. Select **Activate** to restore it. The account and its history are kept.
+
+### Resetting a password
+
+Select **Reset password** for a user who has forgotten their password or whose account may be
+compromised. A new one-time password appears with **Copy** and **Done**, as when creating an
+account. The user's existing sessions are ended.
+
+For a suspected compromise, **deactivate the account first** (immediate), then reset the password,
+then reactivate it.
+
+### Rules that protect the system
+
+| You try to…                                                          | Result                                                                |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Change your own role, deactivate yourself or reset your own password | No controls are shown on your own account; use **Change password**    |
+| Demote or deactivate the last active administrator                   | **That change would leave no active administrators and was refused.** |
+| Change, deactivate or reset the **Protected** administrator          | No controls are shown for it                                          |
+
+The **protected recovery administrator** is the first administrator account in each environment.
+Nobody can demote, deactivate or reset it from the app, so the system always has one administrator
+account to recover from. Its owner can still change its password with **Change password**.
 
 ## AI features
 
-AI output is generated from application data and should be reviewed by the lecturer before use.
-Student topics and questions are treated as content, not instructions to the AI system. Do not
-enter secrets or unrelated personal information into consultation fields.
+AI output is generated from application data and should be reviewed by the Lecturer before use. Student
+topics and questions are treated as content, not instructions to the AI system. AI failures do not block
+ordinary booking features.
 
 ## Known limitations
 
-- Local development requires correctly configured, uncommitted environment variables.
-- AI output depends on the SoC LLM gateway and its quota/rate limits.
-- Briefings are retained in the database, but only the latest ten are shown in the lecturer UI.
-- User-facing behaviour may differ until the relevant feature branch has passed CI and been merged.
+- After a password change or reset, other devices can stay signed in for up to one hour, until
+  their current sign-in expires. They cannot renew it. To lock someone out immediately, an
+  administrator deactivates the account.
+- Public sign-up through the Supabase API is still enabled; the app itself offers no sign-up page.
+- The administrator dashboard currently shows the text of pending consultation requests; a privacy
+  review of this is planned.

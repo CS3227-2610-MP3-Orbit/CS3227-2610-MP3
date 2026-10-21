@@ -31,7 +31,7 @@ async function createOwnedBookingFixture() {
   await sql(`update auth.users set email_confirmed_at=now() where id=${quote(student)};
     insert into auth.users(id) values (${quote(lecturer)});
     update public.profiles set role='lecturer',full_name='Dr STU04 Fixture' where id=${quote(lecturer)};
-    insert into public.courses(id,code,name) values (${quote(course)},'STU04','Manage booking verification');
+    insert into public.courses(id,code,name) values (${quote(course)},${quote(`STU04-${course.replaceAll("-", "").slice(0, 12).toUpperCase()}`)},'Manage booking verification');
     insert into public.course_lecturers(course_id,lecturer_id) values (${quote(course)},${quote(lecturer)});
     insert into public.consultation_slots(id,course_id,lecturer_id,starts_at,ends_at)
     select slot_id,${quote(course)}::uuid,${quote(lecturer)}::uuid,

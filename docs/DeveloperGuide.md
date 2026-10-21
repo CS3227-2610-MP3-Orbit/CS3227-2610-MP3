@@ -2,19 +2,23 @@
 
 ## Setting up
 
-Install the project dependencies, copy `.env.example` to a local environment file, and provide
-the required development values through the local environment. Keep `.env.local` untracked and
-never paste secret values into commits, issues, pull requests, screenshots, chat, or command
-output. If a secret is exposed, revoke it and create a replacement before continuing.
+1. Install Node.js 24, Docker Desktop and the dependencies: `npm ci`.
+2. Start a local Supabase stack: `npx supabase start`, then `npx supabase db reset` to apply every
+   migration and `supabase/seed.sql`.
+3. Run the app with the local stack's URL and keys, which `supabase status` prints. Never print them
+   into logs; load them into the shell instead:
 
-The normal development sequence is:
+   ```sh
+   eval "$(npx supabase status -o json | node tests/integration/local-supabase-env.mjs)"
+   npm run dev
+   ```
 
-1. Start from an up-to-date feature branch based on `develop`.
-2. Create or update a draft specification under `workflow/specs/`.
-3. Resolve questions and obtain human approval for the specification.
-4. Hand the approved specification to the Developer Agent.
-5. Run the Tester/Security Reviewer independently and record the evidence.
-6. Fix findings, rerun the relevant checks, and submit the pull request for human review.
+4. Open <http://localhost:3000> (not `127.0.0.1`; see [Testing](#testing-and-workflow-verification)).
+
+The seed creates local-only accounts, all with the password `LocalOnly!123`:
+`demo-admin@localhost.test` (protected administrator), `demo-admin2@localhost.test`,
+`demo-lecturer@localhost.test` and `demo-student@localhost.test`. The seed never runs against the
+development or production projects: `supabase db push` applies migrations only.
 
 ## Architecture
 
@@ -39,21 +43,41 @@ code that is currently deployed:
 - **Every new table enables row-level security** and has policies that use `current_app_role()`;
   `supabase/tests/rls_enabled.test.sql` fails otherwise.
 
+### Accounts, roles and passwords (ADM-01, SH-06)
+
+`public.profiles` holds each user's `role`, `is_active` and `is_protected`. Signed-in users cannot
+update `profiles` at all: migration `20261020100000_admin_account_management.sql` drops the old
+admin update policy and revokes `UPDATE`. Every change goes through an admin-only
+`security definer` function that sets `search_path = ''` and checks `current_app_role() = 'admin'`
+before reading anything:
+
+| Function                                   | Purpose                                                         | Refuses                                                              |
+| ------------------------------------------ | --------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `admin_set_role(target_id, new_role)`      | Change another user's role                                      | Self, protected administrator, unknown user, leaving no active admin |
+| `admin_set_active(target_id, active)`      | Deactivate or reactivate another user                           | Same as above                                                        |
+| `admin_list_accounts(query, role, active)` | List accounts with email (joins `auth.users`), five fields only | Non-administrators                                                   |
+| `admin_revoke_sessions(target_id)`         | End a user's sessions after a password reset                    | Self, protected administrator, unknown user                          |
+
+`admin_set_role` and `admin_set_active` take the same transaction-scoped advisory lock, so two
+administrators demoting each other at the same moment cannot both succeed and leave no active
+administrator. The first active administrator in each environment is marked `is_protected` by the
+migration; a unique partial index allows at most one.
+
+Account creation and password resets use the service-role client (`createAdminClient`) only after
+`requireRole("admin")`. A new account is always created as a student by the `handle_new_user`
+trigger; for another role the server then calls `admin_set_role` with the administrator's own
+session, and deletes the new user again if that fails. Passwords come from
+`src/features/admin/accounts/password.ts` (24 characters from A–Z, a–z and 0–9, using
+`crypto.randomInt`) and are returned once, never stored or logged.
+
+Changing your own password (`src/features/account/server.ts`) uses `requireUser()`, verifies the
+current password with a separate client that does not persist a session or touch cookies, updates
+the password, and then signs out the user's other sessions. Failed attempts are recorded in
+`public.password_change_attempts` (no access for signed-in users; written by the server with the
+service-role client): each attempt is inserted before counting, so parallel requests cannot pass the
+limit of five failures in 15 minutes, and a successful attempt removes its own row.
+
 ## AI features and the SoC LLM gateway
-
-AI features use the existing SoC LLM gateway configuration and quota controls. Keep prompts
-limited to the data required for the feature. Student-provided topics and questions are untrusted
-content: delimit them clearly, instruct the model not to follow instructions found inside them, and
-validate the response before displaying or storing it. Provider failures, rate limits, malformed
-responses, and persistence failures must produce a user-facing failure without exposing secrets or
-silently claiming that a briefing was generated.
-
-For the Lecturer AI briefing, the user selects one upcoming approved consultation. The application
-generates a summary, grouped question themes, and preparation topics, stores the result in the
-database, and displays only the latest ten saved briefings to the user. Student email is excluded
-from the model input under the least-data principle. The feature still requires lecturer
-authorization, booking ownership checks, row-level security, and tests for prompt injection,
-quota boundaries, provider failure, and unauthorized access.
 
 ## Security
 
@@ -145,6 +169,10 @@ immutability mechanism.
 | Decision                                                                             | Reason                                                                                                                                  | Trade-off                                                                                                              |
 | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Vercel Deployment Protection is off, so preview (development) deployments are public | On the Hobby plan only one person can be in the Vercel team, so teammates could not open development deployments to test their features | Anyone with a preview link reaches the app's login page; development data is fake and the app requires its own sign-in |
+| Administrators can make other users administrators                                   | Lets the team share administration without database access                                                                              | A compromised administrator can create more; the protected recovery administrator cannot be changed from the app       |
+| One protected recovery administrator per environment                                 | Guarantees an account that can undo a takeover                                                                                          | If its password leaks, recovery needs the service-role key                                                             |
+| Password changes and resets revoke refresh tokens, not access tokens                 | `getCurrentUser()` verifies the access token locally (`getClaims`) for speed                                                            | Other sessions can stay signed in for up to one hour; deactivation is immediate                                        |
+| Public sign-up stays enabled in Supabase                                             | Out of scope for ADM-01                                                                                                                 | Self-registered users become students; the app offers no sign-up page                                                  |
 
 ## Spec-driven development
 
@@ -153,10 +181,6 @@ requirements before implementation. Acceptance tests reference criterion IDs, an
 changes flow through spec → tests → code. `npm run check:spec` checks traceability. Each role leaves a
 handoff using `workflow/handoffs/_TEMPLATE.md`, including exact scope, spec version, actual command
 results, findings, and the next decision.
-
-Do not treat an Analyst output as a final requirement set. It is a draft until human decisions have
-resolved its open questions. Record decisions about ownership, deadlines, status transitions,
-privacy, error behaviour, retention, and notifications in the specification before implementation.
 
 Specification approval is bound to the reviewed Git commit or spec content digest. Material changes
 to behavior, permissions, data contracts, failure/security cases, or acceptance criteria invalidate
@@ -241,6 +265,20 @@ prerequisites fail or block the profile; they are never reported as passed.
 Unit policy tests, handler/config integration tests, the observed adversarial-agent exercise, and
 remote GitHub checks are separate evidence types. Results live under `workflow/evaluation/`; branch
 protection/environment settings stay `not-run` until a teammate verifies them in GitHub.
+
+Account and password features have their own suites, which run in the **Accounts and passwords** CI
+job against a local Supabase stack:
+
+| Command                                                                       | What it covers                                                     |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `npm run test:admin:integration`                                              | ADM-01 against real Auth and database, incl. a two-connection race |
+| `npx vitest run --config tests/integration/sh06.vitest.config.mts`            | SH-06 password change, session sign-out, attempt limit             |
+| `npx playwright test --config tests/e2e/admin.playwright.config.ts`           | Administrator pages in a browser                                   |
+| `npx playwright test --config tests/e2e/change-password.playwright.config.ts` | Change password in a browser                                       |
+
+Load the local stack's keys first with `local-supabase-env.mjs` (see [Setting up](#setting-up)).
+Browser tests open the app on `localhost`: the Next 16 dev server blocks its client scripts for other
+origins such as `127.0.0.1`, which would leave pages without JavaScript.
 
 ## Reuse and acknowledgements
 

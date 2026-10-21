@@ -88,6 +88,8 @@ test("[STU-02-AC1] [STU-02-AC2] [STU-02-AC8] [STU-02-AC12] [STU-02-AC14] [STU-02
   expect(user.id).toMatch(/^[0-9a-f-]{36}$/);
   const lecturer = randomUUID();
   const course = randomUUID();
+  // Course codes are unique (ADM-02), so each run gets its own.
+  const courseCode = `E2E-${course.replaceAll("-", "").slice(0, 12).toUpperCase()}`;
   const slot = randomUUID();
   const actions = new Map<string, { url: string; contentType: string; body: string }>();
   page.on("request", (request) => {
@@ -103,7 +105,7 @@ test("[STU-02-AC1] [STU-02-AC2] [STU-02-AC8] [STU-02-AC12] [STU-02-AC14] [STU-02
   await sql(`update auth.users set email_confirmed_at=now() where id=${quote(user.id)};
     insert into auth.users(id) values (${quote(lecturer)});
     update public.profiles set role='lecturer',full_name='Dr Verifier' where id=${quote(lecturer)};
-    insert into public.courses(id,code,name) values (${quote(course)},'E2E-STU02','Browser verification');
+    insert into public.courses(id,code,name) values (${quote(course)},${quote(courseCode)},'Browser verification');
     insert into public.course_lecturers(course_id,lecturer_id) values (${quote(course)},${quote(lecturer)});
     insert into public.consultation_slots(id,course_id,lecturer_id,starts_at,ends_at)
     values (${quote(slot)},${quote(course)},${quote(lecturer)},'2099-05-01 01:00Z','2099-05-01 02:00Z');`);
@@ -125,7 +127,7 @@ test("[STU-02-AC1] [STU-02-AC2] [STU-02-AC8] [STU-02-AC12] [STU-02-AC14] [STU-02
   await expect(
     page
       .getByRole("region", { name: "Selected consultation slot" })
-      .getByText("E2E-STU02", { exact: false }),
+      .getByText(courseCode, { exact: false }),
   ).toBeVisible();
   await expect(page.getByText(/SGT/).first()).toBeVisible();
   await page.reload();

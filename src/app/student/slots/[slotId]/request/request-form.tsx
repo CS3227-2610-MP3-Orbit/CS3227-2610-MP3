@@ -8,6 +8,10 @@ import {
   type RequestSlot,
   type ReceiptResult,
 } from "@/features/student/bookings/request-validation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { type ImproveResult } from "@/features/student/bookings/improve-request-validation";
 import { validateProposalForApply } from "@/features/student/bookings/improve-request-validation";
 import { type Advice } from "@/lib/ai/output-validation";
@@ -20,8 +24,6 @@ const messages = {
   slot_changed: "The slot details have changed. Refresh and review them before submitting again.",
   idempotency_mismatch: "This request cannot be changed while its submission is being resolved.",
 };
-const control =
-  "mt-1 block w-full min-w-0 rounded border p-2 focus-visible:outline-2 focus-visible:outline-offset-2";
 const subscribe = () => () => {};
 const clientReady = () => true;
 const serverReady = () => false;
@@ -155,7 +157,7 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
 
   if (result?.kind === "success")
     return (
-      <section role="status" className="space-y-3 rounded border p-4 break-words">
+      <section role="status" className="space-y-3 rounded-lg border bg-card p-4 break-words">
         <h2 className="text-xl font-semibold">
           {result.receipt.status === "pending"
             ? "Request submitted — pending lecturer approval"
@@ -171,7 +173,10 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
 
   return (
     <div className="space-y-5">
-      <section aria-label="Selected consultation slot" className="rounded border p-4 break-words">
+      <section
+        aria-label="Selected consultation slot"
+        className="rounded-lg border bg-card p-4 break-words"
+      >
         <p>
           <strong>Course: </strong>
           {slot.courseCode} — {slot.courseName}
@@ -182,7 +187,7 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
         </p>
         <p>Starts: {formatSingaporeDateTime(slot.startsAt)} (SGT)</p>
         <p>Ends: {formatSingaporeDateTime(slot.endsAt)} (SGT)</p>
-        <p className="mt-2 text-sm">
+        <p className="mt-2 text-sm text-muted-foreground">
           The slot is reserved only when your request is submitted successfully.
         </p>
       </section>
@@ -198,10 +203,10 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
       >
         <noscript>Enable JavaScript to review and submit a consultation request.</noscript>
         <div>
-          <label htmlFor="topic" className="font-medium">
+          <Label htmlFor="topic" className="font-medium">
             Consultation topic (required)
-          </label>
-          <input
+          </Label>
+          <Input
             id="topic"
             name="topic"
             required
@@ -210,19 +215,19 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
             onChange={(event) => setTopic(event.target.value)}
             aria-invalid={field === "topic"}
             aria-describedby="topic-help"
-            className={control}
+            className="mt-1"
           />
-          <p id="topic-help" className="text-sm">
+          <p id="topic-help" className="mt-1 text-sm text-muted-foreground">
             {field === "topic"
               ? "Enter a topic of 1–200 characters."
               : "1–200 characters after trimming."}
           </p>
         </div>
         <div>
-          <label htmlFor="questions" className="font-medium">
+          <Label htmlFor="questions" className="font-medium">
             Questions (required)
-          </label>
-          <textarea
+          </Label>
+          <Textarea
             id="questions"
             name="questions"
             required
@@ -232,15 +237,15 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
             onChange={(event) => setQuestions(event.target.value)}
             aria-invalid={field === "questions"}
             aria-describedby="questions-help"
-            className={control}
+            className="mt-1"
           />
-          <p id="questions-help" className="text-sm">
+          <p id="questions-help" className="mt-1 text-sm text-muted-foreground">
             {field === "questions"
               ? "Enter questions of 1–2,000 characters."
               : "1–2,000 characters after trimming."}
           </p>
         </div>
-        <div role="status" aria-live="polite" className="break-words">
+        <div role="status" aria-live="polite" className="break-words text-sm">
           {pending && <p>Submitting or checking your request…</p>}
           {result?.kind === "validation_error" && (
             <p>
@@ -265,16 +270,16 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
           )}
         </div>
         <section
-          className="space-y-4 rounded-lg border border-slate-300 bg-slate-50 p-4 shadow-sm sm:p-5"
+          className="space-y-4 rounded-lg border border-border bg-muted p-4 shadow-sm sm:p-5"
           aria-label="Improve your draft with AI"
         >
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-slate-950">Improve your draft with AI</h2>
-            <p className="text-sm leading-6 text-slate-700">
+            <h2 className="text-lg font-semibold text-foreground">Improve your draft with AI</h2>
+            <p className="text-sm leading-6 text-muted-foreground">
               Get a suggested rewrite, then choose exactly what to use in your request.
             </p>
           </div>
-          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-5 text-amber-950">
+          <p className="rounded-md border border-border bg-muted px-3 py-2 text-sm leading-5 text-foreground">
             Generating uses one AI request. Apply and Dismiss use no AI request. Review and edit any
             generated proposal yourself before submitting your request.
           </p>
@@ -282,7 +287,7 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
             type="button"
             disabled={!hydrated || aiPending}
             onClick={() => void improve()}
-            className="min-h-11 rounded-md border border-slate-700 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+            className="min-h-11 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             {aiPending
               ? "Improving draft…"
@@ -326,7 +331,7 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
             {appliedProposal && (
               <p
                 role="status"
-                className="mb-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm leading-5 text-emerald-950"
+                className="mb-3 rounded-md border border-border bg-muted px-3 py-2 text-sm leading-5 text-foreground"
               >
                 AI suggestion applied to your request. You can still edit the fields before
                 submitting.
@@ -334,12 +339,12 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
             )}
             {proposal ? (
               <div
-                className="space-y-5 rounded-lg border border-blue-200 bg-white p-4 shadow-sm sm:p-5"
+                className="space-y-5 rounded-lg border border-border bg-card p-4 shadow-sm sm:p-5"
                 aria-busy={aiPending}
               >
-                <div className="space-y-1 border-b border-slate-200 pb-4">
-                  <h3 className="text-base font-semibold text-slate-950">Suggested improvement</h3>
-                  <p className="text-sm leading-5 text-slate-600">
+                <div className="space-y-1 border-b border-border pb-4">
+                  <h3 className="text-base font-semibold text-foreground">Suggested improvement</h3>
+                  <p className="text-sm leading-5 text-muted-foreground">
                     Edit the suggestion if needed, then apply it to the request form below.
                   </p>
                 </div>
@@ -347,17 +352,17 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
                   (sourceSnapshot.topic !== topic || sourceSnapshot.questions !== questions) && (
                     <p
                       role="status"
-                      className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-5 text-amber-950"
+                      className="rounded-md border border-border bg-muted px-3 py-2 text-sm leading-5 text-foreground"
                     >
                       Applying this proposal will replace your current topic and questions with the
                       generated snapshot.
                     </p>
                   )}
                 <div className="space-y-1">
-                  <label htmlFor="proposed-topic" className="font-semibold text-slate-900">
+                  <label htmlFor="proposed-topic" className="font-semibold text-foreground">
                     Generated topic
                   </label>
-                  <input
+                  <Input
                     id="proposed-topic"
                     value={proposal.topic}
                     aria-invalid={proposalError === "topic"}
@@ -366,14 +371,13 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
                       setConfirmApply(false);
                       setProposal({ ...proposal, topic: event.target.value });
                     }}
-                    className={control}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="proposed-questions" className="font-semibold text-slate-900">
+                  <label htmlFor="proposed-questions" className="font-semibold text-foreground">
                     Generated questions
                   </label>
-                  <textarea
+                  <Textarea
                     id="proposed-questions"
                     rows={5}
                     value={proposal.questions}
@@ -383,21 +387,20 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
                       setConfirmApply(false);
                       setProposal({ ...proposal, questions: event.target.value });
                     }}
-                    className={control}
                   />
                 </div>
                 {/* Retained proposal suggestions, initially sourced from aiResult.proposal.suggestions. */}
                 {proposal.suggestions.length > 0 && (
-                  <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                    <p className="font-semibold text-slate-900">Suggestions</p>
-                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-700">
+                  <div className="rounded-md border border-border bg-muted p-4">
+                    <p className="font-semibold text-foreground">Suggestions</p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-muted-foreground">
                       {proposal.suggestions.map((suggestion, index) => (
                         <li key={`${index}-${suggestion}`}>{suggestion}</li>
                       ))}
                     </ul>
                   </div>
                 )}
-                <div className="grid gap-3 border-t border-slate-200 pt-4 sm:grid-cols-2">
+                <div className="grid gap-3 border-t border-border pt-4 sm:grid-cols-2">
                   {/* >Apply to request< >Dismiss< */}
                   <button
                     type="button"
@@ -405,14 +408,14 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
                       setConfirmApply(false);
                       applyProposal();
                     }}
-                    className="min-h-12 rounded-md bg-blue-700 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+                    className="min-h-12 rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     Apply to request
                   </button>
                   <button
                     type="button"
                     onClick={dismissProposal}
-                    className="min-h-12 rounded-md border border-slate-400 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+                    className="min-h-12 rounded-md border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     Dismiss
                   </button>
@@ -421,15 +424,15 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
                   <section
                     aria-labelledby="confirm-apply-title"
                     aria-describedby="confirm-apply-description"
-                    className="space-y-3 rounded-md border-2 border-amber-300 bg-amber-50 p-4"
+                    className="space-y-3 rounded-md border-2 border-border bg-muted p-4"
                   >
                     <div className="space-y-1">
-                      <h4 id="confirm-apply-title" className="font-semibold text-amber-950">
+                      <h4 id="confirm-apply-title" className="font-semibold text-foreground">
                         Replace your current draft?
                       </h4>
                       <p
                         id="confirm-apply-description"
-                        className="text-sm leading-5 text-amber-950"
+                        className="text-sm leading-5 text-foreground"
                       >
                         Your topic or questions changed after this suggestion was generated.
                         Confirming will replace both fields with the generated version.
@@ -439,14 +442,14 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
                       <button
                         type="button"
                         onClick={() => setConfirmApply(false)}
-                        className="min-h-11 rounded-md border border-amber-900 bg-white px-4 py-2 text-sm font-semibold text-amber-950 hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-900"
+                        className="min-h-11 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                       >
                         Keep my current draft
                       </button>
                       <button
                         type="button"
                         onClick={applyProposal}
-                        className="min-h-11 rounded-md bg-amber-800 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-900"
+                        className="min-h-11 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                       >
                         Apply suggestion
                       </button>
@@ -457,14 +460,14 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
                   <p
                     id={`proposed-${proposalError}-error`}
                     role="alert"
-                    className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+                    className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
                   >
                     Generated {proposalError} must be within the allowed length.
                   </p>
                 )}
               </div>
             ) : (
-              <p className="rounded-md border border-dashed border-slate-300 bg-white px-3 py-4 text-sm text-slate-600">
+              <p className="rounded-md border border-dashed border-border bg-card px-3 py-4 text-sm text-muted-foreground">
                 Generated advice will appear here.
               </p>
             )}
@@ -472,36 +475,33 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
         </section>
         {needsReview ? (
           <div className="space-y-3">
-            <button
+            <Button
               type="button"
+              variant="outline"
               disabled={pending}
               onClick={() => void refreshDetails()}
-              className="rounded border p-2 focus-visible:outline-2"
             >
               Refresh slot details
-            </button>
+            </Button>
             {reviewReady && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                className="block"
                 onClick={() => {
                   setNeedsReview(false);
                   setReviewReady(false);
                   setResult(null);
                 }}
-                className="block rounded border p-2 focus-visible:outline-2"
               >
                 I have reviewed the updated details
-              </button>
+              </Button>
             )}
           </div>
         ) : (
-          <button
-            type="submit"
-            disabled={!hydrated || pending}
-            className="rounded bg-black px-4 py-2 text-white disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
+          <Button type="submit" disabled={!hydrated || pending}>
             {pending ? "Submitting…" : attempt ? "Retry same request" : "Submit request"}
-          </button>
+          </Button>
         )}
       </form>
     </div>
