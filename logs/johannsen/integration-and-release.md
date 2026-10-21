@@ -1,84 +1,121 @@
 # Integration, teammate reviews, and release
 
-## Reviewing Joseph's student AI feature (PR #34) — 2026-10-20
+## Reviewing and merging Joseph's first pull requests, #4 and #11 to #13 (18 to 19 Oct)
 
-- Joseph's "Student ai review" PR implements the Student "Improve my request with AI" feature:
-  AI-assisted rewrite of a consultation topic/questions, reviewed separately before the student
-  explicitly applies or dismisses it, server-side AI safeguards (authenticated access, server-only
-  credentials, input/output limits, timeout handling, plain-text rendering, prompt-injection
-  boundaries), and a daily AI quota.
-- Joseph's own verification, recorded in the PR body: `npm run verify -- --profile=app` passed;
-  `npm run test:db` passed (64 database tests).
-- Johannsen reviewed and approved with "lgtm" on commit `5cedc5c`. Merged 2026-10-20.
+**Prompts**
 
-Generated summary awaiting independent human verification.
+- "okay help me look into the prs that joseph did"
+- "so its good right and we can approve both, as well as asking it to push to develop branch
+  instead?"
+- "okay sure can you help me approve both. and just update to change to develop branch"
+- "okay check the rest of the prs what else is there to review?"
+- "merge #4, 11 (after rereview do it for me) then 12 and then 13"
 
-## Reviewing Jordan's lecturer AI briefing (PR #33) — 2026-10-21
+**What the agent did**
 
-- Jordan's "Implement lecturer AI consultation briefings" PR implements `LEC-04`: AI-generated
-  consultation summary, grouped question themes, and preparation topics for a selected upcoming
-  approved consultation, with lecturer authorization/ownership checks, student email excluded from
-  the prompt, prompt-injection safeguards, quota/rate-limit handling, and RLS on the new briefings
-  table.
-- Johannsen's review (commit `2ce7d05`, state `APPROVED`) found and recorded two problems:
-  1. The shared AI quota allowlist (`claim_ai_attempt`) admitted only `student.improve-request`, so
-     `lecturer.ai-briefing` would always resolve to `unavailable` before any LLM call. Decision:
-     approve #33 with an explanatory comment rather than block it, and fix the allowlist on the
-     ADM-04 side so the change lives in one migration — see `logs/johannsen/adm-04-reports-and-ai-summary.md`
-     for the fix (commit `9eb2e7f`). Until that merges, briefings show "temporarily unavailable."
-  2. Jordan's seed data ("Demo Student Two") reused a protected admin's UUID
-     (`12000000-0000-4000-8000-000000000002`). Jordan fixed this by moving the demo-admin seed IDs to
-     the `14000000-…` prefix (commit `2ce7d05`, "Fix seeded admin account UUID collision").
-     Review comment also flagged, non-blocking: the existing briefing test does not exercise
-     `generateLecturerBriefing`/mock `generateText`, so it would not have caught the allowlist gap — a
-     suggestion for Jordan to add that coverage, not a blocking requirement.
-- Johannsen's review also confirmed: colour token usage, authorization scoping, untrusted-data
-  wrapping, and plain-text rendering were all correct.
-- Merged 2026-10-21 (`b7eb3b4`).
+- Reviewed #4 (Joseph's AI workflow set-up) and #11 (student browse slots). Both had been opened
+  against `master`, so the agent changed their target to `develop` before approving, to keep the
+  release flow.
+- When #11 gained the STU-01 code, it re-reviewed it at `126e7cb`. It then reviewed #12 (the
+  request-consultation function and the one-active-booking rule) and #13 (update and cancel with
+  locking and version checks).
+- Merged #4, #11, #12 and #13 in the order I gave, using the GitHub CLI signed in as me.
 
-Generated summary awaiting independent human verification.
+**What I checked or changed**
 
-## CI fixes during integration — 2026-10-20/2026-10-21
+- I decided the merge order, and that #11 needed a second review after its code changed.
+- The approvals and merges appear under my GitHub account but were run by the agent on my
+  instruction.
 
-- 2026-10-20 (surfaced while merging ADM-01/SH-06, PR #30): the root Playwright/CI job ran every spec
-  in `tests/e2e/`, which broke on account/password specs needing the local stack's secret key.
-  Fixed with `testIgnore` entries and a dedicated "Accounts and passwords" CI job that starts a local
-  Supabase and runs the relevant integration suites and browser specs without exposing credentials
-  (commit `74ce642`). Detail in `logs/johannsen/adm-01-accounts-and-sh-06-password.md`.
-- 2026-10-21 (surfaced while building ADM-03, PR #38): the root `playwright.config.ts` ignored admin
-  specs by exact filename, so the new `admin-announcements.spec.ts` also ran in the student
-  end-to-end job against the wrong Supabase stack. Fixed by widening the ignore pattern to
-  `**/admin-*.spec.ts`, mirroring the admin config's own `testMatch` (commit `1f588fe`, "Run admin
-  browser specs only in the admin Playwright config"). Detail in
-  `logs/johannsen/adm-03-announcements.md`.
-- Also during ADM-03's build, a developer agent's reported Turbopack build failure and Base UI
-  dialog e2e failures were traced to this worktree's `node_modules` being a symlink into another
-  worktree — Turbopack's hermetic workspace-root check refuses to resolve packages outside the
-  project root. Fixed with a real `npm ci` per worktree; the coordinator re-ran every check and
-  confirmed the failures were environmental, not code defects. Detail in
-  `logs/johannsen/adm-03-announcements.md`.
+**Outcome**
 
-Generated summary awaiting independent human verification.
+- All four merged into `develop` on 19 Oct. Jordan also approved #4.
 
-## Release PR #35, develop → master — 2026-10-21 (open)
+_Human verification: pending._
 
-- "Release: student, lecturer and admin features with shared UI" bundles everything merged to
-  `develop` so far: Student browse/request/manage-bookings plus AI improve-request with a daily
-  quota (#11, #12, #13, #34); Lecturer availability, request decisions, consultation status/history
-  (#27, #28, #29); Administrator account management and change-own-password (#30), courses and
-  lecturer assignment (#32); the shared UI design system (#31); specs/agents/workflow (#4, #14, #26).
-  16 new migrations (`20261018000000` … `20261020140000`) run on production when it merges.
-- Explicitly **not** in this release: the lecturer AI briefing (#33), noted in the PR body as "still
-  in review" at the time #35 was opened.
-- Verified-on-development evidence recorded in the PR body: CI passed on each feature PR; every
-  `develop` deployment succeeded, including migrations, up to commit `2b1e91f`.
-- Pre-merge checklist items the PR body itself flags as outstanding: confirming no duplicate course
-  codes exist on production (the new unique index would otherwise fail the deploy, without changing
-  anything), and that AI environment variables are set for the Vercel production environment.
-- Review: Joseph — "Looks good, ready to be merged to main branch!" (commit `2b1e91f`).
-- Status: PR #35 is **open**, not yet merged, as of 2026-10-21. #33 has since merged (2026-10-21,
-  after #35 was opened), and #37/#38 are stated in their own PR bodies to need to merge before #35 so
-  production does not ship a briefing button that returns "unavailable." This log does not claim #35
-  has merged.
+## Reviewing Joseph's student AI feature, PR #34 (20 Oct)
 
-Generated summary awaiting independent human verification.
+- Joseph's PR adds "Improve my request with AI" for students, plus the shared daily AI quota
+  (`claim_ai_attempt`) that every role's AI feature now uses.
+- I approved it myself on GitHub ("lgtm"), not through the Claude session. Joseph
+  merged it on 20 Oct.
+- This quota later replaced my own planned quota work (issue #21). See
+  `adm-04-reports-and-ai-summary.md`.
+
+_Human verification: pending._
+
+## Merging the admin and UI work, and opening release PR #35 (21 Oct)
+
+**Prompts**
+
+- "hows it going? for those pr approved merge it as well as hows the ui going and our next sdd"
+- "okay looks good, have we merged everything yet? and whats next?"
+- "merge please, its already approved right."
+- "then create a pr to master as well since jospeph, jordan and i had did some updates to the app"
+
+**What the agent did**
+
+- Confirmed that Joseph had reviewed #30, #31 and #32, then merged them into `develop`.
+- Opened release PR #35 (`develop` to `master`) under my name. It lists every merged feature and the
+  16 migrations that run on production. Two checks are listed for me to do first:
+  - no duplicate course codes exist in production, or the new unique index would fail the
+    deployment;
+  - the AI keys are set for Vercel production.
+
+**What I checked or changed**
+
+- I merged only pull requests a teammate had reviewed. Joseph's reviews were comments ("Looks
+  good!") rather than formal GitHub approvals. Joseph also reviewed #35 ("Looks good, ready to be
+  merged to main branch!").
+
+**Outcome**
+
+- #30, #31 and #32 merged on 21 Oct. #35 is open. It now has to wait for #36, #37 and #38, so that
+  production does not ship a lecturer briefing that always says "unavailable".
+
+_Human verification: pending._
+
+## Reviewing Jordan's lecturer AI briefing, PR #33 (21 Oct)
+
+**Prompts**
+
+- "https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/pull/33 also approve this if its okay"
+- "can you look back into #33"
+- "whats adm04 in the#33's review? or should we just approve it and do the fix on our end"
+- "is it merged [pasted terminal output of a failed push]" and "merge it please."
+
+**What the agent did**
+
+- A review agent found two blockers, which the coordinator re-checked itself:
+  - the shared quota would refuse the lecturer feature;
+  - Jordan's seed data reused a protected admin's ID.
+- It also confirmed that colour tokens, authorisation checks, untrusted-data wrapping and plain-text
+  output were all correct.
+- It posted an approving review under my name that explains the quota fix being made in ADM-04. As
+  a non-blocking suggestion, it noted that the existing briefing test mocks too much to have caught
+  the quota problem.
+- My pasted push command had failed because of the spaces in the folder path, so the agent gave me
+  a working command.
+
+**What I checked or changed**
+
+- I chose to approve and fix the quota on my side, rather than block Jordan's pull request.
+- Jordan fixed the seed ID clash in the pull request before it merged.
+
+**Outcome**
+
+- PR #33 merged on 21 Oct (`b7eb3b4`).
+
+_Human verification: pending._
+
+## CI fixes during integration (20 to 21 Oct)
+
+- **20 Oct, PR #30.** The general browser-test job ran the account and password specs, which need
+  the local secret key. Fixed with a separate "Accounts and passwords" CI job (`74ce642`).
+- **20 Oct, PR #32.** Joseph's concurrency tests reused course codes that the new unique index
+  refuses. Fixed with unique codes per run (`0f25d6c`).
+- **21 Oct, PR #36.** A handoff note failed the formatting check. Fixed by formatting it.
+- **21 Oct, PR #38 ("fix the ci").** The new admin browser spec ran in the student job. Fixed by
+  ignoring `admin-*.spec.ts` by pattern (`1f588fe`).
+
+_Human verification: pending._
