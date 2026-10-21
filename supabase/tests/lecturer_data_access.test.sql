@@ -28,13 +28,31 @@ select ok(
     and not has_table_privilege('authenticated', 'public.bookings', 'select'),
   '[LEC-01-AC13] authenticated still has no direct privilege on the four feature tables'
 );
+select ok(
+  not exists (
+    select 1
+    from unnest(array['public.courses', 'public.course_lecturers', 'public.consultation_slots',
+                      'public.bookings']) as t(name),
+         unnest(array['insert', 'update', 'delete']) as p(privilege)
+    where has_table_privilege('authenticated', t.name, p.privilege)
+       or has_table_privilege('anon', t.name, p.privilege)
+  ),
+  '[LEC-01-AC13] authenticated and anon have no insert, update or delete on the four tables'
+);
+select ok(
+  not has_function_privilege('anon', 'public.lecturer_create_slot(uuid, timestamptz, timestamptz)', 'execute')
+    and not has_function_privilege('anon', 'public.lecturer_list_my_slots()', 'execute')
+    and not has_function_privilege('anon', 'public.lecturer_get_briefing_context(uuid)', 'execute'),
+  '[LEC-01-AC2] signed-out callers cannot execute the lecturer functions'
+);
 
 -- Fixtures.
 insert into auth.users (id) values
   ('94000000-0000-4000-8000-000000000001'), -- lecturer_a
   ('94000000-0000-4000-8000-000000000002'), -- lecturer_b
   ('94000000-0000-4000-8000-000000000003'), -- student
-  ('94000000-0000-4000-8000-000000000004'); -- lecturer_inactive
+  ('94000000-0000-4000-8000-000000000004'), -- lecturer_inactive
+  ('94000000-0000-4000-8000-000000000005'); -- admin
 update public.profiles set role = 'lecturer', full_name = 'Lecturer A'
   where id = '94000000-0000-4000-8000-000000000001';
 update public.profiles set role = 'lecturer', full_name = 'Lecturer B'
@@ -42,6 +60,7 @@ update public.profiles set role = 'lecturer', full_name = 'Lecturer B'
 update public.profiles set full_name = 'Student S' where id = '94000000-0000-4000-8000-000000000003';
 update public.profiles set role = 'lecturer', is_active = false
   where id = '94000000-0000-4000-8000-000000000004';
+update public.profiles set role = 'admin' where id = '94000000-0000-4000-8000-000000000005';
 
 insert into public.courses (id, code, name, is_active) values
   ('95000000-0000-4000-8000-000000000001', 'LECA', 'Assigned course', true),
@@ -125,6 +144,10 @@ select is(public.lecturer_update_slot('96000000-0000-4000-8000-000000000002',
   '95000000-0000-4000-8000-000000000001', now() + interval '10 days', now() + interval '10 days 30 minutes',
   false)->>'kind', 'confirmation_required',
   '[LEC-01-AC7] editing a slot with an active booking needs confirmation');
+select is(public.lecturer_update_slot('96000000-0000-4000-8000-000000000002',
+  '95000000-0000-4000-8000-000000000001', now() + interval '10 days', now() + interval '10 days 30 minutes',
+  true)->>'kind', 'reserved',
+  '[LEC-01-AC7] a confirmed edit of a booked slot is refused by the STU-02 guard (open spec conflict)');
 select is(public.lecturer_delete_slot('96000000-0000-4000-8000-000000000002', false)->>'kind',
   'confirmation_required',
   '[LEC-01-AC7] deleting a slot with an active booking needs confirmation');
@@ -192,11 +215,21 @@ set local request.jwt.claim.sub = '94000000-0000-4000-8000-000000000004';
 select is(public.lecturer_create_slot('95000000-0000-4000-8000-000000000001',
   now() + interval '12 days', now() + interval '12 days 30 minutes')->>'kind', 'forbidden_or_not_found',
   '[LEC-01-AC2] an inactive lecturer cannot create a slot');
+
+set local request.jwt.claim.sub = '94000000-0000-4000-8000-000000000005';
+select is((select count(*)::int from public.lecturer_list_my_slots()), 0,
+  '[LEC-01-AC2] [LEC-01-AC13] an administrator gets no slots through the lecturer functions');
+select is(public.lecturer_create_slot('95000000-0000-4000-8000-000000000001',
+  now() + interval '12 days', now() + interval '12 days 30 minutes')->>'kind', 'forbidden_or_not_found',
+  '[LEC-01-AC2] an administrator cannot create a slot through the lecturer functions');
+select is(public.lecturer_get_briefing_context('97000000-0000-4000-8000-000000000001')->>'kind',
+  'forbidden_or_not_found', '[LEC-04-AC7] an administrator cannot read briefing context');
 reset role;
 
 select is(
   (select count(*)::int from public.consultation_slots
-    where lecturer_id in ('94000000-0000-4000-8000-000000000003', '94000000-0000-4000-8000-000000000004')),
+    where lecturer_id in ('94000000-0000-4000-8000-000000000003', '94000000-0000-4000-8000-000000000004',
+                          '94000000-0000-4000-8000-000000000005')),
   0, '[LEC-01-AC2] refused callers created no slot');
 
 select * from finish();
