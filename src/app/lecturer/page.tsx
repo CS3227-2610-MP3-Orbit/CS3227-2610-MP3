@@ -86,7 +86,7 @@ export default async function LecturerDashboardPage() {
           <ul className="mt-3 space-y-3">
             {briefings.map((briefing) => (
               <li key={briefing.id} className="rounded border p-4">
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-muted-foreground">
                   Saved{" "}
                   {new Date(briefing.createdAt).toLocaleString("en-SG", {
                     timeZone: "Asia/Singapore",
