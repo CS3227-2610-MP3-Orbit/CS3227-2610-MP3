@@ -6,4 +6,4 @@
  */
 export const EYEBROW_CLASS = "font-mono text-[0.6875rem] font-medium uppercase tracking-[0.08em]";
 
-export const STAT_VALUE_CLASS = "font-mono text-2xl font-semibold tabular-nums";
+export const STAT_VALUE_CLASS = "font-mono text-3xl font-semibold tabular-nums";
