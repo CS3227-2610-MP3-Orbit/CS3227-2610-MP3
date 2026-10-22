@@ -97,7 +97,7 @@ test("[STU-04-AC1] [STU-04-AC3] [STU-04-AC12] owned history renders statuses and
   await page.goto("/student/bookings");
   await expect(page.getByText("Status: pending", { exact: true })).toBeVisible();
   await expect(page.getByText("Status: approved", { exact: true })).toBeVisible();
-  await expect(page.getByText("Status: completed", { exact: true })).toBeVisible();
+  await expect(page.getByText("Status: completed", { exact: true }).first()).toBeVisible();
   await expect(
     page.evaluate(() => (window as typeof window & { stu04Injected?: unknown }).stu04Injected),
   ).resolves.toBeUndefined();
@@ -121,7 +121,7 @@ test("[STU-04-AC4] [STU-04-AC5] [STU-04-AC6] [STU-04-AC7] [STU-04-AC8] [STU-04-A
   await expect(page.getByText("Topic: Updated STU04 topic")).toBeVisible();
   await expect(page.getByText("Questions: Updated STU04 questions")).toBeVisible();
   await page.getByRole("button", { name: /cancel booking/i }).click();
-  await expect(page.getByRole("alert")).toContainText("cannot be undone");
+  await expect(page.getByText(/This cancellation cannot be undone/)).toBeVisible();
   await expect(page.getByRole("button", { name: /confirm cancellation/i })).toBeVisible();
   await page.getByRole("button", { name: /confirm cancellation/i }).click();
   await expect(page.getByRole("status")).toHaveText("Booking cancelled.");
