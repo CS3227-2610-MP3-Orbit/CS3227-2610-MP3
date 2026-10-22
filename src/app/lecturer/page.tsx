@@ -121,6 +121,24 @@ export default async function LecturerDashboardPage({
           <ul className="mt-3 space-y-3">
             {briefings.map((briefing) => (
               <li key={briefing.id} className="rounded border p-4">
+                <h3 className="font-semibold">
+                  {briefing.courseCode} — {briefing.courseName}
+                </h3>
+                <p className="mt-1">
+                  {briefing.topic} · {briefing.studentName}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Consultation:{" "}
+                  {new Date(briefing.startsAt).toLocaleString("en-SG", {
+                    timeZone: "Asia/Singapore",
+                  })}{" "}
+                  —{" "}
+                  {new Date(briefing.endsAt).toLocaleTimeString("en-SG", {
+                    timeZone: "Asia/Singapore",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
                 <p className="text-sm text-muted-foreground">
                   Saved{" "}
                   {new Date(briefing.createdAt).toLocaleString("en-SG", {

@@ -18,6 +18,12 @@ export type StoredBriefing = {
   bookingId: string;
   content: string;
   createdAt: string;
+  courseCode: string;
+  courseName: string;
+  topic: string;
+  studentName: string;
+  startsAt: string;
+  endsAt: string;
 };
 
 const SYSTEM_PROMPT = `${UNTRUSTED_DATA_RULE}
@@ -34,19 +40,35 @@ function validateBriefing(text: string): boolean {
 
 export async function listLecturerBriefings(): Promise<StoredBriefing[]> {
   const user = await requireRole("lecturer");
-  const { data } = await (
-    await createClient()
-  )
-    .from("lecturer_ai_briefings")
-    .select("id, booking_id, content, created_at")
-    .eq("lecturer_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(10);
+  const supabase = await createClient();
+  const [{ data }, { data: activeData }, { data: historyData }] = await Promise.all([
+    supabase
+      .from("lecturer_ai_briefings")
+      .select("id, booking_id, content, created_at")
+      .eq("lecturer_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase.rpc("list_staff_consultations", { p_history: false }),
+    supabase.rpc("list_staff_consultations", { p_history: true }),
+  ]);
+  const consultations = [activeData, historyData]
+    .map((value) => consultationResultSchema.safeParse(value))
+    .filter((parsed) => parsed.success)
+    .flatMap((parsed) => parsed.data.consultations);
+  const byBookingId = new Map(
+    consultations.map((consultation) => [consultation.bookingId, consultation]),
+  );
   return (data ?? []).map((row) => ({
     id: row.id,
     bookingId: row.booking_id,
     content: row.content,
     createdAt: row.created_at,
+    courseCode: byBookingId.get(row.booking_id)?.courseCode ?? "Unknown course",
+    courseName: byBookingId.get(row.booking_id)?.courseName ?? "Consultation details unavailable",
+    topic: byBookingId.get(row.booking_id)?.topic ?? "Consultation details unavailable",
+    studentName: byBookingId.get(row.booking_id)?.studentName ?? "Consultation details unavailable",
+    startsAt: byBookingId.get(row.booking_id)?.startsAt ?? row.created_at,
+    endsAt: byBookingId.get(row.booking_id)?.endsAt ?? row.created_at,
   }));
 }
 
