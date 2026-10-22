@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { generateText } from "@/lib/ai/client";
 import { UNTRUSTED_DATA_RULE, wrapUntrusted } from "@/lib/ai/untrusted";
+import { consultationResultSchema } from "./consultations/validation";
 
 const inputSchema = z.object({ bookingId: z.string().uuid() });
 export type BriefingResult =
@@ -58,32 +59,22 @@ export async function generateLecturerBriefing(
   if (!input.success) return { kind: "error", message: "Select a valid consultation." };
 
   const supabase = await createClient();
-  const { data: booking, error: bookingError } = await supabase
-    .from("bookings")
-    .select(
-      "id, student_id, status, topic, questions, consultation_slots!inner(id, lecturer_id, course_id, starts_at, ends_at)",
-    )
-    .eq("id", input.data.bookingId)
-    .eq("status", "approved")
-    .eq("consultation_slots.lecturer_id", user.id)
-    .single();
-  if (bookingError || !booking) return { kind: "error", message: "Consultation unavailable." };
-
-  const slot = Array.isArray(booking.consultation_slots)
-    ? booking.consultation_slots[0]
-    : booking.consultation_slots;
-  if (!slot || new Date(slot.starts_at) <= new Date())
+  const { data: consultations, error: consultationsError } = await supabase.rpc(
+    "list_staff_consultations",
+    { p_history: false },
+  );
+  const listed = consultationResultSchema.safeParse(consultations);
+  const booking = listed.success
+    ? listed.data.consultations.find((item) => item.bookingId === input.data.bookingId)
+    : undefined;
+  if (consultationsError || !booking)
+    return { kind: "error", message: "Consultation details unavailable." };
+  if (booking.bookingStatus !== "approved" || booking.displayStatus !== "upcoming")
     return { kind: "error", message: "Only upcoming approved consultations can be briefed." };
 
-  const [{ data: student }, { data: course }] = await Promise.all([
-    supabase.from("profiles").select("full_name").eq("id", booking.student_id).single(),
-    supabase.from("courses").select("code, name").eq("id", slot.course_id).single(),
-  ]);
-  if (!student || !course) return { kind: "error", message: "Consultation details unavailable." };
-
   const inputText = [
-    wrapUntrusted("student_name", student.full_name),
-    wrapUntrusted("course", `${course.code} ${course.name}`),
+    wrapUntrusted("student_name", booking.studentName),
+    wrapUntrusted("course", `${booking.courseCode} ${booking.courseName}`),
     wrapUntrusted("topic", booking.topic),
     wrapUntrusted("questions", booking.questions),
   ].join("\n");
@@ -110,7 +101,7 @@ export async function generateLecturerBriefing(
 
   const { data: saved, error: saveError } = await supabase
     .from("lecturer_ai_briefings")
-    .insert({ lecturer_id: user.id, booking_id: booking.id, content: result.text })
+    .insert({ lecturer_id: user.id, booking_id: booking.bookingId, content: result.text })
     .select("id")
     .single();
   if (saveError || !saved) return { kind: "error", message: "Briefing could not be saved." };
