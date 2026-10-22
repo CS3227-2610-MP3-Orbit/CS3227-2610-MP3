@@ -80,11 +80,7 @@ export default async function LecturerDashboardPage() {
                     minute: "2-digit",
                   })}
                 </span>
-                <form
-                  action={async (formData) => {
-                    await deleteSlot(formData);
-                  }}
-                >
+                <form action={deleteSlot}>
                   <input type="hidden" name="slotId" value={slot.id} />
                   <Button variant="link" className="text-destructive" type="submit">
                     Delete
