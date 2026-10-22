@@ -2,6 +2,7 @@ import { CalendarClock, Inbox } from "lucide-react";
 
 import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { AnnouncementsCard } from "@/components/announcements-card";
 import { ConsultationList } from "@/components/consultation-list";
 import { EmptyState } from "@/components/empty-state";
 import { StatTile, StatTileRow } from "@/components/stat-tile";
@@ -94,6 +95,8 @@ export default async function LecturerDashboardPage() {
           </ul>
         )}
       </section>
+
+      <AnnouncementsCard />
 
       <section aria-labelledby="saved-briefings">
         <h2 id="saved-briefings" className="text-xl font-semibold">

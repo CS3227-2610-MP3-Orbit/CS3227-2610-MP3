@@ -1,9 +1,10 @@
 import {
+  BarChart3,
   BookOpen,
   CalendarCheck,
   CalendarSearch,
-  ChartColumn,
   LayoutDashboard,
+  Megaphone,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -54,10 +55,16 @@ export const NAV_GROUPS: Record<Role, NavGroup[]> = {
     { label: "People", items: [{ label: "Accounts", href: "/admin/accounts", icon: Users }] },
     {
       label: "Teaching",
-      // Arrives on another branch (ADM-02); linked here so admin nav is complete once it lands.
       items: [{ label: "Courses", href: "/admin/courses", icon: BookOpen }],
     },
-    { label: "Bookings", items: [{ label: "Reports", href: "/admin/reports", icon: ChartColumn }] },
+    {
+      label: "Communications",
+      items: [{ label: "Announcements", href: "/admin/announcements", icon: Megaphone }],
+    },
+    {
+      label: "Insights",
+      items: [{ label: "Reports", href: "/admin/reports", icon: BarChart3 }],
+    },
   ],
 };
 

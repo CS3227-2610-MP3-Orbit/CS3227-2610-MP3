@@ -86,6 +86,7 @@ jobs:
           npm run test:admin:integration
           npm run test:admin-courses:integration
           npm run test:admin-reports:integration
+          npm run test:admin-announcements:integration
           npx vitest run --config tests/integration/sh06.vitest.config.mts
           npx playwright test --config tests/e2e/admin.playwright.config.ts
           npx playwright test --config tests/e2e/change-password.playwright.config.ts
