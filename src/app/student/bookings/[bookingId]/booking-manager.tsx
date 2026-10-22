@@ -102,8 +102,8 @@ export default function BookingManager({ booking: initial }: { booking: Booking 
           </strong>
         </p>
         <p>Lecturer: {booking.lecturerName}</p>
-        <p>Starts: {formatSingaporeDateTime(booking.startsAt)} (SGT)</p>
-        <p>Ends: {formatSingaporeDateTime(booking.endsAt)} (SGT)</p>
+        <p>Starts: {formatSingaporeDateTime(booking.startsAt)}</p>
+        <p>Ends: {formatSingaporeDateTime(booking.endsAt)}</p>
         <p>
           Status: <Badge variant={statusBadgeVariant(booking.status)}>{booking.status}</Badge>
         </p>

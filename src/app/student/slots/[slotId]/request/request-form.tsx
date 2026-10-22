@@ -190,8 +190,8 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
           <strong>Lecturer: </strong>
           {slot.lecturerName}
         </p>
-        <p>Starts: {formatSingaporeDateTime(slot.startsAt)} (SGT)</p>
-        <p>Ends: {formatSingaporeDateTime(slot.endsAt)} (SGT)</p>
+        <p>Starts: {formatSingaporeDateTime(slot.startsAt)}</p>
+        <p>Ends: {formatSingaporeDateTime(slot.endsAt)}</p>
         <p className="mt-2 text-sm text-muted-foreground">
           The slot is reserved only when your request is submitted successfully.
         </p>

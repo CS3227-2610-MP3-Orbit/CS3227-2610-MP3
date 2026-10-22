@@ -2,7 +2,7 @@
 id: LEC-01
 title: Lecturer consultation availability
 owner: lecturer
-status: approved
+status: draft
 ---
 
 # LEC-01: Lecturer consultation availability
@@ -22,7 +22,7 @@ Lecturers need to create and maintain consultation slots that students can later
 
 ## Proposed behaviour
 
-An authenticated active lecturer can create consultation slots with a course, date, start time, and end time; view only their own slots; edit or delete owned slots, including slots with active bookings after explicit confirmation. The backend validates the request, derives ownership from the authenticated session, prevents overlapping slots for the same lecturer, and returns safe errors for invalid, conflicting, concurrent, or failed operations.
+An authenticated active lecturer can create consultation slots with a course, date, start time, and end time; view only their own slots; edit or delete owned slots only while they have no pending or approved booking. The backend validates the request, derives ownership from the authenticated session, prevents overlapping slots for the same lecturer, and returns safe errors for invalid, conflicting, concurrent, or failed operations.
 
 The authoritative validation timezone is Singapore time. Courses must be selected from courses the
 lecturer is assigned to. Administrators may manage Lecturer slots, subject to an approved server-side
@@ -46,15 +46,15 @@ area and related Lecturer feature folders. Remaining unresolved semantics are li
 
 ### Edit
 
-- An active lecturer can edit an owned slot when validation and conflict checks pass, including when it has active bookings.
+- An active lecturer can edit an owned slot when validation and conflict checks pass, only when it has no pending or approved booking.
 - The same validation and overlap checks used for creation apply to the proposed values.
-- If active bookings exist, the lecturer must explicitly confirm the change and affected students must be notified.
+- If a pending or approved booking exists, the edit is refused and the slot and booking remain unchanged. No confirmation can override this invariant.
 - The mutation must be conditional on ownership and the current slot state so a concurrent booking or edit cannot be silently overwritten.
 
 ### Delete
 
 - An active lecturer can hard-delete an owned slot when it has no active bookings.
-- If active bookings exist, deletion requires explicit confirmation. The slot is removed from the UI and affected students are notified.
+- If active bookings exist, deletion is refused. The slot and bookings remain preserved; no confirmation can override this invariant.
 - The deletion must be conditional on ownership and the current slot state. A cancellation releases the slot until the one-hour-before-start deadline; after that deadline it is unavailable.
 
 ## Permissions
@@ -100,7 +100,7 @@ The migration must enable RLS and provide policies consistent with this specific
 - Overlap with a different lecturer's slot: not restricted by this feature unless a separate approved
   course/resource rule requires it.
 - Edit or delete of another lecturer's slot: reject without disclosure or mutation.
-- Edit or delete while an active booking exists: require explicit confirmation; on confirmation, apply the approved change or hard deletion and notify affected students. A declined confirmation leaves the slot and bookings unchanged.
+- Edit or delete while a pending or approved booking exists: refuse the operation without mutation. The existing database guard is authoritative; no confirmation, notification, or hard deletion is performed.
 - Missing slot: return a safe not-found result without confirming another user's data.
 - Concurrent create/edit/delete or booking changes: use a transaction, conditional mutation, database constraint, or equivalent mechanism so the final state cannot violate ownership, overlap, or active-booking rules. Return a safe conflict result when the operation loses a race.
 - Database/network failure: return a generic safe error, preserve existing data where possible, and do not expose SQL/provider details.
@@ -124,10 +124,10 @@ The migration must enable RLS and provide policies consistent with this specific
 - **LEC-01-AC1** Given an active authenticated lecturer and a valid authorized course, date, future start time, and end time where start is before end, when the lecturer submits a create request, then exactly one slot owned by that authenticated lecturer is persisted and can be returned in that lecturer's slot list.
 - **LEC-01-AC2** Given a signed-out user, inactive user, student, administrator, or other non-lecturer, when they invoke the create, list, edit, or delete operation directly, then the server refuses the operation before protected slot data is returned or changed.
 - **LEC-01-AC3** Given an active lecturer with slots owned by themselves and another lecturer, when they list slots, then the response contains only slots owned by the authenticated lecturer.
-- **LEC-01-AC4** Given an active lecturer and an owned slot, when they submit valid changed course/date/start/end values and confirm if active bookings exist, then the slot is updated, remains owned by the authenticated lecturer, and affected students are notified when applicable.
-- **LEC-01-AC5** Given an active lecturer and an owned slot, when they delete it and confirm if active bookings exist, then the slot is hard-deleted, removed from the UI, affected students are notified when applicable, and no unrelated slot is changed.
+- **LEC-01-AC4** Given an active lecturer and an owned slot with no pending or approved booking, when they submit valid changed course/date/start/end values, then the slot is updated and remains owned by the authenticated lecturer.
+- **LEC-01-AC5** Given an active lecturer and an owned slot with no booking history, when they delete it, then it is removed from the UI and no unrelated slot is changed; slots with booking history are preserved.
 - **LEC-01-AC6** Given an active lecturer and a slot owned by another lecturer, when they attempt to view, edit, or delete it directly by identifier, then the operation is refused or safely not-found, no protected slot data is disclosed, and the slot is unchanged.
-- **LEC-01-AC7** Given an owned slot with an active booking, when the lecturer attempts to edit or delete it without confirmation, then the operation requires confirmation and both the slot and booking remain unchanged; after confirmation, the approved mutation occurs and affected students are notified.
+- **LEC-01-AC7** Given an owned slot with a pending or approved booking, when the lecturer attempts to edit or delete it, with or without confirmation, then the operation is refused and both the slot and booking remain unchanged.
 - **LEC-01-AC8** Given an existing slot for the same lecturer whose interval overlaps the requested interval, when the lecturer creates or edits a slot, then the operation is refused and no conflicting state is persisted.
 - **LEC-01-AC9** Given missing fields, an invalid course, a malformed date/time, a start time not before the end time, or a past date/time, when the lecturer creates or edits a slot, then validation fails, no unintended write occurs, and a safe validation error is returned.
 - **LEC-01-AC10** Given two concurrent slot mutations or a concurrent booking change, when the operations race, then the database/transaction/conditional mutation permits no state that violates ownership, overlap, or active-booking restrictions and returns a safe conflict/error for the losing operation.
@@ -157,7 +157,7 @@ The migration must enable RLS and provide policies consistent with this specific
 - Lecturer creates and sees a valid slot.
 - Lecturer sees only their own slots.
 - Lecturer edits and deletes an unbooked owned slot.
-- Lecturer receives a safe error for overlapping, past, invalid, or booked-slot operations.
+- Lecturer receives a safe error for overlapping, past, invalid, or booked-slot operations; booked-slot edits/deletes remain refused even after confirmation.
 - Student/admin/signed-out users cannot use the Lecturer slot workflow.
 
 ## Discrepancies
@@ -188,17 +188,30 @@ The migration must enable RLS and provide policies consistent with this specific
 
 ## Open questions
 
-1. May a lecturer edit the course as well as the date/time when a slot has active bookings, subject to confirmation?
-2. What exact user-visible messages/status mapping should represent authorization, duplicate, conflict,
+1. What exact user-visible messages/status mapping should represent authorization, duplicate, conflict,
    not-found, and database failures?
-3. What administrator audit trail is required when an administrator manages a Lecturer slot?
-4. What are the concrete course-assignment tables and policies for “a course the lecturer is part of”?
-5. Should overlapping slots be checked only for the same lecturer, as requested, or also within a
+2. What administrator audit trail is required when an administrator manages a Lecturer slot?
+3. What are the concrete course-assignment tables and policies for “a course the lecturer is part of”?
+4. Should overlapping slots be checked only for the same lecturer, as requested, or also within a
    course/resource?
 
 ## Change log
 
-| Date       | Change                                                                                | By                   |
-| ---------- | ------------------------------------------------------------------------------------- | -------------------- |
-| 2026-10-19 | Initial draft based on repository inspection                                          | Codex                |
-| 2026-10-19 | Replaced prior general availability draft with repository-grounded slot specification | Requirements Analyst |
+| Date       | Change                                                                                                                                                                                                                                   | By                                |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| 2026-10-19 | Initial draft based on repository inspection                                                                                                                                                                                             | Codex                             |
+| 2026-10-19 | Replaced prior general availability draft with repository-grounded slot specification                                                                                                                                                    | Requirements Analyst              |
+| 2026-10-22 | Jordan agreed with the cross-role resolution: pending/approved bookings make slot details immutable; edit/delete are refused and the existing database guard remains authoritative. Approval must be renewed for this material revision. | Joseph (reported Jordan decision) |
+
+## Change impact
+
+- Superseded behavior: a Lecturer could confirm an edit or delete of a slot with active bookings and
+  students would be notified.
+- Confirmed replacement: a slot with a pending or approved booking cannot have its course, lecturer,
+  start time, or end time edited or deleted. Confirmation does not override the database invariant.
+- Rationale: this matches `STU-02`'s `guard_requested_slot_details`, `TECHNICAL-SPEC.md`, and
+  `SH-05` preservation rules, preventing booked Students from receiving silently changed slot details.
+- Affected criteria: `LEC-01-AC4`, `LEC-01-AC5`, `LEC-01-AC7`, `LEC-01-AC12` and the booked-slot
+  validation/E2E requirements. Prior approval evidence for those criteria is stale and requires renewal.
+- Implementation evidence: the existing `guard_requested_slot_details` trigger already refuses these
+  updates at the database boundary; tests must prove the refusal and preservation behavior.

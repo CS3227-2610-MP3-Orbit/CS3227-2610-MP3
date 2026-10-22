@@ -100,10 +100,10 @@ export async function updateSlot(formData: FormData): Promise<ActionResult> {
     .select("student_id")
     .eq("slot_id", slotId.data)
     .in("status", ["pending", "approved"]);
-  if (bookings?.length && formData.get("confirm") !== "on")
+  if (bookings?.length)
     return {
       ok: false,
-      message: "This slot has active bookings. Confirm the change to notify students.",
+      message: "This slot cannot be changed because it has an active booking.",
     };
   const { error } = await supabase
     .from("consultation_slots")
@@ -141,10 +141,10 @@ export async function deleteSlot(formData: FormData): Promise<ActionResult> {
     .select("student_id")
     .eq("slot_id", slotId.data)
     .in("status", ["pending", "approved"]);
-  if (bookings?.length && formData.get("confirm") !== "on")
+  if (bookings?.length)
     return {
       ok: false,
-      message: "This slot has active bookings. Confirm deletion to notify students.",
+      message: "This slot cannot be deleted because it has an active booking.",
     };
   const { data: deleted, error } = await supabase
     .from("consultation_slots")
