@@ -280,7 +280,7 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
         >
           <div className="space-y-1">
             <h2 className="text-lg font-semibold text-foreground">Improve your draft with AI</h2>
-            <p className="text-sm leading-6 text-muted-foreground">
+            <p className="text-sm leading-6 text-foreground/75">
               Get a suggested rewrite, then choose exactly what to use in your request.
             </p>
           </div>
