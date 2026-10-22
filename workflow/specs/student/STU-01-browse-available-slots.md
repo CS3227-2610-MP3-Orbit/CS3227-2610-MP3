@@ -2,23 +2,27 @@
 id: STU-01
 title: Browse and filter available consultation slots
 owner: josephkwok001
-status: draft
+status: approved
 ---
 
 # STU-01: Browse and filter available consultation slots
 
 ## Document control
 
-- Version: `0.3-draft`
+- Version: `0.3-approved`
 - Browse clarification record and bounded follow-up plan:
   `workflow/reviews/stu-01/browse-clarifications.md` (`STU-01-CLARIFY-FOUR`).
 - Confirmed clarification source: Joseph requested applying the four preceding recommendations on
   2026-10-18: independent option caps, non-vacuous filter tests, explicit stale cursors without expiry,
-  and filter-independent dropdowns. Exact revised-digest teammate approval remains pending.
+  and filter-independent dropdowns. Joseph reported team approval of this exact revised content on
+  2026-10-22.
 - Prior approval date: `2026-10-18`
 - Approval report: Joseph communicated in the project Codex conversation that the team approved this
   specification and named Jordan as its reviewer.
 - Team-reported reviewed content digest: `13fb2e0693210f4a97e75b395b167d2cf3f3d4f8`.
+- Current approval record: Joseph confirmed on 2026-10-22 that the team approved the implemented
+  STU-01 requirements. This is team-reported approval; teammate identity and protected-PR evidence
+  were not independently verified here.
 - Prior canonical metadata digest: `17248e77c0b9801810c3c190e925bfec62ab03b9`.
 - External evidence limitation: no GitHub review, protected-PR URL, or independently verified reviewer
   identity was supplied. This repository record documents Joseph's report only.
@@ -29,8 +33,8 @@ status: draft
   slot/booking/RLS specification (`SH-03`), and draft authentication foundation (`SH-01`).
 - Material revision: Joseph confirmed on `2026-10-18` that the exact per-slot projection permits opaque
   `courseId` and `lecturerId` in addition to the previously listed fields. This data-contract change
-  resets the canonical specification to `draft`; the prior approval is stale until a teammate reviews
-  the exact revised digest.
+  resets the canonical specification pending review; Joseph's 2026-10-22 team-approval report renews
+  approval for this revised contract.
 - Change-impact record: `workflow/reviews/stu-01/2026-10-18-shared-spec-traceability-impact.md`.
 
 ## Context
@@ -47,8 +51,8 @@ existing broad staff-profile RLS policy conflicts with the revised Student profi
 ## Reviewed decisions and implementation constraints
 
 Joseph reported team approval of the prior specification on 2026-10-18 and later confirmed the material
-cross-spec decisions recorded in the impact record. The requirements below are the resulting draft;
-exact-digest review is still required.
+cross-spec decisions recorded in the impact record. The requirements below are the resulting approved
+version, based on Joseph's team-approval report on 2026-10-22.
 
 1. The authoritative display and date-filter timezone is `Asia/Singapore`; timestamps remain stored
    as PostgreSQL `timestamptz` values and are serialized in ISO 8601 form.
@@ -344,14 +348,15 @@ history finality; start-time date matching; 20-row cursor pagination with “Loa
 filter options capped by the shared contract; catalogue-wide Student eligibility; and the accessibility
 target in `SH-03-R15`.
 
-No unresolved STU-01 product decision remains in this document. Exact-digest review, real acceptance
-tests, shared RLS migration review, and manual/cross-browser verification remain required evidence, not
-product choices.
+No unresolved STU-01 product decision remains in this document. Joseph's team-approval report on
+2026-10-22 approves this exact revised requirements version. Real acceptance tests, shared RLS migration
+review, and manual/cross-browser verification remain required evidence, not product choices.
 
 ## Change log
 
-| Date       | Change                                                                      | By                     |
-| ---------- | --------------------------------------------------------------------------- | ---------------------- |
-| 2026-10-17 | Initial requirements draft for human review; no implementation authorized   | requirements_architect |
-| 2026-10-18 | Recorded team-reported approval; retained unresolved implementation limits  | requirements_architect |
-| 2026-10-18 | Added approved per-slot IDs and exact wire allowlist; reset status to draft | requirements_architect |
+| Date       | Change                                                                                          | By                     |
+| ---------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
+| 2026-10-17 | Initial requirements draft for human review; no implementation authorized                       | requirements_architect |
+| 2026-10-18 | Recorded team-reported approval; retained unresolved implementation limits                      | requirements_architect |
+| 2026-10-18 | Added approved per-slot IDs and exact wire allowlist; reset status to draft                     | requirements_architect |
+| 2026-10-22 | Recorded Joseph's team approval of the implemented revised requirements; status set to approved | Joseph                 |

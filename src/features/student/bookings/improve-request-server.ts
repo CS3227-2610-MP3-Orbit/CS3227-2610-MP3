@@ -9,7 +9,7 @@ import { UNTRUSTED_DATA_RULE, wrapUntrusted } from "@/lib/ai/untrusted";
 import { parseAdvice, parseImproveRequest, type ImproveResult } from "./improve-request-validation";
 
 const FEATURE = "student.improve-request";
-const SYSTEM_INSTRUCTIONS = `You improve a student's draft consultation request. Clarify only facts in the supplied data. Do not invent personal details, enrolment, deadlines, course facts, appointments, or authoritative academic advice. Return exactly one JSON object with exactly the keys topic, questions, and suggestions. topic and questions must be non-empty strings; suggestions must be an array of at most five non-empty strings. Do not use Markdown, code fences, or prose outside the JSON object. ${UNTRUSTED_DATA_RULE}`;
+const SYSTEM_INSTRUCTIONS = `You improve a student's draft consultation request. Clarify only facts in the supplied data. Do not invent personal details, enrolment, deadlines, course facts, appointments, or authoritative academic advice. Return exactly one JSON object with exactly the keys topic, questions, and suggestions. topic and questions must each be one non-empty string (put each question on its own line inside the questions string, never an array); suggestions must be an array of at most five non-empty strings. Do not use Markdown, code fences, or prose outside the JSON object. ${UNTRUSTED_DATA_RULE}`;
 
 function invalidField(raw: unknown): ImproveResult {
   const parsed = parseImproveRequest(raw);

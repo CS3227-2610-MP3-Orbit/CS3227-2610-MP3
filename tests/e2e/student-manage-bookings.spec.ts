@@ -25,9 +25,16 @@ async function createOwnedBookingFixture() {
   const student = (await signup.json()).user.id as string;
   const lecturer = randomUUID();
   const course = randomUUID();
-  const bookingIds = Array.from({ length: 5 }, () => randomUUID());
-  const slotIds = Array.from({ length: 5 }, () => randomUUID());
-  const statuses = ["pending", "approved", "rejected", "cancelled", "completed"] as const;
+  const bookingIds = Array.from({ length: 6 }, () => randomUUID());
+  const slotIds = Array.from({ length: 6 }, () => randomUUID());
+  const statuses = [
+    "pending",
+    "approved",
+    "rejected",
+    "cancelled",
+    "completed",
+    "approved",
+  ] as const;
   await sql(`update auth.users set email_confirmed_at=now() where id=${quote(student)};
     insert into auth.users(id) values (${quote(lecturer)});
     update public.profiles set role='lecturer',full_name='Dr STU04 Fixture' where id=${quote(lecturer)};
@@ -35,8 +42,10 @@ async function createOwnedBookingFixture() {
     insert into public.course_lecturers(course_id,lecturer_id) values (${quote(course)},${quote(lecturer)});
     insert into public.consultation_slots(id,course_id,lecturer_id,starts_at,ends_at)
     select slot_id,${quote(course)}::uuid,${quote(lecturer)}::uuid,
-      '2099-06-01 01:00Z'::timestamptz + ordinal * interval '2 hours',
-      '2099-06-01 02:00Z'::timestamptz + ordinal * interval '2 hours'
+      case when ordinal = 6 then '2000-06-01 01:00Z'::timestamptz
+        else '2099-06-01 01:00Z'::timestamptz + ordinal * interval '2 hours' end,
+      case when ordinal = 6 then '2000-06-01 02:00Z'::timestamptz
+        else '2099-06-01 02:00Z'::timestamptz + ordinal * interval '2 hours' end
     from unnest(array[${slotIds.map(quote).join(",")} ]::uuid[]) with ordinality as fixture(slot_id,ordinal);
     insert into public.bookings(id,slot_id,student_id,status,topic,questions,rejection_reason)
     select booking_id,slot_id,${quote(student)}::uuid,status::public.booking_status,
@@ -88,9 +97,12 @@ test("[STU-04-AC1] [STU-04-AC3] [STU-04-AC12] owned history renders statuses and
   await page.goto("/student/bookings");
   await expect(page.getByText("Status: pending", { exact: true })).toBeVisible();
   await expect(page.getByText("Status: approved", { exact: true })).toBeVisible();
+  await expect(page.getByText("Status: completed", { exact: true }).first()).toBeVisible();
   await expect(
     page.evaluate(() => (window as typeof window & { stu04Injected?: unknown }).stu04Injected),
   ).resolves.toBeUndefined();
+  await page.goto(`/student/bookings/${fixture.bookingIds[2]}`);
+  await expect(page.getByText("Rejection reason: Private rejection reason")).toBeVisible();
 });
 
 test("[STU-04-AC4] [STU-04-AC5] [STU-04-AC6] [STU-04-AC7] [STU-04-AC8] [STU-04-AC10] edit and cancel report safe conflicts", async ({
@@ -109,6 +121,9 @@ test("[STU-04-AC4] [STU-04-AC5] [STU-04-AC6] [STU-04-AC7] [STU-04-AC8] [STU-04-A
   await expect(page.getByText("Topic: Updated STU04 topic")).toBeVisible();
   await expect(page.getByText("Questions: Updated STU04 questions")).toBeVisible();
   await page.getByRole("button", { name: /cancel booking/i }).click();
+  await expect(page.getByText(/This cancellation cannot be undone/)).toBeVisible();
+  await expect(page.getByRole("button", { name: /confirm cancellation/i })).toBeVisible();
+  await page.getByRole("button", { name: /confirm cancellation/i }).click();
   await expect(page.getByRole("status")).toHaveText("Booking cancelled.");
   await expect(page.getByText("Status: cancelled")).toBeVisible();
   await expect(page.getByText("Topic: Updated STU04 topic")).toBeVisible();
