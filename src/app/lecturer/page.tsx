@@ -6,13 +6,12 @@ import { AnnouncementsCard } from "@/components/announcements-card";
 import { ConsultationList } from "@/components/consultation-list";
 import { EmptyState } from "@/components/empty-state";
 import { StatTile, StatTileRow } from "@/components/stat-tile";
-import { Button } from "@/components/ui/button";
 import { listStaffConsultations } from "@/features/lecturer/consultations/server";
 import { listLecturerRequests } from "@/features/lecturer/requests-server";
 import { listLecturerBriefings } from "@/features/lecturer/ai-briefing";
 import { greetingFor } from "@/lib/greeting";
 import { SlotForm } from "./slot-form";
-import { deleteSlotForForm } from "./actions";
+import { SlotRow } from "./slot-row";
 import { RequestCard } from "./request-card";
 
 export default async function LecturerDashboardPage({
@@ -23,13 +22,14 @@ export default async function LecturerDashboardPage({
   const user = await requireRole("lecturer");
   const supabase = await createClient();
   const params = await searchParams;
-  const [{ data: courses }, { data: slots }, [result, history], requests, briefings] =
+  const [{ data: courseResult }, { data: slots }, [result, history], requests, briefings] =
     await Promise.all([
-      supabase.from("courses").select("id, code, name").order("code"),
+      supabase.rpc("list_lecturer_courses"),
       supabase
         .from("consultation_slots")
         .select("id, course_id, starts_at, ends_at, courses(code, name)")
         .eq("lecturer_id", user.id)
+        .eq("is_active", true)
         .order("starts_at"),
       Promise.all([
         listStaffConsultations("lecturer", false),
@@ -38,6 +38,11 @@ export default async function LecturerDashboardPage({
       listLecturerRequests(),
       listLecturerBriefings(),
     ]);
+
+  const courses =
+    courseResult?.kind === "success" && Array.isArray(courseResult.courses)
+      ? (courseResult.courses as { id: string; code: string; name: string }[])
+      : [];
 
   const pendingRequestsCount = requests.kind === "success" ? requests.requests.length : null;
 
@@ -80,28 +85,11 @@ export default async function LecturerDashboardPage({
         ) : (
           <ul className="mt-3 grid gap-2">
             {slots.map((slot) => (
-              <li
+              <SlotRow
                 key={slot.id}
-                className="flex items-center justify-between rounded-lg border bg-card p-3"
-              >
-                <span>
-                  {new Date(slot.starts_at).toLocaleString("en-SG", {
-                    timeZone: "Asia/Singapore",
-                  })}{" "}
-                  –{" "}
-                  {new Date(slot.ends_at).toLocaleTimeString("en-SG", {
-                    timeZone: "Asia/Singapore",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-                <form action={deleteSlotForForm}>
-                  <input type="hidden" name="slotId" value={slot.id} />
-                  <Button variant="link" className="text-destructive" type="submit">
-                    Delete
-                  </Button>
-                </form>
-              </li>
+                slot={slot}
+                courses={(courses ?? []) as { id: string; code: string; name: string }[]}
+              />
             ))}
           </ul>
         )}

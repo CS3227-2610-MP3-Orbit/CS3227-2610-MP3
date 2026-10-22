@@ -6,7 +6,7 @@ import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { slotInputSchema, validateSlotInput } from "@/features/lecturer/availability";
 
-type ActionResult = { ok: boolean; message: string };
+export type ActionResult = { ok: boolean; message: string };
 const idSchema = z.string().uuid();
 
 function formInput(formData: FormData) {
@@ -100,11 +100,6 @@ export async function updateSlot(formData: FormData): Promise<ActionResult> {
     .select("student_id")
     .eq("slot_id", slotId.data)
     .in("status", ["pending", "approved"]);
-  if (bookings?.length && formData.get("confirm") !== "on")
-    return {
-      ok: false,
-      message: "This slot has active bookings. Confirm the change to notify students.",
-    };
   const { error } = await supabase
     .from("consultation_slots")
     .update({
@@ -138,28 +133,42 @@ export async function deleteSlot(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient();
   const { data: bookings } = await supabase
     .from("bookings")
-    .select("student_id")
-    .eq("slot_id", slotId.data)
-    .in("status", ["pending", "approved"]);
-  if (bookings?.length && formData.get("confirm") !== "on")
-    return {
-      ok: false,
-      message: "This slot has active bookings. Confirm deletion to notify students.",
-    };
-  const { data: deleted, error } = await supabase
-    .from("consultation_slots")
-    .delete()
-    .eq("id", slotId.data)
-    .eq("lecturer_id", user.id)
-    .select("id");
-  if (error) return { ok: false, message: "The slot could not be deleted. Please try again." };
-  if (!deleted?.length) return { ok: false, message: "The selected slot was not found." };
+    .select("student_id, status")
+    .eq("slot_id", slotId.data);
+  const activeBookings =
+    bookings?.filter((booking) => ["pending", "approved"].includes(booking.status)) ?? [];
+
+  let mutationError = null;
+  if (bookings?.length) {
+    const { data: archived, error } = await supabase
+      .from("consultation_slots")
+      .update({ is_active: false })
+      .eq("id", slotId.data)
+      .eq("lecturer_id", user.id)
+      .eq("is_active", true)
+      .select("id");
+    mutationError = error;
+    if (!error && !archived?.length)
+      return { ok: false, message: "The selected slot was not found or is already unavailable." };
+  } else {
+    const { data: deleted, error } = await supabase
+      .from("consultation_slots")
+      .delete()
+      .eq("id", slotId.data)
+      .eq("lecturer_id", user.id)
+      .select("id");
+    mutationError = error;
+    if (!error && !deleted?.length)
+      return { ok: false, message: "The selected slot was not found." };
+  }
+  if (mutationError)
+    return { ok: false, message: "The slot could not be deleted. Please try again." };
   await supabase
     .from("consultation_audit_log")
     .insert({ actor_id: user.id, slot_id: slotId.data, action: "deleted", outcome: "success" });
-  if (bookings?.length)
+  if (activeBookings.length)
     await supabase.from("consultation_notifications").insert(
-      bookings.map((booking) => ({
+      activeBookings.map((booking) => ({
         recipient_id: booking.student_id,
         slot_id: slotId.data,
         kind: "slot_deleted",
