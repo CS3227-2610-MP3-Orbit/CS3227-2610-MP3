@@ -49,3 +49,5 @@ $$;
 revoke all on function public.list_my_bookings() from public, anon, authenticated;
 revoke all on function public.my_booking_projection(uuid) from public, anon, authenticated;
 grant execute on function public.list_my_bookings() to authenticated;
+
+

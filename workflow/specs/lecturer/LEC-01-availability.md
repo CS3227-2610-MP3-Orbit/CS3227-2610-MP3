@@ -119,6 +119,22 @@ The migration must enable RLS and provide policies consistent with this specific
   validation, conflict, authorization, not-found, and failure messages; provider/SQL details remain internal.
 - Slot operations do not use the SoC LLM. No user text should be sent to an AI provider for this feature.
 
+### Data access path (2026-10-22)
+
+STU-01 revokes every direct table privilege on `courses`, `course_lecturers`,
+`consultation_slots` and `bookings` from `authenticated` (`STU-01-AC21`, `SH-02-AC12`,
+`SH-03-AC19`). Lecturer reads and writes therefore cannot use direct table queries; they go through
+role-checked `security definer` functions, the same pattern ADM-01 to ADM-04 use:
+
+- `lecturer_list_my_courses()` returns only courses that are active and actively assigned to the
+  calling lecturer; `lecturer_list_my_slots()` returns only the caller's own slots.
+- `lecturer_create_slot`, `lecturer_update_slot` and `lecturer_delete_slot` check the caller's role
+  first, derive the lecturer from `auth.uid()`, re-check the one-hour lead time, the active course
+  assignment, overlap and active-booking confirmation, and serialize each lecturer's slot changes
+  with a transaction-scoped advisory lock. They write the audit row and student notifications in
+  the same transaction as the slot change.
+- No direct table privilege is granted to `authenticated`.
+
 ## Acceptance criteria
 
 - **LEC-01-AC1** Given an active authenticated lecturer and a valid authorized course, date, future start time, and end time where start is before end, when the lecturer submits a create request, then exactly one slot owned by that authenticated lecturer is persisted and can be returned in that lecturer's slot list.
@@ -132,6 +148,8 @@ The migration must enable RLS and provide policies consistent with this specific
 - **LEC-01-AC9** Given missing fields, an invalid course, a malformed date/time, a start time not before the end time, or a past date/time, when the lecturer creates or edits a slot, then validation fails, no unintended write occurs, and a safe validation error is returned.
 - **LEC-01-AC10** Given two concurrent slot mutations or a concurrent booking change, when the operations race, then the database/transaction/conditional mutation permits no state that violates ownership, overlap, or active-booking restrictions and returns a safe conflict/error for the losing operation.
 - **LEC-01-AC11** Given a database or network failure during a slot operation, when the request completes, then the user receives a safe generic failure, no internal database details are exposed, and the system does not report success for an uncommitted mutation.
+- **LEC-01-AC13** Given any signed-in user, when lecturer slot data is listed, created, edited or deleted, then it goes through the role-checked functions in "Data access path", a non-lecturer receives `forbidden_or_not_found` or an empty list, and `authenticated` still holds no direct privilege on `courses`, `course_lecturers`, `consultation_slots` or `bookings`.
+- **LEC-01-AC14** Given a course the lecturer was assigned to but whose assignment has ended, or an inactive course, when the lecturer lists courses or creates or edits a slot for it, then the course is not offered and the operation is refused as not assigned.
 - **LEC-01-AC12** Given the repository's approved implementation for slot operations, when unit, integration, and E2E tests run, then tests cover valid create/list/edit/delete flows, every refusal and validation case above, cross-lecturer isolation, RLS, concurrent/conflict behavior, and safe database failures, with test names referencing these acceptance-criteria IDs.
 
 ## Required tests
@@ -197,11 +215,12 @@ The migration must enable RLS and provide policies consistent with this specific
 
 ## Change log
 
-| Date       | Change                                                                                                                                                                                                                                   | By                                |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| 2026-10-19 | Initial draft based on repository inspection                                                                                                                                                                                             | Codex                             |
-| 2026-10-19 | Replaced prior general availability draft with repository-grounded slot specification                                                                                                                                                    | Requirements Analyst              |
-| 2026-10-22 | Jordan agreed with the cross-role resolution: pending/approved bookings make slot details immutable; edit/delete are refused and the existing database guard remains authoritative. Approval must be renewed for this material revision. | Joseph (reported Jordan decision) |
+| Date       | Change                                                                                                                                                                                                                                                                                           | By                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
+| 2026-10-19 | Initial draft based on repository inspection                                                                                                                                                                                                                                                     | Codex                             |
+| 2026-10-19 | Replaced prior general availability draft with repository-grounded slot specification                                                                                                                                                                                                            | Requirements Analyst              |
+| 2026-10-22 | Added "Data access path", AC13 and AC14: lecturer slot reads and writes go through role-checked functions because STU-01 revokes direct table access, which left the dashboard unable to read or create slots. Approved by Johannsen (coordinator) on 22 Oct; Jordan reviews in the pull request | Coordinator                       |
+| 2026-10-22 | Jordan agreed with the cross-role resolution: pending/approved bookings make slot details immutable; edit/delete are refused and the existing database guard remains authoritative. Approval must be renewed for this material revision.                                                         | Joseph (reported Jordan decision) |
 
 ## Change impact
 

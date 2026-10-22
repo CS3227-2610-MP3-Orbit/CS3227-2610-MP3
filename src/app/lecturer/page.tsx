@@ -6,26 +6,26 @@ import { AnnouncementsCard } from "@/components/announcements-card";
 import { ConsultationList } from "@/components/consultation-list";
 import { EmptyState } from "@/components/empty-state";
 import { StatTile, StatTileRow } from "@/components/stat-tile";
-import { Button } from "@/components/ui/button";
 import { listStaffConsultations } from "@/features/lecturer/consultations/server";
 import { listLecturerRequests } from "@/features/lecturer/requests-server";
 import { listLecturerBriefings } from "@/features/lecturer/ai-briefing";
 import { greetingFor } from "@/lib/greeting";
 import { SlotForm } from "./slot-form";
-import { deleteSlot } from "./actions";
+import { SlotRow } from "./slot-row";
 import { RequestCard } from "./request-card";
 
-export default async function LecturerDashboardPage() {
+export default async function LecturerDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ briefing?: string; message?: string }>;
+}) {
   const user = await requireRole("lecturer");
   const supabase = await createClient();
-  const [{ data: courses }, { data: slots }, [result, history], requests, briefings] =
+  const params = await searchParams;
+  const [{ data: courses }, { data: slotRows }, [result, history], requests, briefings] =
     await Promise.all([
-      supabase.from("courses").select("id, code, name").order("code"),
-      supabase
-        .from("consultation_slots")
-        .select("id, course_id, starts_at, ends_at, courses(code, name)")
-        .eq("lecturer_id", user.id)
-        .order("starts_at"),
+      supabase.rpc("lecturer_list_my_courses"),
+      supabase.rpc("lecturer_list_my_slots"),
       Promise.all([
         listStaffConsultations("lecturer", false),
         listStaffConsultations("lecturer", true),
@@ -34,12 +34,32 @@ export default async function LecturerDashboardPage() {
       listLecturerBriefings(),
     ]);
 
+  const courseRows = (courses ?? []) as { id: string; code: string; name: string }[];
+  const slots = (slotRows ?? []) as {
+    id: string;
+    course_id: string;
+    starts_at: string;
+    ends_at: string;
+    course_code: string;
+    course_name: string;
+  }[];
+
   const pendingRequestsCount = requests.kind === "success" ? requests.requests.length : null;
 
   return (
     <main className="space-y-8">
       <section className="space-y-5">
         <h1 className="text-2xl font-semibold">{greetingFor(new Date(), user.fullName)}</h1>
+        {params.briefing === "success" && (
+          <p role="status" className="rounded-lg border border-primary/50 p-3">
+            AI briefing generated and saved successfully.
+          </p>
+        )}
+        {params.briefing === "error" && (
+          <p role="alert" className="rounded-lg border border-destructive/50 p-3">
+            {params.message ?? "The AI briefing could not be generated."}
+          </p>
+        )}
         <StatTileRow>
           <StatTile
             label="Your consultation slots"
@@ -58,39 +78,14 @@ export default async function LecturerDashboardPage() {
           Consultation availability uses Singapore time. Slots must be created at least one hour
           before they start.
         </p>
-        <SlotForm courses={(courses ?? []) as { id: string; code: string; name: string }[]} />
+        <SlotForm courses={courseRows} />
         <h2 className="mt-8 font-semibold">Your consultation slots</h2>
         {!slots?.length ? (
           <p className="mt-2 text-sm text-muted-foreground">No consultation slots yet.</p>
         ) : (
           <ul className="mt-3 grid gap-2">
             {slots.map((slot) => (
-              <li
-                key={slot.id}
-                className="flex items-center justify-between rounded-lg border bg-card p-3"
-              >
-                <span>
-                  {new Date(slot.starts_at).toLocaleString("en-SG", {
-                    timeZone: "Asia/Singapore",
-                  })}{" "}
-                  –{" "}
-                  {new Date(slot.ends_at).toLocaleTimeString("en-SG", {
-                    timeZone: "Asia/Singapore",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-                <form
-                  action={async (formData) => {
-                    await deleteSlot(formData);
-                  }}
-                >
-                  <input type="hidden" name="slotId" value={slot.id} />
-                  <Button variant="link" className="text-destructive" type="submit">
-                    Delete
-                  </Button>
-                </form>
-              </li>
+              <SlotRow key={slot.id} slot={slot} courses={courseRows} />
             ))}
           </ul>
         )}
@@ -110,6 +105,24 @@ export default async function LecturerDashboardPage() {
           <ul className="mt-3 space-y-3">
             {briefings.map((briefing) => (
               <li key={briefing.id} className="rounded border p-4">
+                <h3 className="font-semibold">
+                  {briefing.courseCode} — {briefing.courseName}
+                </h3>
+                <p className="mt-1">
+                  {briefing.topic} · {briefing.studentName}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Consultation:{" "}
+                  {new Date(briefing.startsAt).toLocaleString("en-SG", {
+                    timeZone: "Asia/Singapore",
+                  })}{" "}
+                  —{" "}
+                  {new Date(briefing.endsAt).toLocaleTimeString("en-SG", {
+                    timeZone: "Asia/Singapore",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
                 <p className="text-sm text-muted-foreground">
                   Saved{" "}
                   {new Date(briefing.createdAt).toLocaleString("en-SG", {
