@@ -406,3 +406,5 @@ create policy "lecturers read assigned courses" on public.courses
     )
     or (select public.current_app_role()) = 'admin'::public.app_role
   );
+
+
