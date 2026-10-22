@@ -12,7 +12,7 @@ import { listLecturerRequests } from "@/features/lecturer/requests-server";
 import { listLecturerBriefings } from "@/features/lecturer/ai-briefing";
 import { greetingFor } from "@/lib/greeting";
 import { SlotForm } from "./slot-form";
-import { deleteSlot } from "./actions";
+import { deleteSlotForForm } from "./actions";
 import { RequestCard } from "./request-card";
 
 export default async function LecturerDashboardPage() {
@@ -80,7 +80,7 @@ export default async function LecturerDashboardPage() {
                     minute: "2-digit",
                   })}
                 </span>
-                <form action={deleteSlot}>
+                <form action={deleteSlotForForm}>
                   <input type="hidden" name="slotId" value={slot.id} />
                   <Button variant="link" className="text-destructive" type="submit">
                     Delete

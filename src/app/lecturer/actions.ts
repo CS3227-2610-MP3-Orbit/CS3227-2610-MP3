@@ -169,3 +169,8 @@ export async function deleteSlot(formData: FormData): Promise<ActionResult> {
   revalidatePath("/lecturer");
   return { ok: true, message: "Consultation slot deleted." };
 }
+
+// Form actions must return void; the page refreshes through revalidatePath after deletion.
+export async function deleteSlotForForm(formData: FormData): Promise<void> {
+  await deleteSlot(formData);
+}
