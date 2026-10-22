@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { generateLecturerBriefing, type BriefingResult } from "@/features/lecturer/ai-briefing";
+import { type BriefingResult } from "@/features/lecturer/ai-briefing";
+import { submitLecturerBriefing } from "@/app/lecturer/briefing-actions";
 
 const initial: BriefingResult = { kind: "idle" };
 
 export function BriefingButton({ bookingId }: { bookingId: string }) {
-  const [state, action, pending] = useActionState(generateLecturerBriefing, initial);
+  const [state, action, pending] = useActionState(submitLecturerBriefing, initial);
   return (
     <form action={action} className="mt-3 space-y-2">
       <input type="hidden" name="bookingId" value={bookingId} />
