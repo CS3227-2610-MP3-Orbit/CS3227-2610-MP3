@@ -173,6 +173,16 @@ already issued stays valid until it expires (Supabase default ≤ 1 hour), becau
 tokens are revoked immediately. For a suspected compromise, the admin can deactivate the account
 first (immediate, `ADM-01-R6`) and reset the password after.
 
+### ADM-01-R11 — Sign-in guidance for a deactivated account
+
+`confirmed`; source: owner decision 2026-10-22 (pre-release audit found a deactivated user who
+signs in with the correct password is signed in and silently bounced back to `/login`). When the
+password is correct but the account's profile is inactive, the sign-in action signs the session out
+again and shows "This account has been deactivated. Contact an administrator." A wrong password
+still shows only the generic "Incorrect email or password.", so the message reveals nothing to
+someone who does not already hold the password. `ADM-01-AC9` (a live session is denied on the next
+request after deactivation) is unchanged.
+
 ## Non-functional requirements
 
 No new performance/accessibility/capacity target beyond existing conventions (keyboard operable,
@@ -326,6 +336,7 @@ Planned tests, not results.
 - **ADM-01-AC23** (R10; pgTAP; live DB) `admin_revoke_sessions` called by a non-admin, or with the caller's own id, or with the protected admin's id → refused, no `auth.sessions` row removed
 - **ADM-01-AC24** (R10; pgTAP; live DB) An admin calls `admin_revoke_sessions` on a valid, non-self, non-protected target → all of that target's `auth.sessions` rows are removed
 - **ADM-01-AC25** (R10; integration; live auth) After an admin resets a user's password → the target's prior refresh token no longer works, while the new password signs in successfully
+- **ADM-01-AC26** (R11; unit; mocked) A deactivated user submits the correct password → the session is signed out, the deactivated-account message is returned and no redirect happens; an active user is still redirected to `/`
 
 ## Review evidence
 
@@ -355,3 +366,4 @@ validity limitation recorded there.
 | 2026-10-19 | Material change: added `ADM-01-R9` (admin resets another user's password, reusing the creation generator and one-time panel; protected-admin refusal tagged proposed pending owner confirmation; session-revocation left Open); status approved → draft, approval at `7f6c579` marked superseded, re-approval required; updated UI, API, data model, edge cases; added AC18–AC22 | R9 (new), AC1–AC22         | Approval at `7f6c579` superseded             | requirements_architect |
 | 2026-10-20 | Owner confirmed the R9 protected-admin refusal and re-approved the spec; status draft → approved                                                                                                                                                                                                                                                                                 | R9                         | None                                         | Johannsen              |
 | 2026-10-20 | Security review findings; owner approved 2026-10-20: added `ADM-01-R10` (password reset ends the target's sessions via a new `admin_revoke_sessions` RPC) and the documented access-token-validity limitation; updated technical constraints, data model, API result codes, security notes, and edge cases; added AC23–AC25; status remains `approved`                           | R10 (new), AC23–AC25       | None                                         | requirements_architect |
+| 2026-10-22 | Pre-release audit; owner approved 2026-10-22: added `ADM-01-R11` (deactivated accounts get sign-in guidance instead of a silent redirect) and `ADM-01-AC26`; status remains `approved`                                                                                                                                                                                           | R11 (new), AC26            | None                                         | Johannsen              |

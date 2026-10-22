@@ -84,4 +84,20 @@ describe.each([
       expect(ratio).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
     },
   );
+
+  // SH-07-R18: a stat tile (src/components/stat-tile.tsx) tints the whole card with its tone at
+  // 5% and draws its label in `text-foreground/75` on top. Both layers are translucent, so the
+  // label is checked as rendered: the label colour blended over the tinted card.
+  const TILE_TINT_ALPHA = 0.05;
+  const TILE_LABEL_ALPHA = 0.75;
+
+  it.each([["primary"], ["success"], ["warning"]])(
+    "the stat-tile label on a %s-tinted tile meets WCAG AA",
+    (tone) => {
+      const card = token(block, "card");
+      const tile = blendOklab(token(block, tone), TILE_TINT_ALPHA, card);
+      const label = blendOklab(token(block, "foreground"), TILE_LABEL_ALPHA, tile);
+      expect(contrastRatio(label, tile)).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+    },
+  );
 });

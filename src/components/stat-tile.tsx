@@ -63,7 +63,8 @@ export function StatTile({
         <Icon className="size-5" />
       </span>
       <div className="min-w-0">
-        <p className={cn(EYEBROW_CLASS, "text-muted-foreground")}>{label}</p>
+        {/* Muted grey drops below 4.5:1 on the tinted card, so the label uses a darker tint. */}
+        <p className={cn(EYEBROW_CLASS, "text-foreground/75")}>{label}</p>
         <p className={cn(STAT_VALUE_CLASS, "mt-1")}>{value === null ? "—" : value}</p>
       </div>
     </div>

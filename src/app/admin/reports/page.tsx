@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { requireRole } from "@/lib/auth/session";
 import { getBookingReport } from "@/features/admin/reports/server";
 import { isBoundedPeriod, isValidIsoDate, presetPeriod } from "@/features/admin/reports/period";
@@ -84,13 +82,7 @@ export default async function AdminReportsPage({
   return (
     <div className="min-w-0 space-y-8">
       <header>
-        <Link
-          href="/admin"
-          className="text-sm underline focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
-          Back to dashboard
-        </Link>
-        <h1 className="mt-3 text-2xl font-semibold">Reports</h1>
+        <h1 className="text-2xl font-semibold">Reports</h1>
       </header>
 
       <form
