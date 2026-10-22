@@ -136,6 +136,10 @@ Nav items come from the server-resolved `user.role` already passed into `RoleShe
 
 `confirmed`; source: owner decision 2026-10-22 (pre-release audit, axe `landmark-no-duplicate-main`). `SidebarInset` already renders the page's `<main>`, so `RoleShell` wraps page content in a plain `<div>`, leaving exactly one `main` landmark in every role page. Stat-tile labels use a darker tint than `text-muted-foreground`, which fell below 4.5:1 on the tinted tile (`SH-07-R6`/`SH-07-AC19`, light mode).
 
+### SH-07-R19 — Create dialogs refresh the list behind them
+
+`confirmed`; source: owner request 2026-10-22 (testing on dev: a new course, account or announcement only appeared after a manual reload). After a successful create from the "New course", "New account" or "New announcement" dialog, the server action refreshes the page so the list behind the dialog shows the new row. The dialog stays open with its unchanged success message (account creation must keep showing the one-time password). A failed create does not refresh.
+
 ## Non-functional requirements
 
 Accessibility per `SH-07-R6` (WCAG AA both themes, keyboard operability) — now also covering the new teal/navy sidebar tokens and the new `success`/`warning` badge tokens in both themes (`SH-07-AC19`). No new performance/capacity target — kit components are statically bundled, no runtime fetch added; stat tiles reuse data the page already fetches, adding no new query. No new browser-support target beyond the project's existing baseline.
@@ -214,6 +218,7 @@ Planned tests, not results.
 - **SH-07-AC19** (R10, R13; e2e/axe or token-contrast check; live) `prefers-color-scheme: dark` keeps WCAG AA contrast for the new teal/navy sidebar tokens and the new `success`/`warning` badge tokens
 - **SH-07-AC21** (R17; e2e; live) A signed-in user opens an unmatched URL → the page shows the "Page not found" heading and a "Go to your dashboard" link that leads to that user's own dashboard
 - **SH-07-AC22** (R18; e2e; live) The student and admin dashboards expose exactly one `main` landmark (the lecturer dashboard still renders its own nested `<main>` in `src/app/lecturer/page.tsx`; its owner removes it, then this criterion extends to it)
+- **SH-07-AC23** (R19; unit; mocked) Given an admin creates a course, an account or an announcement, when the create succeeds, then its server action calls `refresh()` from `next/cache` and returns the unchanged result; when it fails, `refresh()` is not called.
 - **SH-07-AC20** (R5, R9–R16; unit + integration + pgTAP + e2e; mocked + live) Every existing automated suite still passes, with no assertion change beyond the selectors and steps justified in `SH-07-R9`, `R14`, and the edge-case table above
 
 ## Review evidence
@@ -236,3 +241,4 @@ None. The proposed items were confirmed with the 2026-10-21 approval.
 | 2026-10-20 | `TASK-SH-07B` material revision: visual identity ("Orbit" brand, SuperCane-style nav, greeting + stat tiles, semantic status pills, responsive tables/cards + create dialog, friendlier empty states, removed redundant nav links); status reset to `draft` | R9–R16, AC12–AC20         | Prior approval above superseded for the amended scope; `R1`–`R8`/`AC1`–`AC11` unaffected | requirements_architect |
 | 2026-10-21 | Owner approval of the material revision; greeting boundaries and omitted student tile accepted                                                                                                                                                              | R9–R16                    | None                                                                                     | Johannsen              |
 | 2026-10-22 | Pre-release audit; owner approved 2026-10-22: added `SH-07-R17` (branded not-found page) and `SH-07-R18` (single main landmark, stat-tile label contrast), with `SH-07-AC21`–`AC22`; status remains `approved`                                              | R17, R18 (new), AC21–AC22 | None                                                                                     | Johannsen              |
+| 2026-10-22 | Testing on dev; requested by Johannsen 2026-10-22, reviewed in the pull request: added `SH-07-R19` (create dialogs refresh the list behind them) with `SH-07-AC23`; status remains `approved`                                                               | R19 (new), AC23           | None                                                                                     | Johannsen              |
