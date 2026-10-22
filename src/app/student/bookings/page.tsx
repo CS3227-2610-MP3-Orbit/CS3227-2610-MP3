@@ -1,24 +1,31 @@
+import { CalendarSearch } from "lucide-react";
 import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { listMyBookings } from "@/features/student/bookings/manage-server";
 import { formatSingaporeDateTime } from "@/features/student/slots/format";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
+import { statusBadgeVariant } from "@/lib/status-badge";
 export default async function MyBookingsPage() {
   await requireRole("student");
   const result = await listMyBookings();
   return (
     <div className="space-y-5 min-w-0">
       <header>
-        <Link
-          className="text-sm underline focus-visible:outline-2 focus-visible:outline-offset-2"
-          href="/student"
-        >
-          Back to dashboard
-        </Link>
-        <h1 className="mt-3 text-2xl font-semibold">My bookings</h1>
+        <h1 className="text-2xl font-semibold">My bookings</h1>
       </header>
       {result.kind === "success" ? (
         result.bookings.length === 0 ? (
-          <p role="status">You have no consultation bookings yet.</p>
+          <EmptyState
+            icon={CalendarSearch}
+            message="You have no consultation bookings yet."
+            action={
+              <Link href="/student/slots" className={buttonVariants({ variant: "default" })}>
+                Browse available slots
+              </Link>
+            }
+          />
         ) : (
           <ul className="space-y-3">
             {result.bookings.map((b) => (
@@ -30,7 +37,9 @@ export default async function MyBookingsPage() {
                 </p>
                 <p>Lecturer: {b.lecturerName}</p>
                 <p>{formatSingaporeDateTime(b.startsAt)} (SGT)</p>
-                <p>Status: {b.status}</p>
+                <p>
+                  Status: <Badge variant={statusBadgeVariant(b.status)}>{b.status}</Badge>
+                </p>
                 <p>Topic: {b.topic}</p>
                 <Link
                   className="underline focus-visible:outline-2"

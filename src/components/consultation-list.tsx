@@ -1,9 +1,14 @@
+import { Inbox } from "lucide-react";
+
 import type { Consultation } from "@/features/lecturer/consultations/validation";
 import { Badge } from "@/components/ui/badge";
 import { BriefingButton } from "./briefing-button";
+import { EmptyState } from "@/components/empty-state";
+import { statusBadgeVariant } from "@/lib/status-badge";
 
 export function ConsultationList({ consultations }: { consultations: Consultation[] }) {
-  if (consultations.length === 0) return <p role="status">No consultations found.</p>;
+  if (consultations.length === 0)
+    return <EmptyState icon={Inbox} message="No consultations found." />;
   return (
     <ul aria-label="Consultations" className="grid gap-4">
       {consultations.map((item) => (
@@ -12,7 +17,10 @@ export function ConsultationList({ consultations }: { consultations: Consultatio
             <h2 className="font-semibold">
               {item.courseCode} — {item.topic}
             </h2>
-            <Badge variant="secondary" aria-label={`Status: ${item.displayStatus}`}>
+            <Badge
+              variant={statusBadgeVariant(item.displayStatus)}
+              aria-label={`Status: ${item.displayStatus}`}
+            >
               {item.displayStatus === "rejected" && item.rejectionReason
                 ? `Rejected: ${item.rejectionReason}`
                 : item.displayStatus}
