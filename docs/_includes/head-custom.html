@@ -1,0 +1,27 @@
+<!-- Renders ```mermaid code blocks as diagrams on the GitHub Pages site. -->
+<script
+  src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"
+  integrity="sha384-WmdflGW9aGfoBdHc4rRyWzYuAjEmDwMdGdiPNacbwfGKxBW/SO6guzuQ76qjnSlr"
+  crossorigin="anonymous"
+></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var blocks = document.querySelectorAll("div.language-mermaid, pre > code.language-mermaid");
+    blocks.forEach(function (block) {
+      var container = block.tagName === "CODE" ? block.parentElement : block;
+      var diagram = document.createElement("pre");
+      diagram.className = "mermaid";
+      diagram.textContent = block.textContent;
+      container.replaceWith(diagram);
+    });
+    mermaid.initialize({ startOnLoad: false, theme: "neutral", securityLevel: "strict" });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  });
+</script>
+<style>
+  pre.mermaid {
+    background: transparent;
+    border: 0;
+    text-align: center;
+  }
+</style>

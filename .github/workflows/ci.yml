@@ -11,7 +11,41 @@ permissions:
 
 jobs:
   app:
-    name: Lint, types, unit tests, traceability, build
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run verify -- --profile=app
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+          SENSITIVE_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD^' }}
+
+  database:
+    name: Database rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1.7.3
+        with:
+          version: 2.121.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: supabase db start
+      - run: npm run verify -- --profile=database
+
+  e2e:
+    name: End-to-end
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -19,27 +53,40 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run check:spec -- --markdown traceability.md
-      - name: Publish traceability matrix
-        run: cat traceability.md >> "$GITHUB_STEP_SUMMARY"
-      - run: npm run build
-        env:
-          # Placeholders: the build must not depend on real credentials.
-          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
-
-  database:
-    name: Migrations and database rule tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1.7.3
         with:
           version: 2.121.0
-      - run: supabase db start
-      - run: supabase db lint --level error
-      - run: supabase test db
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run concurrency and all browser tests against a disposable stack
+        run: node workflow/scripts/stu02-ci.mjs
+
+  accounts:
+    name: Accounts and passwords
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1.7.3
+        with:
+          version: 2.121.0
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # The stack prints its local-only keys; keep them out of the log.
+      - run: supabase start > /dev/null
+      # Reapply migrations and seed the documented admin fixtures before the live tests.
+      # `supabase start` does not guarantee that an existing local database has been reset.
+      - run: supabase db reset --local
+      - name: Run ADM-01 and SH-06 integration and browser tests
+        run: |
+          eval "$(supabase status -o json | node tests/integration/local-supabase-env.mjs)"
+          npm run test:admin:integration
+          npm run test:admin-courses:integration
+          npm run test:admin-reports:integration
+          npm run test:admin-announcements:integration
+          npx vitest run --config tests/integration/sh06.vitest.config.mts
+          npx playwright test --config tests/e2e/admin.playwright.config.ts
+          npx playwright test --config tests/e2e/change-password.playwright.config.ts

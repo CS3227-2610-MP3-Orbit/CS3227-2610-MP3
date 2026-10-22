@@ -1,0 +1,31 @@
+{
+  "description": "CS3227 development guardrails and bounded handoff checks.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(Bash|apply_patch|Edit|Write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/env node \"$(git rev-parse --show-toplevel)/workflow/hooks/pre-tool-use.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Checking development action policy"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "^(requirements_architect|developer|tester_verifier)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/env node \"$(git rev-parse --show-toplevel)/workflow/hooks/stop-handoff.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Checking agent handoff"
+          }
+        ]
+      }
+    ]
+  }
+}
