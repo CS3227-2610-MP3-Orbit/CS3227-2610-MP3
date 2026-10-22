@@ -285,3 +285,30 @@ test("[SH-07-AC10] toggling the sidebar writes no new cookie or localStorage/ses
   expect(Object.keys(storageState.localStorage)).toHaveLength(0);
   expect(Object.keys(storageState.sessionStorage)).toHaveLength(0);
 });
+
+test("[SH-07-AC21] a signed-in user on an unknown URL sees the branded not-found page and can get home", async ({
+  page,
+}) => {
+  await signIn(page, STUDENT_EMAIL);
+  await expect(page).toHaveURL(/\/student$/);
+
+  await page.goto("/this-page-does-not-exist");
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+  await page.getByRole("link", { name: "Go to your dashboard" }).click();
+  await expect(page).toHaveURL(/\/student$/);
+});
+
+test("[SH-07-AC22] the student and admin dashboards have exactly one main landmark", async ({
+  page,
+}) => {
+  for (const [email, path] of [
+    [STUDENT_EMAIL, /\/student$/],
+    [ADMIN_EMAIL, /\/admin$/],
+  ] as const) {
+    await signIn(page, email);
+    await expect(page).toHaveURL(path);
+    await expect(page.getByRole("main")).toHaveCount(1);
+    await page.getByRole("button", { name: /sign out/i }).click();
+    await expect(page).toHaveURL(/\/login$/);
+  }
+});

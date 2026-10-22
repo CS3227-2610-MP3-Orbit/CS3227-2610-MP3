@@ -58,7 +58,8 @@ export function RoleShell({ user, children }: { user: CurrentUser; children: Rea
             </form>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 p-4 sm:p-6">{children}</main>
+        {/* SidebarInset already renders the page's single <main> landmark. */}
+        <div className="mx-auto w-full max-w-5xl flex-1 p-4 sm:p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
