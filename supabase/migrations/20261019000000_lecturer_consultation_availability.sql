@@ -22,13 +22,6 @@ create table public.consultation_audit_log (
 alter table public.consultation_notifications enable row level security;
 alter table public.consultation_audit_log enable row level security;
 
--- RLS policies restrict which rows are visible, but they do not grant table privileges.
--- Restore only the operations used by the Lecturer read/slot workflow after the shared
--- Student migration revoked the default authenticated privileges.
-grant select on table public.courses, public.course_lecturers to authenticated;
-grant select, insert, update, delete on table public.consultation_slots to authenticated;
-grant select on table public.bookings to authenticated;
-
 create policy "lecturers read assigned courses" on public.courses for select to authenticated
 using (exists (select 1 from public.course_lecturers cl where cl.course_id = id and cl.lecturer_id = (select auth.uid()) and cl.is_active) or (select public.current_app_role()) = 'admin');
 

@@ -6,8 +6,9 @@
 -- role check first, the lecturer derived from auth.uid(), and typed jsonb results. No table
 -- privilege is granted. Parameters are prefixed p_ so plpgsql never shadows a column name.
 
--- Remove the direct privileges that were added by the earlier availability migration. Lecturer
--- access to these tables must stay behind the role-checked functions below (STU-01-AC21).
+-- Defensive: make sure no direct privileges remain on these tables (for example on a local
+-- database that applied an earlier draft of this branch). Lecturer access must stay behind the
+-- role-checked functions below (STU-01-AC21).
 revoke all on table public.courses, public.course_lecturers, public.consultation_slots, public.bookings
   from authenticated;
 
