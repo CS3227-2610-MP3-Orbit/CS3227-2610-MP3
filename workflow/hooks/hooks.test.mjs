@@ -102,6 +102,17 @@ test("review-sensitive file edits are flagged but not denied", () => {
   assert.equal(inspectPatch(patch).result, "review");
 });
 
+test("[WFG-02-AC2] Claude Code agent and settings edits are flagged like Codex controls", () => {
+  for (const file of [
+    ".claude/agents/developer.md",
+    ".claude/settings.json",
+    ".codex/config.toml",
+  ]) {
+    const patch = `*** Begin Patch\n*** Update File: ${file}\n@@\n-old\n+new\n*** End Patch`;
+    assert.equal(inspectPatch(patch).result, "review", file);
+  }
+});
+
 test("[WFG-03-AC5] malformed tool input receives an explicit deny decision", () => {
   const decision = evaluatePreToolUse({ hook_event_name: "PreToolUse", tool_name: "Bash" });
   assert.deepEqual(

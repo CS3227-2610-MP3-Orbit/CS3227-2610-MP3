@@ -310,6 +310,7 @@ export function inspectShell(command, depth = 0) {
 const reviewPaths = [
   /^AGENTS\.md$/,
   /^\.codex\//,
+  /^\.claude\//,
   /^\.github\/(?:workflows\/|CODEOWNERS$)/,
   /^workflow\/(?:agents|hooks|policies)\//,
   /^src\/lib\/auth\//,

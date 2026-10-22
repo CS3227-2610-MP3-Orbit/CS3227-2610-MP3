@@ -10,7 +10,7 @@ const rules = [
   },
   {
     category: "agent controls",
-    pattern: /^(AGENTS\.md$|\.codex\/|workflow\/(agents|hooks|policies)\/)/,
+    pattern: /^(AGENTS\.md$|\.codex\/|\.claude\/|workflow\/(agents|hooks|policies)\/)/,
   },
   {
     category: "CI/deployment",
