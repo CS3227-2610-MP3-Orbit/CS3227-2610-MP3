@@ -2,6 +2,7 @@ import {
   BookOpen,
   CalendarCheck,
   CalendarSearch,
+  ChartColumn,
   LayoutDashboard,
   Users,
   type LucideIcon,
@@ -56,6 +57,7 @@ export const NAV_GROUPS: Record<Role, NavGroup[]> = {
       // Arrives on another branch (ADM-02); linked here so admin nav is complete once it lands.
       items: [{ label: "Courses", href: "/admin/courses", icon: BookOpen }],
     },
+    { label: "Bookings", items: [{ label: "Reports", href: "/admin/reports", icon: ChartColumn }] },
   ],
 };
 
