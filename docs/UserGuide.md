@@ -105,6 +105,7 @@ Use these accounts to try every role. The data in both environments is fictional
 | Production  | Student       | `student@example.com`    | `BkYvP6a2wVVzgwqG` |
 | Production  | Lecturer      | `lecturer@example.com`   | `kiNXGd2ukYKiqYaz` |
 | Production  | Administrator | `peer-admin@example.com` | `6LRkZU_CTw9NUmJl` |
+| Development | Administrator | `peer-admin@example.com` | `zXag_ANzstk7cYvj` |
 | Development | Student       | `student@example.com`    | `mBp77HI0zXExqCzV` |
 | Development | Lecturer      | `lecturer@example.com`   | `yYp2YY2uXslWEoUq` |
 
