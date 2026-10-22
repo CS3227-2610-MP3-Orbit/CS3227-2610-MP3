@@ -83,3 +83,29 @@ Generated summary awaiting independent human verification.
   in this log.
 
 Generated summary awaiting independent human verification of hosted configuration and release gates.
+
+## Reconstructed Lecturer branch history — 2026-10-22
+
+The repository still contains these Lecturer-related remote refs and their observable latest commits:
+
+- `origin/feature/lecturer-consultation-availability` — initial Lecturer availability implementation,
+  shared-schema alignment, form typing, traceability tests, and verification formatting.
+- `origin/branch-lecturer` — the availability branch after conflict resolution and formatting, later
+  merged into the development line.
+- `origin/feature/lecturer-request-decisions` — request-decision implementation, specification, develop
+  merge, traceability/verification corrections, and duplicate-notification migration fix.
+- `origin/feature/lecturer-consultation-completion` — completion/dashboard integration, conflict
+  resolution, and LEC-03 traceability coverage.
+- `origin/feature/lecturer-ai-briefing-v3` — AI briefing implementation and later CI fixes, including
+  the shared quota merge, quota-test correction, traceability/format fix, develop merge, semantic color
+  token fix, Supabase fixture reset, and seeded-admin UUID collision fix.
+- `origin/fix/lecturer-data-access` — role-checked Lecturer data-access hardening, slot-function failure
+  handling, and expanded admin/signed-out coverage.
+- `branch-lecturer-fix` — current follow-up branch containing the local server-action, Lecturer grants,
+  authorized briefing projection, visible result handling, environment-debugging log, and this history
+  update.
+
+These entries were reconstructed from Git refs, commit subjects, and the local reflog. The repository does
+not currently retain a separate Jordan log for each earlier branch, so details not represented in commits,
+handoffs, or existing logs cannot be recovered reliably. Deleted or never-pushed branches outside the
+available refs/reflog are also not recoverable from this checkout.
