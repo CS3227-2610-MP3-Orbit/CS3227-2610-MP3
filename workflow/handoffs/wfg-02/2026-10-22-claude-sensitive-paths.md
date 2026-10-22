@@ -27,9 +27,9 @@
 
 | Surface                                          | Before                                       | After                        |
 | ------------------------------------------------ | -------------------------------------------- | ---------------------------- |
-| Pre-tool-use hook `reviewPaths`                  | `.claude/` edits returned `allow`            | They return `review`         |
+| Pre-tool-use hook `reviewPaths`                  | `.claude/` and `CLAUDE.md` edits returned `allow`            | They return `review`         |
 | `check:sensitive` "agent controls" category      | `.claude/`-only diffs reported not triggered | Classified as agent controls |
-| `workflow/policies/approval-gates.md` gate table | Named `.codex` only                          | Names `.codex` and `.claude` |
+| `workflow/policies/approval-gates.md` gate table | Named `.codex` only                          | Names `.codex`, `.claude` and `CLAUDE.md` |
 
 ## Next decision
 

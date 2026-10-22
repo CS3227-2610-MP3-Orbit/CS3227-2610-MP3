@@ -104,6 +104,7 @@ test("review-sensitive file edits are flagged but not denied", () => {
 
 test("[WFG-02-AC2] Claude Code agent and settings edits are flagged like Codex controls", () => {
   for (const file of [
+    "CLAUDE.md",
     ".claude/agents/developer.md",
     ".claude/settings.json",
     ".codex/config.toml",
