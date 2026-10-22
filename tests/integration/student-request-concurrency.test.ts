@@ -214,12 +214,17 @@ describe("STU-02 real PostgreSQL request invariants", () => {
     ]);
   });
 
-  it("[STU-02-AC6] existing approved overlap blocks but disjoint requests succeed", async () => {
+  it("[STU-02-AC6] [LEC-01-AC4] [LEC-01-AC7] existing approved booking blocks slot edits while disjoint requests succeed", async () => {
     const created = await request(slot, await lookup());
     expect(created.kind).toBe("success");
     await sql(
       `update public.bookings set status='approved' where id=${quote(created.receipt.bookingId)}`,
     );
+    await expect(
+      sql(
+        `update public.consultation_slots set starts_at=starts_at+interval '1 day',ends_at=ends_at+interval '1 day' where id=${quote(slot)}`,
+      ),
+    ).rejects.toThrow(/reserved slot details cannot change/);
     expect(await request(overlap, await lookup(overlap))).toMatchObject({
       kind: "conflict",
       reason: "student_overlap",

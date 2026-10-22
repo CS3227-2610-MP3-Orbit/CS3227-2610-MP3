@@ -36,7 +36,7 @@ export default async function MyBookingsPage() {
                   </strong>
                 </p>
                 <p>Lecturer: {b.lecturerName}</p>
-                <p>{formatSingaporeDateTime(b.startsAt)} (SGT)</p>
+                <p>{formatSingaporeDateTime(b.startsAt)}</p>
                 <p>
                   Status: <Badge variant={statusBadgeVariant(b.status)}>{b.status}</Badge>
                 </p>
