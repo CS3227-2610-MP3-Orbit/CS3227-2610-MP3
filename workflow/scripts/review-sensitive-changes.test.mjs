@@ -7,6 +7,7 @@ describe("sensitive-change classifier", () => {
     const result = classifyPaths([
       "src/lib/auth/session.ts",
       ".codex/config.toml",
+      ".claude/agents/developer.md",
       ".github/workflows/ci.yml",
       ".github/CODEOWNERS",
       "supabase/migrations/20261018000000_bookings.sql",
@@ -15,7 +16,7 @@ describe("sensitive-change classifier", () => {
       "package-lock.json",
       ".secretlintrc.json",
     ]);
-    expect(result).toHaveLength(9);
+    expect(result).toHaveLength(10);
     expect(result.flatMap((entry) => entry.categories)).toEqual(
       expect.arrayContaining([
         "authentication/authorization",

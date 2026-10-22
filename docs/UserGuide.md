@@ -370,9 +370,20 @@ time** and **End time**, then select **Create slot**. Rules enforced on save:
 On success the page shows **Consultation slot created.** and the slot appears in **Your
 consultation slots**, which otherwise shows **No consultation slots yet.**
 
-### 5.2 Deleting a slot
+### 5.2 Editing and deleting a slot
 
-Select **Delete** next to a slot in **Your consultation slots** to remove it. If the slot still
+The **Your consultation slots** section lists the slots you created. Select **Edit** to change the
+assigned course, date or times, or select **Delete** to remove the slot. Both actions show a browser
+confirmation popup before submitting.
+
+- An unbooked slot is deleted immediately after confirmation.
+- A slot with a pending or approved booking is deactivated rather than physically removed, so its
+  booking history is preserved. The system records a notification event for affected students.
+- Editing a slot with active bookings requires confirmation, but the booking-protection rule still
+  refuses the actual course/time change. Resolve the active booking first, then edit the slot.
+- If an operation fails, the slot remains unchanged and the page shows a safe error message.
+
+<!-- Historical wording retained below for traceability:
 has a pending or approved booking, deletion is refused with "This slot has active bookings.
 Confirm deletion to notify students." — the current dashboard has no way to confirm that
 notification, so in practice a slot with an active booking cannot be deleted from the UI; cancel
@@ -381,6 +392,8 @@ or resolve the booking first. A slot with no pending/approved booking deletes im
 > Editing an existing slot's course/date/time is implemented on the server but is **not currently
 > exposed** anywhere in the lecturer dashboard UI — there is no "Edit" control for a slot. Only
 > **Create** and **Delete** are reachable today.
+
+-->
 
 ### 5.3 Approving or rejecting requests
 
@@ -391,13 +404,25 @@ time, topic and questions. For each request:
   reasons**, or **Other scheduling reason**) — used only if you reject.
 - Select **Approve** or **Reject**.
 
-On success the page shows "Request approved." or "Request rejected.", plus whether the student was
-notified immediately or the notification will be retried. If the request was already decided or
+On success the page shows "Request approved." or "Request rejected." and whether the notification
+event was recorded successfully or will be retried. The current student UI does not provide a
+notification inbox; students see the outcome through **My bookings** and the booking detail page,
+including the rejection reason when applicable. If the request was already decided or
 changed since the page loaded, you see "This request was already decided or is no longer
 available. Refresh and try again." If there are no pending requests, the page shows **No pending
 consultation requests.**
 
 ### 5.4 Upcoming, ongoing, completed and past consultations
+
+**Lecturer consultations** is split into **Active consultations** and **Past consultations**. Active
+consultations currently contains pending and approved bookings. An approved consultation displays as
+**completed** once its slot's end time has passed; the stored booking status stays `approved`. Because
+the active query currently includes all approved bookings, a completed badge can appear under
+**Active consultations**; this is a known display-grouping limitation. Past consultations contains
+rejected, cancelled and explicitly completed records. Each entry shows the course, topic, time range,
+student name and email, the student's questions, and its status badge.
+
+<!-- The paragraph below is retained only in the source history of the guide. -->
 
 **Lecturer consultations** is split into **Active consultations** (not yet finished — including
 upcoming and ongoing approved consultations) and **Past consultations** (rejected, cancelled, or
@@ -406,6 +431,8 @@ end time has passed — the system derives this on each view; the stored booking
 `approved`. Each entry shows the course, topic, time range, student name and email, and the
 student's questions, with its status shown as a badge (a rejected entry also shows the rejection
 reason).
+
+-->
 
 ### 5.5 AI: consultation briefing
 
@@ -693,7 +720,13 @@ lecturer decides, you can still cancel an approved booking before it starts.
 **I cannot cancel my booking.** Cancelling is refused once the slot's start time has passed.
 
 **A consultation shows as Completed, but nobody marked it.** That is expected. An approved
-consultation is shown as completed once its end time passes.
+consultation is shown as completed once its end time passes. The stored booking remains approved.
+The current dashboard may show that completed badge under **Active consultations** because the active
+list includes approved bookings; this does not mean the consultation is still ongoing.
+
+**Where can a student see a lecturer's notification?** There is currently no student notification
+inbox in the UI. The booking status and any rejection reason are shown in **My bookings** and the
+booking detail page; notification events are recorded for the application's delivery/retry boundary.
 
 **The AI feature says the limit has been reached.** The whole app shares 100 successful AI
 responses per Singapore day. Everything else keeps working; the limit resets at midnight SGT.
@@ -712,8 +745,8 @@ immediately.
 - Public sign-up through the Supabase API is still enabled; the app itself offers no sign-up page.
 - The administrator dashboard currently shows the text of pending consultation requests; a privacy
   review of this is planned.
-- Editing an existing lecturer slot is implemented on the server but has no control in the current
-  lecturer dashboard UI (see [Deleting a slot](#52-deleting-a-slot)).
+- Completed approved consultations can appear under **Active consultations** with a `completed` badge;
+  this is a display-grouping limitation in the current dashboard query.
 
 ## 11. Glossary
 

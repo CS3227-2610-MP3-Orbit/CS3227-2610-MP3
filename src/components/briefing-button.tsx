@@ -1,27 +1,37 @@
 "use client";
 
-import { useActionState } from "react";
-import { generateLecturerBriefing, type BriefingResult } from "@/features/lecturer/ai-briefing";
+import { Loader2, Sparkles } from "lucide-react";
+import { useFormStatus } from "react-dom";
 
-const initial: BriefingResult = { kind: "idle" };
+import { submitLecturerBriefing } from "@/app/lecturer/briefing-actions";
+import { Button } from "@/components/ui/button";
+
+// LEC-04-AC8: a briefing can take up to the 20-second SoC LLM timeout, so the button shows that
+// it is working and cannot be clicked again while its request is in flight.
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <>
+      <Button type="submit" variant="outline" size="sm" disabled={pending}>
+        {pending ? (
+          <Loader2 aria-hidden="true" className="animate-spin" />
+        ) : (
+          <Sparkles aria-hidden="true" />
+        )}
+        {pending ? "Generating briefing…" : "Generate AI briefing"}
+      </Button>
+      <p role="status" className="text-sm text-muted-foreground">
+        {pending ? "Generating the briefing. This can take up to 20 seconds." : ""}
+      </p>
+    </>
+  );
+}
 
 export function BriefingButton({ bookingId }: { bookingId: string }) {
-  const [state, action, pending] = useActionState(
-    (_previous: BriefingResult, formData: FormData) => generateLecturerBriefing(formData),
-    initial,
-  );
   return (
-    <form action={action} className="mt-3 space-y-2">
+    <form action={submitLecturerBriefing} className="mt-3 space-y-2">
       <input type="hidden" name="bookingId" value={bookingId} />
-      <button type="submit" disabled={pending} className="rounded border px-3 py-1">
-        {pending ? "Generating briefing…" : "Generate AI briefing"}
-      </button>
-      {state.kind === "success" && (
-        <pre className="whitespace-pre-wrap" role="status">
-          {state.text}
-        </pre>
-      )}
-      {state.kind === "error" && <p role="alert">{state.message}</p>}
+      <SubmitButton />
     </form>
   );
 }

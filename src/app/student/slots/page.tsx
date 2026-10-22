@@ -180,9 +180,6 @@ export default async function StudentSlotsPage({
                       <dd className="inline">{formatSingaporeDateTime(slot.endsAt)}</dd>
                     </div>
                   </dl>
-                  <p className="mt-2 break-all text-xs text-muted-foreground">
-                    Slot reference: {slot.slotId}
-                  </p>
                   <Link
                     href={`/student/slots/${slot.slotId}/request`}
                     className="mt-3 inline-block underline focus-visible:outline-2 focus-visible:outline-offset-2"

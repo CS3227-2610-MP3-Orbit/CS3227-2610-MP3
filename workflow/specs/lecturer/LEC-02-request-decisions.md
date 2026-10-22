@@ -2,7 +2,7 @@
 id: LEC-02
 title: Lecturer consultation request decisions
 owner: lecturer
-status: draft
+status: approved
 ---
 
 # LEC-02: Lecturer consultation request decisions
@@ -16,13 +16,13 @@ status: draft
 - Related plan and latest handoff: `workflow/handoffs/analyst-to-developer.md`.
 - Confirmed requirements: owning lecturers decide their consultation requests; existing statuses are
   `pending`, `approved`, `rejected`, `cancelled`, and `completed`; terminal history is retained.
-- Human decisions recorded: rejection reasons are required and selected from a controlled dropdown
-  containing `Schedule unavailable`, `Insufficient information`, `Course mismatch`, `Feeling Unwell`,
-  and `Family emergency`; students can see the selected reason; decisions are allowed until the
-  consultation starts; administrators may view and manage requests; audit records store booking ID,
-  actor ID, decision, timestamp, and operation ID only; notifications are in-app only; and lecturers
-  may view all currently stored request fields subject to privacy rules. User-facing failures use safe
-  generic messages without database, provider, or authorization details.
+- Human decisions recorded: rejection reasons are required and selected from the current UI dropdown
+  containing `Lecturer unavailable`, `Family or medical reasons`, and `Other scheduling reason`; students
+  can see the selected reason; decisions are allowed until the consultation starts; administrators may
+  view and manage requests; audit records store booking ID, actor ID, decision, timestamp, and operation
+  ID only; notifications are in-app only; and lecturers may view all currently stored request fields
+  subject to privacy rules. User-facing failures use safe generic messages without database, provider,
+  or authorization details.
 
 ## Product and feature description
 
@@ -76,7 +76,7 @@ trusted server/database state. UI hiding is not authorization.
 - Source: user feature request; `SH-05-R2` and `SH-05-R3`.
 
 An active Lecturer can list only pending bookings attached to that Lecturer's slots and current course
-assignment. The result contains an allowlisted booking/slot/course projection and bounded consultation
+assignment. The result contains an allowlisted booking/slot/course projection and consultation
 content required for a decision. Other Lecturer, Student identity/contact, audit, and unrelated booking
 data are excluded. Empty and dependency-failure states are distinguishable without revealing private
 existence.
@@ -255,7 +255,7 @@ approval/rejection may occur. Provider availability must not affect decision out
 | LEC-02-AC12 | R7          | Given invalid, oversized, unknown, duplicate, or missing fields, when submitted, then safe validation feedback appears and no mutation occurs.                                     | unit + integration                | deterministic/live |
 | LEC-02-AC13 | R7/security | Given HTML, SQL, or model-instruction text in request fields, when displayed or decided, then it renders literally and no model/SQL/code execution occurs.                         | unit + browser security           | deterministic/live |
 | LEC-02-AC14 | R7          | Given a DB timeout before or after possible commit, when the UI receives failure/uncertainty, then it offers safe retry/recovery without duplicate decisions.                      | fault-injected integration + E2E  | deterministic/live |
-| LEC-02-AC15 | R1/R7       | Given zero, many, or dependency-failed requests, when the Lecturer opens the page, then empty/loading/error states are usable and bounded.                                         | unit + E2E                        | deterministic/live |
+| LEC-02-AC15 | R1/R7       | Given zero, many, or dependency-failed requests, when the Lecturer opens the page, then empty/loading/error states are usable.                                                     | unit + E2E                        | deterministic/live |
 | LEC-02-AC16 | all         | Given keyboard, 320px, 200% zoom, and pending submission, when the Lecturer uses the page, then labels, focus, status, and disabled duplicate controls remain usable.              | E2E + manual                      | live/N/A           |
 | LEC-02-AC17 | R8          | Given the app and AI provider states, when list/decision operations run, then no AI call or `ai_usage` access occurs and ordinary behavior is unchanged.                           | unit spy + inspection             | deterministic      |
 

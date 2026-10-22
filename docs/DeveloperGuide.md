@@ -547,13 +547,15 @@ Students never read `consultation_slots` or `bookings` directly. Every student p
 
 Specs: [`LEC-01`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-01-availability.md), [`LEC-02`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-02-request-decisions.md), [`LEC-03`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-03-consultation-completion.md), [`LEC-04`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-04-ai-briefing.md).
 
-- **Availability (LEC-01).** `src/app/lecturer/actions.ts` creates, updates and deletes slots with
-  the lecturer's own client after `requireRole("lecturer")`, checking the course assignment, the
-  one-hour lead time and overlaps, and writes `consultation_audit_log` and, where students are
-  affected, `consultation_notifications`.
+- **Availability (LEC-01).** `src/app/lecturer/actions.ts` validates create/update/delete requests
+  after `requireRole("lecturer")`, then calls the role-checked `lecturer_*` RPCs. The RPCs enforce
+  the course assignment, one-hour lead time, overlap and active-booking rules, and write
+  `consultation_audit_log` and, where students are affected, `consultation_notifications`.
 - **Decisions (LEC-02).** `list_lecturer_requests` and `decide_lecturer_request` (section 4.3).
-- **History (LEC-03).** `list_staff_consultations` returns active and past consultations and
-  applies the derived completion rule below. Triggers on slots and assignments
+- **History (LEC-03/LEC-05).** `list_staff_consultations` returns active and past consultations and
+  applies the derived completion rule below. The active query currently includes pending and approved
+  bookings, so an approved booking whose end time has passed can carry a `completed` display status
+  under the active section. Triggers on slots and assignments
   (`consultation_slot_deactivation_notice`, `course_assignment_deactivation_notice`) write
   `in_app_notifications` when a slot or assignment is deactivated.
 - **AI briefing (LEC-04).** See section 6.
@@ -1150,23 +1152,23 @@ agent prompts, handoffs, review evidence, hooks, and the scripts CI runs. The ta
 brief description of every top-level entry (`workflow/README.md` keeps a more granular,
 file-by-file version of the same map):
 
-| Path           | What it holds                                                                                                                                                                                                                                                                                                                  |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `INDEX.md`     | Current feature status and links to each feature's canonical evidence; the starting point for "what's the state of X".                                                                                                                                                                                                         |
-| `specs/`       | One Markdown spec per feature, grouped `shared/`, `student/`, `lecturer/`, `admin/`, plus `_TEMPLATE.md`, `PRODUCT-SPEC.md`, `TECHNICAL-SPEC.md`, `INTEGRATION-SPEC.md`, `SHARED-TECHNICAL-SPEC.md`, and `PLAN.md`. The approved source of truth this guide links to instead of duplicating.                                   |
-| `agents/`      | The coordinator procedure and role prompts (`analyst.md`, `developer.md`, `tester-security.md`) the four Codex/Claude agents load, and a `README.md` explaining invocation and effective permissions.                                                                                                                          |
-| `handoffs/`    | One dated file per completed agent task (`_TEMPLATE.md` plus per-feature subfolders, e.g. `adm-03/`, `adm-04/`), the structured "what I did, what I found, what's next" record `AGENTS.md` requires at the end of every role task.                                                                                             |
-| `reviews/`     | Feature-grouped specification challenges, independent-review findings, and their dispositions — e.g. `reviews/stu-05/specification-challenge.md`.                                                                                                                                                                              |
-| `evaluation/`  | Harmless, recorded fixtures and results used to validate the agent workflow itself (hook behaviour, prompt-injection resistance, guardrail coverage) — not application test data.                                                                                                                                              |
-| `evaluations/` | Narrative evaluation write-ups (e.g. `security.md`, `multi-agent-workflow.md`, `lecturer-ai-briefing-review.md`) summarising what the project's process and AI features achieved, for assignment reporting.                                                                                                                    |
-| `policies/`    | The actual enforced rules: `development-security.md` (agent action policy — automatic denies, review flags, enforcement boundaries), `approval-gates.md` (what needs human sign-off and how it's recorded), and `master-branch-protection.json` (the branch-protection config applied to `master`).                            |
-| `hooks/`       | The tested `PreToolUse`/`SubagentStop` hook implementations (`pre-tool-use.mjs`, `stop-handoff.mjs`, `lib.mjs`) and their test suites, wired up by `.codex/hooks.json`.                                                                                                                                                        |
-| `scripts/`     | Everything `npm run verify`/`check:*` actually runs: `verify.mjs` (shared entry point), `check-traceability.mjs` (spec ↔ test linking), `check-colors.mjs` (no hard-coded hex), `check-secrets.mjs`, `review-sensitive-changes.mjs`, plus one-off setup scripts (`setup-github.sh`, `setup-vercel-env.sh`, `create-user.mjs`). |
-| `templates/`   | `task-handoff.md`, `specification-challenge.md`, `requirement-change-impact.md` — the exact structured formats agents fill in rather than free-form prose.                                                                                                                                                                     |
-| `examples/`    | Explicitly non-authoritative worked examples of the feature-specification workflow, for onboarding.                                                                                                                                                                                                                            |
-| `notes/`       | Reference material pulled in from outside the repo, e.g. the SoC LLM's NUS-only usage limits.                                                                                                                                                                                                                                  |
-| `logs/`        | Per-day agent-session notes (e.g. `2026-10-19-lecturer-availability-analyst.md`) and `logs/hooks/` (gitignored, metadata-only JSONL hook audit records). Distinct from each teammate's own `logs/<name>/` under the repo root.                                                                                                 |
-| `plans/`       | Bounded implementation plans for larger features (e.g. `stu-05-improve-request.md`) that a spec alone doesn't fully sequence.                                                                                                                                                                                                  |
+| Path           | What it holds                                                                                                                                                                                                                                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `INDEX.md`     | Current feature status and links to each feature's canonical evidence; the starting point for "what's the state of X".                                                                                                                                                                                                                                 |
+| `specs/`       | One Markdown spec per feature, grouped `shared/`, `student/`, `lecturer/`, `admin/`, plus `_TEMPLATE.md`, `PRODUCT-SPEC.md`, `TECHNICAL-SPEC.md`, `INTEGRATION-SPEC.md`, `SHARED-TECHNICAL-SPEC.md`, and `PLAN.md`. The approved source of truth this guide links to instead of duplicating.                                                           |
+| `agents/`      | The coordinator procedure and role prompts (`analyst.md`, `developer.md`, `tester-security.md`) the four Codex/Claude agents load, and a `README.md` explaining invocation and effective permissions.                                                                                                                                                  |
+| `handoffs/`    | One dated file per completed agent task (`_TEMPLATE.md` plus per-feature subfolders, e.g. `adm-03/`, `adm-04/`), the structured "what I did, what I found, what's next" record `AGENTS.md` requires at the end of every role task.                                                                                                                     |
+| `reviews/`     | Feature-grouped specification challenges, independent-review findings, and their dispositions — e.g. `reviews/stu-05/specification-challenge.md`.                                                                                                                                                                                                      |
+| `evaluation/`  | Harmless, recorded fixtures and results used to validate the agent workflow itself (hook behaviour, prompt-injection resistance, guardrail coverage) — not application test data.                                                                                                                                                                      |
+| `evaluations/` | Narrative evaluation write-ups (e.g. `security.md`, `multi-agent-workflow.md`, `lecturer-ai-briefing-review.md`) summarising what the project's process and AI features achieved, for assignment reporting.                                                                                                                                            |
+| `policies/`    | The actual enforced rules: `development-security.md` (agent action policy — automatic denies, review flags, enforcement boundaries), `approval-gates.md` (what needs human sign-off and how it's recorded), and `master-branch-protection.json` (the branch-protection config applied to `master`).                                                    |
+| `hooks/`       | The tested `PreToolUse`/`SubagentStop` hook implementations (`pre-tool-use.mjs`, `stop-handoff.mjs`, `lib.mjs`) and their test suites, wired up by `.codex/hooks.json`.                                                                                                                                                                                |
+| `scripts/`     | Everything `npm run verify`/`check:*` actually runs: `verify.mjs` (shared entry point), `check-traceability.mjs` (spec ↔ test linking), `check-colors.mjs` (no hard-coded hex), `check-secrets.mjs`, `review-sensitive-changes.mjs`, plus one-off setup scripts (`setup-github.sh`, `setup-vercel-env.sh`, `create-user.mjs`, `seed-sample-data.mjs`). |
+| `templates/`   | `task-handoff.md`, `specification-challenge.md`, `requirement-change-impact.md` — the exact structured formats agents fill in rather than free-form prose.                                                                                                                                                                                             |
+| `examples/`    | Explicitly non-authoritative worked examples of the feature-specification workflow, for onboarding.                                                                                                                                                                                                                                                    |
+| `notes/`       | Reference material pulled in from outside the repo, e.g. the SoC LLM's NUS-only usage limits.                                                                                                                                                                                                                                                          |
+| `logs/`        | Per-day agent-session notes (e.g. `2026-10-19-lecturer-availability-analyst.md`) and `logs/hooks/` (gitignored, metadata-only JSONL hook audit records). Distinct from each teammate's own `logs/<name>/` under the repo root.                                                                                                                         |
+| `plans/`       | Bounded implementation plans for larger features (e.g. `stu-05-improve-request.md`) that a spec alone doesn't fully sequence.                                                                                                                                                                                                                          |
 
 ## 12. Environments and deployment
 
@@ -1351,7 +1353,7 @@ browser-dependent failure never blocks the fast checks:
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Verify**                 | `npm run verify -- --profile=app` — format, lint, typecheck, workflow controls, unit tests, `check:spec` traceability, sensitive-path classification, Secretlint, build. No database.                                                                                                                                                    |
 | **Database rules**         | `supabase db start`, then `npm run verify -- --profile=database` (pgTAP).                                                                                                                                                                                                                                                                |
-| **End-to-end**             | `npx playwright install --with-deps chromium`, then `node workflow/scripts/stu02-ci.mjs` — the STU-02 concurrency suite and the default Playwright spec set against a disposable Supabase stack it provisions itself.                                                                                                                    |
+| **End-to-end**             | `npx playwright install chromium` (the runner image already has the system libraries), then `node workflow/scripts/stu02-ci.mjs` — the STU-02 concurrency suite and the default Playwright spec set against a disposable Supabase stack it provisions itself.                                                                            |
 | **Accounts and passwords** | `supabase start` + `supabase db reset --local` (reapplies every migration and the seed), then every admin integration suite, the SH-06 integration suite, and the `admin.playwright.config.ts`/`change-password.playwright.config.ts` browser specs — i.e. every ADM-01/02/03/04 and SH-06 acceptance criterion that needs a live stack. |
 
 Load the local stack's keys first with `local-supabase-env.mjs` (see [Setting up](#1-setting-up)).
@@ -1410,13 +1412,31 @@ The script reads the project URL and secret key from the gitignored `.env.secret
 a password, and appends it to the gitignored `.env.test-accounts` file. It never prints the
 password.
 
-### 14.7 Rotate a leaked key
+### 14.7 Seed sample data
+
+```sh
+node workflow/scripts/seed-sample-data.mjs <local|dev|prod>
+```
+
+Gives testers something to work with in every role: the courses `CS3227` and `CS2103` assigned
+to the test lecturer, one published guideline and one announcement, one sample booking per
+status (pending, approved, rejected, and a past approved one that shows as completed), and at
+least six open future slots over the next three weeks. The test lecturer and student accounts
+must already exist (`LECTURER_EMAIL`/`STUDENT_EMAIL` override the defaults).
+
+The script only adds what is missing, so it is safe to rerun, for example to top up open slots
+after testers book them. It never edits or deletes rows. It writes with the secret key, which
+bypasses the app's role checks, so its fixed schedule keeps slots at least a day ahead and never
+overlapping. That is also the only way to create a completed booking without waiting for a slot to
+end. For `local`, load the local keys first with `local-supabase-env.mjs`.
+
+### 14.8 Rotate a leaked key
 
 1. Revoke the key at its provider (Supabase, Vercel or SoC LLM) and create a new one.
 2. Update the matching GitHub environment secret and Vercel environment variable.
 3. Redeploy (14.3). Never paste the new value into chat, an issue, or a log.
 
-### 14.8 Recover administrator access
+### 14.9 Recover administrator access
 
 The protected recovery administrator can always sign in and fix other administrator accounts. If
 its own password is lost, reset it with the service-role key outside the app (for example from the

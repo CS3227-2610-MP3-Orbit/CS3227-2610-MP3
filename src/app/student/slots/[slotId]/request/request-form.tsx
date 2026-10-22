@@ -190,8 +190,8 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
           <strong>Lecturer: </strong>
           {slot.lecturerName}
         </p>
-        <p>Starts: {formatSingaporeDateTime(slot.startsAt)} (SGT)</p>
-        <p>Ends: {formatSingaporeDateTime(slot.endsAt)} (SGT)</p>
+        <p>Starts: {formatSingaporeDateTime(slot.startsAt)}</p>
+        <p>Ends: {formatSingaporeDateTime(slot.endsAt)}</p>
         <p className="mt-2 text-sm text-muted-foreground">
           The slot is reserved only when your request is submitted successfully.
         </p>
@@ -280,7 +280,7 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
         >
           <div className="space-y-1">
             <h2 className="text-lg font-semibold text-foreground">Improve your draft with AI</h2>
-            <p className="text-sm leading-6 text-muted-foreground">
+            <p className="text-sm leading-6 text-foreground/75">
               Get a suggested rewrite, then choose exactly what to use in your request.
             </p>
           </div>

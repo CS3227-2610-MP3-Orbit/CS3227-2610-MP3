@@ -294,7 +294,7 @@ describe("ADM-03 admin announcements: real Postgres + real Auth", () => {
     expect(anonRows.data ?? []).toHaveLength(0);
   });
 
-  it("[ADM-03-AC8] a published guideline and a published announcement both appear to an active Student and Lecturer reader", async () => {
+  it("[ADM-03-AC8] [STU-06-AC1] a published guideline and a published announcement both appear to an active Student and Lecturer reader", async () => {
     const tag = randomUUID().slice(0, 8);
     const guidelineId = await createFixtureAnnouncement({
       kind: "guideline",
@@ -401,7 +401,7 @@ describe("ADM-03 admin announcements: real Postgres + real Auth", () => {
     expect(await countAiUsageFor(admin.id)).toBe(before);
   });
 
-  it("[ADM-03-AC13] 2 published guidelines and 6 published announcements: the reader returns both guidelines and exactly the 5 newest announcements, all newest-first", async () => {
+  it("[ADM-03-AC13] [STU-06-AC2] 2 published guidelines and 6 published announcements: the reader returns both guidelines and exactly the 5 newest announcements, all newest-first", async () => {
     const tag = randomUUID().slice(0, 8);
     const base = Date.parse("2030-01-01T00:00:00Z");
     const guidelineIds: string[] = [];
@@ -460,7 +460,7 @@ describe("ADM-03 admin announcements: real Postgres + real Auth", () => {
     }
   });
 
-  it("[ADM-03-AC15] a deactivated user's reader projection returns no items, regardless of publication state", async () => {
+  it("[ADM-03-AC15] [STU-06-AC4] [STU-06-AC8] a deactivated user's reader projection returns no items, regardless of publication state", async () => {
     const tag = randomUUID().slice(0, 8);
     const publishedId = await createFixtureAnnouncement({
       kind: "guideline",

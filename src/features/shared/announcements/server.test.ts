@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -51,7 +53,7 @@ describe("ADM-03 shared announcements reader boundary", () => {
     expect(mocks.client).not.toHaveBeenCalled();
   });
 
-  it("[ADM-03-AC8] returns published guidelines and announcements, requiring any active role (not just admin)", async () => {
+  it("[ADM-03-AC8] [STU-06-AC1] returns published guidelines and announcements, requiring any active role (not just admin)", async () => {
     const from = vi
       .fn()
       .mockReturnValueOnce(queryResult([guidelineRow]))
@@ -81,14 +83,14 @@ describe("ADM-03 shared announcements reader boundary", () => {
     });
   });
 
-  it("[ADM-03-AC11] the reader path never calls the SoC LLM client", async () => {
+  it("[ADM-03-AC11] [STU-06-AC5] the reader path never calls the SoC LLM client", async () => {
     const from = vi.fn().mockReturnValueOnce(queryResult([])).mockReturnValueOnce(queryResult([]));
     mocks.client.mockResolvedValue({ from });
     await listPublishedAnnouncements();
     expect(mocks.generateText).not.toHaveBeenCalled();
   });
 
-  it("returns temporarily_unavailable if either read fails, never throwing", async () => {
+  it("[STU-06-AC6] returns temporarily_unavailable if either read fails, never throwing", async () => {
     const from = vi
       .fn()
       .mockReturnValueOnce({
@@ -109,5 +111,42 @@ describe("ADM-03 shared announcements reader boundary", () => {
 
     const result = await listPublishedAnnouncements();
     expect(result.kind).toBe("temporarily_unavailable");
+  });
+
+  it("[STU-06-AC2] [STU-06-AC6] returns a successful empty projection when no items are published", async () => {
+    const from = vi.fn().mockReturnValueOnce(queryResult([])).mockReturnValueOnce(queryResult([]));
+    mocks.client.mockResolvedValue({ from });
+    await expect(listPublishedAnnouncements()).resolves.toEqual({
+      kind: "success",
+      guidelines: [],
+      announcements: [],
+    });
+  });
+
+  it("[STU-06-AC3] [STU-06-AC7] renders bounded multiline content as inert, responsive plain text", () => {
+    const source = readFileSync(
+      join(process.cwd(), "src/components/announcements-card.tsx"),
+      "utf8",
+    );
+    const emptyState = readFileSync(join(process.cwd(), "src/components/empty-state.tsx"), "utf8");
+    expect(source).toContain('aria-labelledby="guidelines-and-announcements"');
+    expect(source).toContain("sm:p-6");
+    expect(source).toContain("whitespace-pre-wrap");
+    expect(source).toContain('role="alert"');
+    expect(emptyState).toContain('role="status"');
+    expect(source).not.toContain("dangerouslySetInnerHTML");
+  });
+
+  it("[STU-06-AC4] [STU-06-AC8] keeps direct reads published-only and requires an active session", async () => {
+    const from = vi
+      .fn()
+      .mockReturnValueOnce(queryResult([guidelineRow]))
+      .mockReturnValueOnce(queryResult([]));
+    mocks.client.mockResolvedValue({ from });
+    await listPublishedAnnouncements();
+    expect(from).toHaveBeenCalledTimes(2);
+    for (const call of from.mock.results)
+      expect(call.value.select).toHaveBeenCalledWith("id, title, body, updated_at");
+    expect(mocks.user).toHaveBeenCalledTimes(1);
   });
 });

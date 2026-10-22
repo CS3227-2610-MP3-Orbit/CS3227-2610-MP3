@@ -23,6 +23,7 @@ Lecturers should be able to request an AI-generated briefing for an authorized c
 - Student-submitted descriptions are passed as untrusted data through `wrapUntrusted()`.
 - The backend calls `generateText()` and returns bounded text or a typed safe failure.
 - The UI renders the result as plain text and ordinary consultation features remain usable when AI is unavailable.
+- While a briefing is being generated, its button is disabled and the page says so in text, because a generation can take up to the SH-01 timeout.
 
 ## Non-functional requirements
 
@@ -55,6 +56,8 @@ Lecturers should be able to request an AI-generated briefing for an authorized c
 - **LEC-04-AC3** Given a student description containing instructions to reveal data or change a booking, when the briefing is generated, then the text is treated as untrusted content and cannot change authorization, booking state, or system instructions.
 - **LEC-04-AC4** Given model output containing markup or scripts, when the briefing is rendered, then it is displayed as inert plain text.
 - **LEC-04-AC5** Given quota exhaustion, timeout, rate limit, provider failure, oversized input, or empty output, when a briefing is requested, then a safe typed failure is returned and ordinary consultation features remain functional.
+- **LEC-04-AC7** Given a booking id, when a lecturer requests a briefing, then the consultation details are read through the role-checked function `lecturer_get_briefing_context`, which returns the student name, course, topic and questions only for an approved, upcoming booking on the caller's own slot; any other booking returns `not_found` or `not_upcoming` without disclosing its details.
+- **LEC-04-AC8** Given a lecturer has clicked **Generate AI briefing**, when the request is in flight, then that button is disabled, reads "Generating briefing…", and a status message announces that it can take up to 20 seconds, so a second click cannot start another request.
 - **LEC-04-AC6** Given repeated requests by one lecturer, when the configured quota is reached, then further calls are refused according to SH-01 without exposing secrets or internal provider details.
 
 ## Error and edge cases
@@ -87,7 +90,9 @@ Lecturers should be able to request an AI-generated briefing for an authorized c
 
 ## Change log
 
-| Date       | Change                                                                                | By                |
-| ---------- | ------------------------------------------------------------------------------------- | ----------------- |
-| 2026-10-19 | Initial draft based on repository inspection                                          | Codex             |
-| 2026-10-20 | Approved selected-consultation format, fields, retention, and default quota decisions | Human stakeholder |
+| Date       | Change                                                                                                                                                                                                               | By                |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| 2026-10-19 | Initial draft based on repository inspection                                                                                                                                                                         | Codex             |
+| 2026-10-20 | Approved selected-consultation format, fields, retention, and default quota decisions                                                                                                                                | Human stakeholder |
+| 2026-10-22 | Added AC7: briefing data is read through `lecturer_get_briefing_context`, because direct table reads are revoked (STU-01-AC21). Approved by Johannsen (coordinator) on 22 Oct; Jordan reviews in the pull request    | Coordinator       |
+| 2026-10-22 | Added AC8: the briefing button shows a disabled "Generating briefing…" state while the request is in flight. Requested by Johannsen (coordinator) on 22 Oct after testing on dev; Jordan reviews in the pull request | Coordinator       |

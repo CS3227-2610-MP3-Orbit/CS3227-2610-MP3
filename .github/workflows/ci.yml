@@ -57,7 +57,7 @@ jobs:
         with:
           version: 2.121.0
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install chromium
       - name: Run concurrency and all browser tests against a disposable stack
         run: node workflow/scripts/stu02-ci.mjs
 
@@ -74,7 +74,7 @@ jobs:
         with:
           version: 2.121.0
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install chromium
       # The stack prints its local-only keys; keep them out of the log.
       - run: supabase start > /dev/null
       # Reapply migrations and seed the documented admin fixtures before the live tests.
