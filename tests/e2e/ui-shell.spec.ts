@@ -50,6 +50,121 @@ test.describe("[SH-07-AC2] role nav isolation", () => {
   });
 });
 
+test("[SH-07-AC12] every role shell shows the Orbit wordmark/mark, and the page title reads Orbit", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await expect(page).toHaveTitle("Orbit");
+
+  for (const email of [STUDENT_EMAIL, LECTURER_EMAIL, ADMIN_EMAIL]) {
+    await signIn(page, email);
+    await expect(page).toHaveTitle("Orbit");
+    // The wordmark/mark link shares homePathFor(role) with today's sidebar header link, same
+    // as before SH-07-R9 -- only its label/mark changed.
+    const wordmark = page.getByRole("link", { name: "Orbit" }).first();
+    await expect(wordmark).toBeVisible();
+    await expect(wordmark.locator("svg[aria-hidden='true']")).toHaveCount(1);
+    await page.getByRole("button", { name: /sign out/i }).click();
+    await expect(page).toHaveURL(/\/login$/);
+  }
+});
+
+test("[SH-07-AC13] every nav item shows a lucide icon under its role's uppercase group label, with its accessible link name unchanged", async ({
+  page,
+}) => {
+  await signIn(page, ADMIN_EMAIL);
+  await expect(page).toHaveURL(/\/admin$/);
+  const nav = page.getByRole("navigation").first();
+
+  // Group labels appropriate to the admin's longer nav list (SH-07-R10).
+  await expect(nav.getByText("Overview")).toBeVisible();
+  await expect(nav.getByText("People")).toBeVisible();
+  await expect(nav.getByText("Teaching")).toBeVisible();
+
+  for (const name of ["Dashboard", "Accounts", "Courses"]) {
+    const link = nav.getByRole("link", { name });
+    await expect(link).toBeVisible();
+    // Decorative icon: present, but doesn't change the link's accessible name (still exactly
+    // `name`, asserted by getByRole above) or add an accessible element of its own.
+    await expect(link.locator("svg[aria-hidden='true']")).toHaveCount(1);
+  }
+});
+
+test("[SH-07-AC15] a lecturer's stat tiles match that page's own rendered slot/request counts", async ({
+  page,
+}) => {
+  await signIn(page, LECTURER_EMAIL);
+  await expect(page).toHaveURL(/\/lecturer$/);
+
+  // .first(): "Your consultation slots" is also the heading text of the list further down the
+  // same page; the stat tile renders first in document order.
+  const slotsTile = page.getByText("Your consultation slots").first().locator("..");
+  const slotsValue = Number(await slotsTile.locator("p").nth(1).innerText());
+  const slotsListed = await page.getByRole("button", { name: "Delete" }).count();
+  expect(slotsValue).toBe(slotsListed);
+
+  const requestsTile = page.getByText("Pending requests", { exact: true }).first().locator("..");
+  const requestsValue = Number(await requestsTile.locator("p").nth(1).innerText());
+  const requestsListed = await page.getByRole("button", { name: "Approve" }).count();
+  expect(requestsValue).toBe(requestsListed);
+});
+
+test("[SH-07-AC15] an admin's stat tiles match the seeded/filtered data for that signed-in user", async ({
+  page,
+}) => {
+  await signIn(page, ADMIN_EMAIL);
+  await expect(page).toHaveURL(/\/admin$/);
+
+  // "Pending consultation requests" matches this same page's own rendered request cards.
+  const requestsTile = page.getByText("Pending consultation requests").first().locator("..");
+  const requestsValue = Number(await requestsTile.locator("p").nth(1).innerText());
+  const requestsListed = await page.getByRole("button", { name: "Approve" }).count();
+  expect(requestsValue).toBe(requestsListed);
+
+  // "Active accounts"/"Active courses" match the already-active-filtered accounts/courses
+  // lists -- the dashboard calls the exact same listAccounts/listCourses({activeFilter:
+  // "true"}) an admin gets by filtering those pages themselves.
+  const accountsValue = Number(
+    await page.getByText("Active accounts").first().locator("..").locator("p").nth(1).innerText(),
+  );
+  const coursesValue = Number(
+    await page.getByText("Active courses").first().locator("..").locator("p").nth(1).innerText(),
+  );
+
+  await page.goto("/admin/accounts?active=true");
+  const accountRows = (await page.getByRole("row").count()) - 1; // minus the header row
+  expect(accountsValue).toBe(accountRows);
+
+  await page.goto("/admin/courses?active=true");
+  const courseRows = (await page.getByRole("row").count()) - 1;
+  expect(coursesValue).toBe(courseRows);
+});
+
+test("[SH-07-AC15] a student's stat tile matches that student's own pending/approved bookings, and no available-slots tile is shown", async ({
+  page,
+}) => {
+  await signIn(page, STUDENT_EMAIL);
+  await expect(page).toHaveURL(/\/student$/);
+
+  // No "available slots" stat tile on the student dashboard content (SH-07-R12's documented
+  // omission) -- scoped to <main> since the sidebar's "Available slots" nav link is expected.
+  await expect(page.locator("main").getByText("Available slots", { exact: true })).toHaveCount(0);
+  const tileValue = Number(
+    await page
+      .getByText("Upcoming or active bookings")
+      .locator("..")
+      .locator("p")
+      .nth(1)
+      .innerText(),
+  );
+
+  await page.goto("/student/bookings");
+  const pendingOrApproved =
+    (await page.getByText("Status: pending", { exact: true }).count()) +
+    (await page.getByText("Status: approved", { exact: true }).count());
+  expect(tileValue).toBe(pendingOrApproved);
+});
+
 test("[SH-07-AC3] dark mode applies the dark token set on a restyled page", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/login");
@@ -103,7 +218,7 @@ test("[SH-07-AC6] restyled pages keep the accessible labels and roles existing t
   await expect(page.getByRole("heading", { name: /my bookings/i })).toBeVisible();
 });
 
-test("[SH-07-AC1] the restyled sign-in -> dashboard -> sign-out flow still works end to end", async ({
+test("[SH-07-AC1] [SH-07-AC20] the restyled sign-in -> dashboard -> sign-out flow still works end to end", async ({
   page,
 }) => {
   await signIn(page, STUDENT_EMAIL);

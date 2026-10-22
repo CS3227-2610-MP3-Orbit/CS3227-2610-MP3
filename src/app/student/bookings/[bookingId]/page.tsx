@@ -12,12 +12,6 @@ export default async function BookingPage({ params }: { params: Promise<{ bookin
         <nav aria-label="Booking navigation" className="flex flex-wrap gap-4">
           <Link
             className="text-sm underline focus-visible:outline-2 focus-visible:outline-offset-2"
-            href="/student"
-          >
-            Back to dashboard
-          </Link>
-          <Link
-            className="text-sm underline focus-visible:outline-2 focus-visible:outline-offset-2"
             href="/student/bookings"
           >
             Back to My Bookings
@@ -34,12 +28,6 @@ export default async function BookingPage({ params }: { params: Promise<{ bookin
   return (
     <div className="space-y-5 min-w-0">
       <nav aria-label="Booking navigation" className="flex flex-wrap gap-4">
-        <Link
-          className="text-sm underline focus-visible:outline-2 focus-visible:outline-offset-2"
-          href="/student"
-        >
-          Back to dashboard
-        </Link>
         <Link
           className="text-sm underline focus-visible:outline-2 focus-visible:outline-offset-2"
           href="/student/bookings"

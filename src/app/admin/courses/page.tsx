@@ -1,14 +1,16 @@
+import { SearchX } from "lucide-react";
 import Link from "next/link";
 
 import { listAccounts } from "@/features/admin/accounts/server";
 import { listCourses } from "@/features/admin/courses/server";
 import { requireRole } from "@/lib/auth/session";
 import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
-import CourseRow from "./course-row";
-import CreateCourseForm from "./create-course-form";
+import CoursesList from "./courses-list";
+import CreateCourseDialog from "./create-course-dialog";
 
 type RawSearchParams = { [key: string]: string | string[] | undefined };
 
@@ -50,17 +52,10 @@ export default async function AdminCoursesPage({
 
   return (
     <div className="min-w-0 space-y-8">
-      <header>
-        <Link
-          href="/admin"
-          className="text-sm underline focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
-          Back to dashboard
-        </Link>
-        <h1 className="mt-3 text-2xl font-semibold">Courses</h1>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <h1 className="text-2xl font-semibold">Courses</h1>
+        <CreateCourseDialog />
       </header>
-
-      <CreateCourseForm />
 
       <form
         action="/admin/courses"
@@ -123,14 +118,18 @@ export default async function AdminCoursesPage({
           </p>
         )}
         {result.kind === "success" && result.courses.length === 0 && (
-          <p role="status">No courses match these filters.</p>
+          <EmptyState
+            icon={SearchX}
+            message="No courses match these filters."
+            action={
+              <Link href="/admin/courses" className="text-sm underline focus-visible:outline-2">
+                Clear filters
+              </Link>
+            }
+          />
         )}
         {result.kind === "success" && result.courses.length > 0 && (
-          <ul className="space-y-3">
-            {result.courses.map((course) => (
-              <CourseRow key={course.id} course={course} eligibleLecturers={eligibleLecturers} />
-            ))}
-          </ul>
+          <CoursesList courses={result.courses} eligibleLecturers={eligibleLecturers} />
         )}
       </section>
     </div>

@@ -8,6 +8,7 @@ import {
   type RequestSlot,
   type ReceiptResult,
 } from "@/features/student/bookings/request-validation";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { type ImproveResult } from "@/features/student/bookings/improve-request-validation";
 import { validateProposalForApply } from "@/features/student/bookings/improve-request-validation";
 import { type Advice } from "@/lib/ai/output-validation";
+import { statusBadgeVariant } from "@/lib/status-badge";
 import { improveRequest, submitRequest, recoverRequest, refreshRequestSlot } from "./actions";
 
 const messages = {
@@ -163,7 +165,10 @@ export default function RequestForm({ initialSlot }: { initialSlot: RequestSlot 
             ? "Request submitted — pending lecturer approval"
             : `Request recovered — ${result.receipt.status}`}
         </h2>
-        <p>Status: {result.receipt.status}</p>
+        <p>
+          Status:{" "}
+          <Badge variant={statusBadgeVariant(result.receipt.status)}>{result.receipt.status}</Badge>
+        </p>
         <p className="break-all">Booking reference: {result.receipt.bookingId}</p>
         <a href="/student/slots" className="underline focus-visible:outline-2">
           Browse available slots

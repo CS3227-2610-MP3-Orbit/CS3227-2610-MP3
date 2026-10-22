@@ -77,6 +77,9 @@ jobs:
       - run: npx playwright install --with-deps chromium
       # The stack prints its local-only keys; keep them out of the log.
       - run: supabase start > /dev/null
+      # Reapply migrations and seed the documented admin fixtures before the live tests.
+      # `supabase start` does not guarantee that an existing local database has been reset.
+      - run: supabase db reset --local
       - name: Run ADM-01 and SH-06 integration and browser tests
         run: |
           eval "$(supabase status -o json | node tests/integration/local-supabase-env.mjs)"
