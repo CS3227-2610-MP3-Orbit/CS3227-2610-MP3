@@ -6,10 +6,7 @@ import { generateLecturerBriefing, type BriefingResult } from "@/features/lectur
 const initial: BriefingResult = { kind: "idle" };
 
 export function BriefingButton({ bookingId }: { bookingId: string }) {
-  const [state, action, pending] = useActionState(
-    (_previous: BriefingResult, formData: FormData) => generateLecturerBriefing(formData),
-    initial,
-  );
+  const [state, action, pending] = useActionState(generateLecturerBriefing, initial);
   return (
     <form action={action} className="mt-3 space-y-2">
       <input type="hidden" name="bookingId" value={bookingId} />

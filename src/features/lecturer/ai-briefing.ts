@@ -49,7 +49,10 @@ export async function listLecturerBriefings(): Promise<StoredBriefing[]> {
   }));
 }
 
-export async function generateLecturerBriefing(formData: FormData): Promise<BriefingResult> {
+export async function generateLecturerBriefing(
+  _previousState: BriefingResult,
+  formData: FormData,
+): Promise<BriefingResult> {
   const user = await requireRole("lecturer");
   const input = inputSchema.safeParse({ bookingId: formData.get("bookingId") });
   if (!input.success) return { kind: "error", message: "Select a valid consultation." };
