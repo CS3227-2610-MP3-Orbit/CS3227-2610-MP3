@@ -85,11 +85,7 @@ export default async function LecturerDashboardPage({
         ) : (
           <ul className="mt-3 grid gap-2">
             {slots.map((slot) => (
-              <SlotRow
-                key={slot.id}
-                slot={slot}
-                courses={courseRows}
-              />
+              <SlotRow key={slot.id} slot={slot} courses={courseRows} />
             ))}
           </ul>
         )}
