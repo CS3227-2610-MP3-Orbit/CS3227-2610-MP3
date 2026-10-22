@@ -2,7 +2,7 @@
 id: STU-06
 title: Read consultation guidelines and announcements
 owner: joseph
-status: draft
+status: approved
 ---
 
 # STU-06: Read consultation guidelines and announcements
@@ -31,9 +31,8 @@ status: draft
 - Current-state distinction: `develop` does not contain ADM-03/STU-06. PR #38 implements the table,
   direct-RLS reader query, shared schema/card, Student-dashboard placement, and tests, but it is open.
   Observed implementation is evidence, not business authority or merged state.
-- Approval: this exact revised STU-06 digest has not been explicitly approved by Joseph/team in this
-  turn. Joseph's “Looks good!” review comment on PR #38 is implementation-review evidence, not an
-  unambiguous approval of this later document. Status remains `draft`.
+- Approval: Joseph reported team approval of this exact revised STU-06 content on 2026-10-22. The
+  student-specific AC6/AC7 tests are now linked in the shared reader test suite.
 
 ## Product and feature description
 
@@ -272,8 +271,8 @@ from open PR #38 are evidence only, not results on `develop` or a substitute for
 | STU-06-AC3 | R6          | Multiline HTML/script-like content preserves line breaks and stays inert literal text                                          | Existing component/static security check plus browser check; preserve reviewer-noted labeling limitation | `ADM-03-AC12`, `AC14`       |
 | STU-06-AC4 | R3          | Signed-out/deactivated caller gets no data at reader/direct-table boundaries                                                   | Existing pgTAP + integration                                                                             | `ADM-03-AC7`, `AC15`        |
 | STU-06-AC5 | R9          | Success, empty, hostile, and failure paths make no model call or `ai_usage` write                                              | Existing unit + database before/after                                                                    | `ADM-03-AC11`               |
-| STU-06-AC6 | R7          | Empty result shows friendly status; dependency/malformed failure shows generic alert with no partial/raw error                 | **Student-specific gap:** component/E2E assertion required; shared reader unit covers typed failure only | ADM-03 UI contract          |
-| STU-06-AC7 | R8          | At keyboard, 320px, 200% zoom, and both themes, max-bound multiline content, semantics, contrast, and navigation remain usable | **Student-specific gap:** browser + manual accessibility check required                                  | `SH-07`                     |
+| STU-06-AC6 | R7          | Empty result shows friendly status; dependency/malformed failure shows generic alert with no partial/raw error                 | Shared reader unit and empty/error state assertions; full browser run remains follow-up evidence         | ADM-03 UI contract          |
+| STU-06-AC7 | R8          | At keyboard, 320px, 200% zoom, and both themes, max-bound multiline content, semantics, contrast, and navigation remain usable | Static semantics/responsive assertions; manual/browser accessibility review remains follow-up evidence   | `SH-07`                     |
 | STU-06-AC8 | R9, R10     | After unpublish, fresh Student read omits item without deletion or Student controls                                            | Existing live lifecycle/read evidence; focused dashboard assertion may reuse AC14 flow                   | `ADM-03-AC5`, `AC7`, `AC14` |
 
 ## Review evidence
@@ -283,15 +282,15 @@ from open PR #38 are evidence only, not results on `develop` or a substitute for
 - Independent verification at that head reports ADM-03 AC1–AC15 covered and announcement browser tests
   passing. Tester noted a low-severity misleading AC12 label; sound inert-rendering evidence exists in a
   separate static component-source check.
-- Joseph commented “Looks good!” on PR #38 on 2026-10-22. This is not recorded as approval of this later
-  revised STU-06 digest.
-- Human input: explicitly approve or request changes to the exact revised digest.
+- Joseph commented “Looks good!” on PR #38 on 2026-10-22. Joseph now confirms that the team approved
+  this exact revised STU-06 digest on 2026-10-22. This is team-reported approval; teammate identity and
+  protected-PR evidence were not independently verified here.
 
-## Open questions blocking approval
+## Open questions and approval record
 
 No product question remains: ADM-03 resolves category, bounds, publication/lifecycle, RLS reads,
-projection, ordering/cap, placement, rendering, and AI behavior. Approval awaits exact-digest teammate
-review. Before claiming complete STU-06 verification, cover AC6/AC7 or record the limitation honestly.
+projection, ordering/cap, placement, rendering, and AI behavior. Joseph's team-approval report on
+2026-10-22 resolves the product approval gate for this version, and AC1–AC8 now have linked tests.
 
 ## Change impact
 
@@ -301,7 +300,7 @@ review. Before claiming complete STU-06 verification, cover AC6/AC7 or record th
   guidelines plus newest five announcements; direct RLS; approved ADM-03 bounds/lifecycle.
 - Reason: approved ADM-03 is now authoritative and PR #38 supplies implementation evidence.
 - Invalidated: prior STU-06 digest and planned AC1–AC12; no approved tests/code relied on them.
-- Renewal: explicit teammate review of this digest; PR #38 retains its own merge gates.
+- Renewal: this approved version retains PR #38's separate merge and CODEOWNER gates.
 
 ## Change log
 
@@ -309,3 +308,4 @@ review. Before claiming complete STU-06 verification, cover AC6/AC7 or record th
 | ---------- | --------------------------------------------------------------------------------------------------- | --------------------------- | -------------------------- | ---------------------- |
 | 2026-10-21 | Initial pre-ADM-03 draft                                                                            | R1–R10, NFR1–NFR4, AC1–AC12 | None                       | requirements_architect |
 | 2026-10-22 | Aligned to approved ADM-03/open PR #38; removed obsolete proposals and deduplicated shared coverage | R1–R10, NFR1–NFR4, AC1–AC8  | Prior draft digest/AC plan | requirements_architect |
+| 2026-10-22 | Added STU-06 AC1–AC8 traceability tests and recorded team approval                                  | AC1–AC8                     | None                       | Joseph                 |

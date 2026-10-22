@@ -33,6 +33,7 @@ export default function BookingManager({ booking: initial }: { booking: Booking 
     [questions, setQuestions] = useState(initial.questions),
     [message, setMessage] = useState(""),
     [pending, setPending] = useState(false),
+    [confirmingCancel, setConfirmingCancel] = useState(false),
     [attempt, setAttempt] = useState<Attempt | null>(null);
   const busy = useRef(false);
   const actionable = booking.status === "pending" || booking.status === "approved";
@@ -74,6 +75,7 @@ export default function BookingManager({ booking: initial }: { booking: Booking 
         setTopic(result.booking.topic);
         setQuestions(result.booking.questions);
         setEditing(false);
+        setConfirmingCancel(false);
         setAttempt(null);
         setMessage(kind === "update" ? "Booking updated." : "Booking cancelled.");
         router.refresh();
@@ -185,10 +187,28 @@ export default function BookingManager({ booking: initial }: { booking: Booking 
             type="button"
             variant="outline"
             disabled={pending}
-            onClick={() => void run("cancel")}
+            onClick={() => setConfirmingCancel(true)}
           >
             Cancel booking
           </Button>
+          {confirmingCancel && (
+            <div className="space-y-2 rounded-md border border-destructive/50 p-3" role="alert">
+              <p>This cancellation cannot be undone. Do you want to continue?</p>
+              <div className="flex items-center gap-3">
+                <Button type="button" disabled={pending} onClick={() => void run("cancel")}>
+                  Confirm cancellation
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  disabled={pending}
+                  onClick={() => setConfirmingCancel(false)}
+                >
+                  Keep booking
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </section>

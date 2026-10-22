@@ -118,15 +118,6 @@ export async function updateSlot(formData: FormData): Promise<ActionResult> {
   await supabase
     .from("consultation_audit_log")
     .insert({ actor_id: user.id, slot_id: slotId.data, action: "updated", outcome: "success" });
-  if (bookings?.length)
-    await supabase.from("consultation_notifications").insert(
-      bookings.map((booking) => ({
-        recipient_id: booking.student_id,
-        slot_id: slotId.data,
-        kind: "slot_updated",
-        message: "A consultation slot you booked has been updated.",
-      })),
-    );
   revalidatePath("/lecturer");
   return { ok: true, message: "Consultation slot updated." };
 }
@@ -157,15 +148,6 @@ export async function deleteSlot(formData: FormData): Promise<ActionResult> {
   await supabase
     .from("consultation_audit_log")
     .insert({ actor_id: user.id, slot_id: slotId.data, action: "deleted", outcome: "success" });
-  if (bookings?.length)
-    await supabase.from("consultation_notifications").insert(
-      bookings.map((booking) => ({
-        recipient_id: booking.student_id,
-        slot_id: slotId.data,
-        kind: "slot_deleted",
-        message: "A consultation slot you booked has been deleted.",
-      })),
-    );
   revalidatePath("/lecturer");
   return { ok: true, message: "Consultation slot deleted." };
 }

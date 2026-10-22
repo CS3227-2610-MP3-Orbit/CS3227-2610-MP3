@@ -12,7 +12,9 @@ language sql stable security definer set search_path = '' as $$
     'courseCode', c.code, 'courseName', c.name, 'lecturerName', p.full_name,
     'startsAt', to_char(s.starts_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
     'endsAt', to_char(s.ends_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
-    'topic', b.topic, 'questions', b.questions, 'version', b.manage_version
+    'topic', b.topic, 'questions', b.questions,
+    'rejectionReason', b.rejection_reason,
+    'version', b.manage_version
   )
   from public.bookings b
   join public.consultation_slots s on s.id=b.slot_id
