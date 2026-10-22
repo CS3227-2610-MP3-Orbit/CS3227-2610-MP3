@@ -354,9 +354,9 @@ review, and manual/cross-browser verification remain required evidence, not prod
 
 ## Change log
 
-| Date       | Change                                                                      | By                     |
-| ---------- | --------------------------------------------------------------------------- | ---------------------- |
-| 2026-10-17 | Initial requirements draft for human review; no implementation authorized   | requirements_architect |
-| 2026-10-18 | Recorded team-reported approval; retained unresolved implementation limits  | requirements_architect |
-| 2026-10-18 | Added approved per-slot IDs and exact wire allowlist; reset status to draft | requirements_architect |
-| 2026-10-22 | Recorded Joseph's team approval of the implemented revised requirements; status set to approved | Joseph |
+| Date       | Change                                                                                          | By                     |
+| ---------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
+| 2026-10-17 | Initial requirements draft for human review; no implementation authorized                       | requirements_architect |
+| 2026-10-18 | Recorded team-reported approval; retained unresolved implementation limits                      | requirements_architect |
+| 2026-10-18 | Added approved per-slot IDs and exact wire allowlist; reset status to draft                     | requirements_architect |
+| 2026-10-22 | Recorded Joseph's team approval of the implemented revised requirements; status set to approved | Joseph                 |

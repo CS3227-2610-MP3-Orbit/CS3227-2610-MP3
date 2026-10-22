@@ -59,7 +59,7 @@ limits how many calls we can make:
 - When the AI fails or the limit is reached, the user sees a friendly message and booking still
   works normally.
 
-**The coding agents** were limited in the ways Lecture 6 recommends for *excessive autonomy*:
+**The coding agents** were limited in the ways Lecture 6 recommends for _excessive autonomy_:
 
 - **Permission control.** Each agent had one role and could only work within it. No agent could read
   password files, publish the app or change the live database.
@@ -85,8 +85,8 @@ We applied the five oversight concepts from Lecture 6:
 - **Traceability.** Every agent left a handoff note recording what it changed, which checks it
   actually ran and what it could not check.
 
-These controls also addressed two more of the lecture's typical safety problems. *Unsafe outcomes*
-were limited by a rule that agents must never weaken a test just to make it pass. *Data leakage* was
+These controls also addressed two more of the lecture's typical safety problems. _Unsafe outcomes_
+were limited by a rule that agents must never weaken a test just to make it pass. _Data leakage_ was
 limited by automatic scanning for leaked passwords.
 
 We tested the guardrails themselves with two practice exercises:
@@ -147,13 +147,13 @@ approved requirement had no test.
 We followed the lecture's structured form. We wrote a product spec, a technical spec, shared
 non-functional rules that every feature must follow, an integration spec and a plan, plus one spec
 per feature. A specification skill and a shared template made sure every feature spec covered what
-the lecture says a good spec *must* contain:
+the lecture says a good spec _must_ contain:
 
 - the product description, users and roles;
 - functional requirements and non-functional requirements;
 - a UI description and use cases.
 
-It also covered what a good spec *should* contain: the data model, boundary contracts, security
+It also covered what a good spec _should_ contain: the data model, boundary contracts, security
 rules, AI behaviour, edge cases and failure paths.
 
 The lecture also says a spec should not be written from a single perspective, and should not leave
@@ -192,7 +192,7 @@ changing the code directly, we:
 
 ### How can tests show that the software meets the intent of the spec, not just its wording?
 
-We learned that passing tests do not prove a spec's *intent* is met. In one practice test, every
+We learned that passing tests do not prove a spec's _intent_ is met. In one practice test, every
 test passed even though users could read other people's private notes. In our own app, a browser
 test found that private consultation questions could appear in the page address, even though the
 form followed the spec's wording. Testing the real app, the way a real user would use it, caught
@@ -251,7 +251,7 @@ methods:
 4. **Generator–verifier**, with the tester and security reviewer checking in parallel, and at most
    two rounds of fixes.
 
-We gave all the closely connected parts to *one* developer. The lecture warns that splitting
+We gave all the closely connected parts to _one_ developer. The lecture warns that splitting
 tightly linked work causes duplicated or conflicting changes. For some features, we also ran the
 developer in a separate workspace (a Git worktree), as Lecture 8 suggests, to avoid file collisions.
 
