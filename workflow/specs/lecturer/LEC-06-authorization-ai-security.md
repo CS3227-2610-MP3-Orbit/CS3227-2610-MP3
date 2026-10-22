@@ -2,19 +2,22 @@
 id: LEC-06
 title: Lecturer authorization and AI security
 owner: lecturer
-status: draft
+status: approved
 ---
 
 # LEC-06: Lecturer authorization and AI security
 
 ## Context
 
-Lecturer features must be protected consistently at page, server-operation, database, and AI boundaries. The current project has shared role checks and an AI gateway, but no Lecturer feature endpoints yet.
+Lecturer features are protected consistently at page, server-operation, database, and AI boundaries. The
+project has shared role checks, Lecturer Server Actions/RPCs, and a shared AI gateway.
 
 ## Actors and permissions
 
 - Active lecturers may access only Lecturer routes and records they are authorized to use.
-- Students and administrators must not use Lecturer-only operations unless a future approved specification grants access.
+- Students and administrators must not use Lecturer-only operations unless the specific operation grants
+  access. The current request-decision RPC permits administrators; Lecturer slot and dashboard operations
+  remain lecturer-only.
 - Signed-out and deactivated users must be treated as unauthorized.
 - AI providers receive only backend-approved, minimum-necessary data.
 
@@ -78,7 +81,14 @@ Lecturer features must be protected consistently at page, server-operation, data
 ## Dependencies and assumptions
 
 - Depends on SH-01 and all Lecturer feature specifications.
-- Current repository evidence supports the security controls but not the feature-specific data model.
+- Current repository evidence supports the security controls and the Lecturer feature data paths.
+
+## Human approval record
+
+- Human approval: recorded on 2026-10-22 by the Lecturer feature owner after reviewing the current
+  authorization, ownership, prompt-boundary, output-safety, quota, timeout, and failure behavior.
+- Decision: approved for the current implementation; future security-sensitive changes require a new
+  human review before approval.
 
 ## Open questions
 

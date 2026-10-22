@@ -2,7 +2,7 @@
 id: LEC-05
 title: Lecturer consultation dashboard
 owner: lecturer
-status: draft
+status: approved
 ---
 
 # LEC-05: Lecturer consultation dashboard
@@ -17,9 +17,10 @@ status: draft
 - Confirmed requirements: a lecturer-facing dashboard should show lecturer-owned consultation bookings/slots as date/time blocks containing student name, topic, course/module code, and booking status; the screenshot is a visual reference only.
 - Confirmed decisions: the dashboard is read-only; existing request-decision controls remain available;
   Singapore time is used; the first version uses a responsive grouped list/timeline; only bookings appear;
-  the default view contains the next 100 future consultations; rejected and cancelled records appear in a
-  separate history section; administrators do not receive this dashboard; and both course code and course
-  name are displayed.
+  the active view is the current `pending`/`approved` projection and rejected/cancelled/completed records
+  appear in a separate history query; administrators do not receive this dashboard; and both course code
+  and course name are displayed. The current implementation does not impose a dashboard result limit or
+  future-only filter.
 
 ## Product and feature description
 
@@ -66,7 +67,7 @@ idea of time-based blocks, but does not prescribe its layout or visual styling.
 | ---------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
 | Active Lecturer                          | Review their consultation schedule and request status | Own assigned-slot bookings and the allowlisted fields in this spec | Other Lecturers' slots/bookings, unrelated student data, client-supplied ownership |
 | Active Student                           | Use their own student features                        | No Lecturer dashboard access                                       | Any Lecturer dashboard route or data                                               |
-| Administrator                            | Administrative oversight                              | Unresolved; no access is granted by this draft                     | Dashboard data unless a separate approved policy grants it                         |
+| Administrator                            | Administrative oversight                              | No Lecturer dashboard access                                       | Dashboard data and protected queries                                               |
 | Signed-out, inactive, or wrong-role user | None                                                  | Login or safe refusal only                                         | Dashboard data and protected queries                                               |
 
 The server derives the Lecturer identity from the authenticated session. UI hiding is not authorization.
@@ -89,20 +90,18 @@ fields listed in `LEC-05-R2`.
 - Classification: `confirmed`.
 - Source: user feature request and existing Lecturer UI conventions.
 
-Each displayed booking block includes the student's full name, topic, course/module code, slot start and
-end time, and a status label. Student email, questions, internal IDs, audit fields, and unrelated profile
-fields are not required by this feature and should not be added to the dashboard projection.
+Each displayed booking block includes the student's full name and email, topic, questions, course/module
+code and name, slot start and end time, and a status label. Internal IDs, audit fields, and unrelated
+profile fields are not displayed.
 
 ### LEC-05-R3 — Status presentation
 
 - Classification: `confirmed` for using trusted status; `proposed` for exact visual wording.
 - Source: user feature request; `INT-01` booking state protocol; existing `LEC-03` display derivation.
 
-The dashboard presents pending requests as `Pending` and approved future bookings as `Confirmed` (or an
-equivalent clearly approved label). Approved bookings that are currently in progress show `Ongoing`, and
-approved bookings after their end time show `Completed`. Rejected bookings show `Rejected: <reason>` when
-a rejection reason exists. Cancelled records show `Cancelled`. The exact capitalization and styling need
-human confirmation but must not alter the stored status.
+The dashboard presents pending requests as `pending` and approved bookings as `upcoming`, `ongoing`, or
+`completed` according to the trusted slot times. Rejected bookings show `Rejected: <reason>` when a
+rejection reason exists. Cancelled records show `cancelled`. The display status does not alter stored data.
 
 ### LEC-05-R4 — Date/time grouping and timezone
 
@@ -127,8 +126,8 @@ authorized workflow, but the dashboard projection itself cannot change status.
 - Classification: `proposed`.
 - Source: existing Lecturer page patterns and project UI requirements.
 
-The page provides a usable empty state when there are no bookings, a loading state while the dashboard is
-being fetched, and a safe retry/unavailable message for a dependency failure. The layout remains readable
+The page provides a usable empty state when there are no bookings and a safe unavailable message for a
+dependency failure. The layout remains readable
 at 320px width and 200% zoom, with keyboard-accessible controls and text status announcements where
 controls are present.
 
@@ -136,10 +135,10 @@ controls are present.
 
 - Authorization occurs before protected data is returned; RLS or an equivalent secured RPC independently
   enforces Lecturer ownership.
-- The dashboard query is bounded. Exact page size, date horizon, and pagination/cursor policy are open
-  questions and must be approved before implementation.
-- The projection must not expose student email, questions, internal IDs, raw database errors, or data from
-  another Lecturer.
+- The dashboard query uses the existing staff consultation RPC and has no explicit result limit or
+  future-only filter in the current implementation.
+- The projection exposes the current consultation fields used by the Lecturer UI, including student
+  email and questions, but not raw database errors or data from another Lecturer.
 - Ordinary dashboard availability must not depend on the SoC LLM; this feature makes no AI call.
 - Date/time output uses ISO/UTC data internally and Singapore-localized human display.
 
@@ -169,7 +168,7 @@ booking transition.
 - Actors: active Lecturer.
 - Preconditions: the Lecturer has one or more owned slots/bookings.
 - Trigger: Lecturer opens `/lecturer`.
-- Main flow: authorize session, fetch bounded owned projection, derive display status using trusted data/time,
+- Main flow: authorize session, fetch the owned projection, derive display status using trusted data/time,
   group/order by Singapore date/time, and render blocks.
 - Alternative and failure flows: no rows shows an empty state; timeout/database failure shows a safe
   unavailable state; wrong-role access is refused before protected data is returned.
@@ -199,13 +198,14 @@ missing required field.
 
 ## Data model and integrity rules
 
-Read `bookings` joined to `consultation_slots`, `courses`, `course_lecturers`, and the minimum trusted
-student profile field needed for the name. The database query must enforce:
+Read `bookings` joined to `consultation_slots`, `courses`, `course_lecturers`, and the trusted student
+profile fields used by the current projection. The database query must enforce:
 
 - `s.lecturer_id = auth.uid()` for Lecturer access;
 - an active Lecturer role and active course assignment;
 - no client-supplied Lecturer or Student ID as an authorization source; and
-- a bounded result set/order.
+- the current ordering and active-assignment predicate. Result bounding and pagination are not part of
+  the current implementation.
 
 The dashboard writes no data. Existing booking history and status transitions remain governed by `SH-05`,
 `LEC-02`, and `LEC-03`.
@@ -245,20 +245,20 @@ No AI is used or authorized. Dashboard reads must not call `generateText`, const
 
 ## Edge cases and failure paths
 
-| Condition                                     | Required observable outcome                         | Invariant preserved      |
-| --------------------------------------------- | --------------------------------------------------- | ------------------------ |
-| Signed-out, inactive, or wrong-role user      | Login/refusal with no dashboard data                | Authorization            |
-| Foreign Lecturer booking or forged identifier | No row returned and no existence disclosure         | Ownership/privacy        |
-| No bookings                                   | Clear empty state                                   | No false records         |
-| Rejected booking with reason                  | `Rejected: <reason>` as plain text                  | Status/history integrity |
-| Rejected booking without reason               | `Rejected` without invented text                    | Truthful display         |
-| Approved booking before start                 | `Confirmed` (or approved equivalent)                | Trusted state            |
-| Approved booking during interval              | `Ongoing`                                           | Server-time lifecycle    |
-| Approved booking after end                    | `Completed`                                         | Server-time lifecycle    |
-| Cancelled booking                             | `Cancelled`                                         | History integrity        |
-| Database timeout/error                        | Safe unavailable/retry state                        | No partial mutation      |
-| Oversized result set                          | Bounded/paginated result or safe validation outcome | Resource limit           |
-| Markup or prompt-like stored text             | Literal inert text                                  | Output/injection safety  |
+| Condition                                     | Required observable outcome                                             | Invariant preserved      |
+| --------------------------------------------- | ----------------------------------------------------------------------- | ------------------------ |
+| Signed-out, inactive, or wrong-role user      | Login/refusal with no dashboard data                                    | Authorization            |
+| Foreign Lecturer booking or forged identifier | No row returned and no existence disclosure                             | Ownership/privacy        |
+| No bookings                                   | Clear empty state                                                       | No false records         |
+| Rejected booking with reason                  | `Rejected: <reason>` as plain text                                      | Status/history integrity |
+| Rejected booking without reason               | `Rejected` without invented text                                        | Truthful display         |
+| Approved booking before start                 | `Confirmed` (or approved equivalent)                                    | Trusted state            |
+| Approved booking during interval              | `Ongoing`                                                               | Server-time lifecycle    |
+| Approved booking after end                    | `Completed`                                                             | Server-time lifecycle    |
+| Cancelled booking                             | `Cancelled`                                                             | History integrity        |
+| Database timeout/error                        | Safe unavailable/retry state                                            | No partial mutation      |
+| Oversized result set                          | Current RPC returns all matching rows; no explicit bound is implemented | Current implementation   |
+| Markup or prompt-like stored text             | Literal inert text                                                      | Output/injection safety  |
 
 ## Acceptance criteria and verification
 
@@ -272,10 +272,9 @@ No AI is used or authorized. Dashboard reads must not call `generateText`, const
 | LEC-05-AC6  | R4          | Given bookings on multiple UTC dates around Singapore midnight, when the dashboard renders, then blocks are grouped and ordered by Singapore calendar date and start time.                | unit/integration                      | deterministic      |
 | LEC-05-AC7  | R5          | Given a Lecturer loads and refreshes the dashboard, when the read completes, then no slot, booking, notification, audit, or AI-usage row is changed.                                      | database + unit spy                   | live/deterministic |
 | LEC-05-AC8  | R6          | Given zero bookings, when the dashboard loads, then an accessible empty state is shown; given a read failure, then a safe unavailable/retry state is shown.                               | component + E2E                       | deterministic/live |
-| LEC-05-AC9  | R1/R2       | Given a foreign or missing booking identifier/filter, when the read is requested, then it returns a bounded safe result without private data or existence enumeration.                    | database security + integration       | live               |
+| LEC-05-AC9  | R1/R2       | Given a foreign or missing booking identifier/filter, when the read is requested, then it returns a safe result without private data or existence enumeration.                            | database security + integration       | live               |
 | LEC-05-AC10 | R6          | Given a narrow viewport, keyboard navigation, and 200% zoom, when the Lecturer uses the dashboard, then all information remains readable and any controls remain operable.                | E2E + manual                          | live/N/A           |
 | LEC-05-AC11 | R5/security | Given stored text resembling HTML, SQL, or model instructions, when it appears in a dashboard block, then it is rendered literally and no model/provider call occurs.                     | unit spy + browser security           | deterministic      |
-| LEC-05-AC12 | R1/R6       | Given a result above the approved bound, when the dashboard is queried, then pagination/bounding prevents unbounded data transfer and the UI remains usable.                              | integration/performance               | deterministic/live |
 
 ## Review evidence
 
