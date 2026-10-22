@@ -7,7 +7,7 @@
 "taskId": "LEC-01-DATA-ACCESS",
 "requirementIds": ["LEC-01-AC1", "LEC-01-AC2", "LEC-01-AC3", "LEC-01-AC5", "LEC-01-AC6", "LEC-01-AC7", "LEC-01-AC8", "LEC-01-AC9", "LEC-01-AC13", "LEC-01-AC14", "LEC-04-AC7"],
 "status": "passed",
-"changedFiles": ["workflow/specs/lecturer/LEC-01-availability.md", "workflow/specs/lecturer/LEC-04-ai-briefing.md", "supabase/tests/lecturer_data_access.test.sql", "supabase/migrations/20261022000000_lecturer_data_access_functions.sql", "src/app/lecturer/actions.ts", "src/app/lecturer/page.tsx", "src/features/lecturer/ai-briefing.ts", "workflow/handoffs/lec-01/2026-10-22-lecturer-data-access.md"],
+"changedFiles": ["workflow/specs/lecturer/LEC-01-availability.md", "workflow/specs/lecturer/LEC-04-ai-briefing.md", "supabase/tests/lecturer_data_access.test.sql", "supabase/migrations/20261022050000_lecturer_data_access_functions.sql", "src/app/lecturer/actions.ts", "src/app/lecturer/page.tsx", "src/features/lecturer/ai-briefing.ts", "workflow/handoffs/lec-01/2026-10-22-lecturer-data-access.md"],
 "verification": [
 {"check": "new pgTAP suite before the migration", "result": "failed", "evidence": "function public.lecturer_list_my_courses() does not exist"},
 {"check": "new pgTAP suite after the migration", "result": "passed", "evidence": "43/43"},
@@ -43,7 +43,7 @@ The pgTAP suites run as the table owner, so none of them noticed.
 
 ## What changed
 
-- Seven role-checked `security definer` functions in `20261022000000`: list my courses, list my
+- Seven role-checked `security definer` functions in `20261022050000`: list my courses, list my
   slots, create, update, delete, get briefing context, save briefing. No table privilege was granted,
   so `[STU-01-AC21]` still holds.
 - `src/app/lecturer/actions.ts`, `page.tsx` and `src/features/lecturer/ai-briefing.ts` call those
