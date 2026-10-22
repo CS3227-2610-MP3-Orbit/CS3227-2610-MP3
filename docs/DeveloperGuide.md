@@ -547,13 +547,15 @@ Students never read `consultation_slots` or `bookings` directly. Every student p
 
 Specs: [`LEC-01`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-01-availability.md), [`LEC-02`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-02-request-decisions.md), [`LEC-03`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-03-consultation-completion.md), [`LEC-04`](https://github.com/CS3227-2610-MP3-Orbit/CS3227-2610-MP3/blob/master/workflow/specs/lecturer/LEC-04-ai-briefing.md).
 
-- **Availability (LEC-01).** `src/app/lecturer/actions.ts` creates, updates and deletes slots with
-  the lecturer's own client after `requireRole("lecturer")`, checking the course assignment, the
-  one-hour lead time and overlaps, and writes `consultation_audit_log` and, where students are
-  affected, `consultation_notifications`.
+- **Availability (LEC-01).** `src/app/lecturer/actions.ts` validates create/update/delete requests
+  after `requireRole("lecturer")`, then calls the role-checked `lecturer_*` RPCs. The RPCs enforce
+  the course assignment, one-hour lead time, overlap and active-booking rules, and write
+  `consultation_audit_log` and, where students are affected, `consultation_notifications`.
 - **Decisions (LEC-02).** `list_lecturer_requests` and `decide_lecturer_request` (section 4.3).
-- **History (LEC-03).** `list_staff_consultations` returns active and past consultations and
-  applies the derived completion rule below. Triggers on slots and assignments
+- **History (LEC-03/LEC-05).** `list_staff_consultations` returns active and past consultations and
+  applies the derived completion rule below. The active query currently includes pending and approved
+  bookings, so an approved booking whose end time has passed can carry a `completed` display status
+  under the active section. Triggers on slots and assignments
   (`consultation_slot_deactivation_notice`, `course_assignment_deactivation_notice`) write
   `in_app_notifications` when a slot or assignment is deactivated.
 - **AI briefing (LEC-04).** See section 6.

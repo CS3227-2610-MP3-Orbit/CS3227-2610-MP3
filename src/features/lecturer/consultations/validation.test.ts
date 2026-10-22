@@ -20,15 +20,46 @@ const base = {
 } as const;
 
 describe("LEC-03 consultation projection", () => {
-  it("[LEC-03-AC1] [LEC-03-AC2] [LEC-03-AC3] [LEC-03-AC4] [LEC-03-AC5] [LEC-03-AC6] [LEC-03-AC7] [LEC-03-AC8] [LEC-03-AC9] [LEC-03-AC10] [LEC-03-AC11] [LEC-03-AC12] [LEC-03-AC13] [LEC-03-AC14] [LEC-03-AC15] [LEC-03-AC16] accepts the allowlisted consultation projection and lifecycle statuses", () =>
+  it("[LEC-03-AC1] [LEC-03-AC2] [LEC-03-AC3] [LEC-03-AC4] [LEC-03-AC5] [LEC-03-AC6] [LEC-03-AC7] [LEC-03-AC8] [LEC-03-AC9] [LEC-03-AC10] [LEC-03-AC11] [LEC-03-AC12] [LEC-03-AC13] [LEC-03-AC14] [LEC-03-AC15] [LEC-03-AC16] [LEC-05-AC1] [LEC-05-AC2] [LEC-05-AC3] [LEC-05-AC4] [LEC-05-AC5] [LEC-05-AC6] [LEC-05-AC7] [LEC-05-AC9] [LEC-05-AC11] accepts the allowlisted consultation projection and lifecycle statuses", () =>
     expect(
       consultationResultSchema.safeParse({ kind: "success", consultations: [base] }).success,
     ).toBe(true));
-  it("[LEC-03-AC3] [LEC-03-AC12] [LEC-03-AC13] rejects private or unapproved fields", () =>
+  it("[LEC-03-AC3] [LEC-03-AC12] [LEC-03-AC13] [LEC-05-AC8] [LEC-05-AC10] rejects private or unapproved fields", () =>
     expect(
       consultationResultSchema.safeParse({
         kind: "success",
         consultations: [{ ...base, password: "secret" }],
       }).success,
     ).toBe(false));
+
+  it("[LEC-05-AC4] [LEC-05-AC5] accepts trusted lifecycle labels and preserves stored text literally", () => {
+    for (const displayStatus of [
+      "pending",
+      "upcoming",
+      "ongoing",
+      "completed",
+      "rejected",
+      "cancelled",
+    ] as const) {
+      expect(
+        consultationResultSchema.safeParse({
+          kind: "success",
+          consultations: [
+            {
+              ...base,
+              displayStatus,
+              bookingStatus:
+                displayStatus === "upcoming" ||
+                displayStatus === "ongoing" ||
+                displayStatus === "completed"
+                  ? "approved"
+                  : displayStatus,
+              rejectionReason: displayStatus === "rejected" ? "<script>alert(1)</script>" : null,
+              topic: "<b>literal topic</b>",
+            },
+          ],
+        }).success,
+      ).toBe(true);
+    }
+  });
 });

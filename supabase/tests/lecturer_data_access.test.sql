@@ -43,7 +43,7 @@ select ok(
   not has_function_privilege('anon', 'public.lecturer_create_slot(uuid, timestamptz, timestamptz)', 'execute')
     and not has_function_privilege('anon', 'public.lecturer_list_my_slots()', 'execute')
     and not has_function_privilege('anon', 'public.lecturer_get_briefing_context(uuid)', 'execute'),
-  '[LEC-01-AC2] signed-out callers cannot execute the lecturer functions'
+  '[LEC-01-AC2] [LEC-06-AC1] signed-out callers cannot execute the lecturer functions'
 );
 
 -- Fixtures.
@@ -194,9 +194,9 @@ select ok(
 set local role authenticated;
 set local request.jwt.claim.sub = '94000000-0000-4000-8000-000000000002';
 select is(public.lecturer_get_briefing_context('97000000-0000-4000-8000-000000000001')->>'kind',
-  'not_found', '[LEC-04-AC7] another lecturer''s consultation is not disclosed');
+  'not_found', '[LEC-04-AC7] [LEC-06-AC2] another lecturer''s consultation is not disclosed');
 select is(public.lecturer_save_briefing('97000000-0000-4000-8000-000000000001', 'Summary')->>'kind',
-  'not_found', '[LEC-04-AC7] another lecturer cannot save a briefing for it');
+  'not_found', '[LEC-04-AC7] [LEC-06-AC2] another lecturer cannot save a briefing for it');
 
 set local request.jwt.claim.sub = '94000000-0000-4000-8000-000000000003';
 select is((select count(*)::int from public.lecturer_list_my_courses()), 0,

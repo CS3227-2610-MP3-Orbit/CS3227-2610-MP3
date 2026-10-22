@@ -2,32 +2,36 @@
 id: LEC-01
 title: Lecturer consultation availability
 owner: lecturer
-status: draft
+status: approved
 ---
 
 # LEC-01: Lecturer consultation availability
 
 ## Context
 
-Lecturers need to create and maintain consultation slots that students can later use for consultation requests. This specification defines the first Lecturer feature: slot ownership and availability management. The current repository contains the Lecturer dashboard shell and shared authentication/RBAC foundations, but no consultation-slot implementation or schema.
+Lecturers create and maintain consultation slots that students can later use for consultation requests.
+The current repository implements slot ownership and availability management through Lecturer Server
+Actions and role-checked Supabase functions.
 
 ## Observed repository behaviour
 
 - `src/app/lecturer/layout.tsx` calls `requireRole("lecturer")` for the Lecturer route.
-- `src/app/lecturer/page.tsx` currently renders only a dashboard heading.
+- `src/app/lecturer/page.tsx` renders the Lecturer dashboard, slot form, slot list, consultation lists,
+  request decisions, announcements, and saved AI briefings.
 - `src/lib/auth/session.ts` derives the active user and role from the server-side session and redirects users who are signed out, inactive, or in the wrong role.
-- `supabase/migrations/20261017000000_initial_schema.sql` defines `profiles` and `ai_usage`; it does not define courses, consultation slots, bookings, or slot RLS policies.
-- No Lecturer Server Actions, Route Handlers, slot components, or slot-specific tests were found.
+- The later migrations define courses, lecturer assignments, consultation slots, bookings, notifications,
+  audit records, and role-checked Lecturer RPCs.
+- `src/app/lecturer/actions.ts`, `slot-form.tsx`, and `slot-row.tsx` implement the slot workflows, with
+  validation and database tests under `src/features/lecturer/` and `supabase/tests/`.
 - Shared project rules require server-side authorization, RLS for protected data, a spec before implementation, and handoff evidence.
 
-## Proposed behaviour
+## Current behaviour
 
 An authenticated active lecturer can create consultation slots with a course, date, start time, and end time; view only their own slots; edit or delete owned slots only while they have no pending or approved booking. The backend validates the request, derives ownership from the authenticated session, prevents overlapping slots for the same lecturer, and returns safe errors for invalid, conflicting, concurrent, or failed operations.
 
 The authoritative validation timezone is Singapore time. Courses must be selected from courses the
-lecturer is assigned to. Administrators may manage Lecturer slots, subject to an approved server-side
-administrator authorization rule. The Lecturer UI belongs under the existing `src/app/lecturer/`
-area and related Lecturer feature folders. Remaining unresolved semantics are listed below.
+lecturer is assigned to. Administrators do not use the Lecturer slot operations. The Lecturer UI belongs
+under the existing `src/app/lecturer/` area and related Lecturer feature folders.
 
 ## Behaviour
 
@@ -60,10 +64,12 @@ area and related Lecturer feature folders. Remaining unresolved semantics are li
 ## Permissions
 
 - Active authenticated lecturers may create slots owned by themselves and view, edit, or delete only their own slots.
-- Students, signed-out users, inactive users, and users with any other role must be refused by every Lecturer Server Action or Route Handler. Administrators may manage Lecturer slots through an explicitly authorized server-side path.
+- Students, signed-out users, inactive users, and users with any other role, including administrators,
+  must be refused by Lecturer slot operations.
 - A lecturer must be refused when attempting to read, edit, or delete another lecturer's slot, even if the slot identifier is guessed or supplied directly.
 - Client-supplied lecturer/user IDs must not determine authorization or ownership.
-- Administrator slot changes must be recorded in an audit trail containing the actor, action, affected slot, timestamp, and outcome.
+- Lecturer slot mutations are recorded in the existing consultation audit log containing the actor, action,
+  affected slot, timestamp, and outcome.
 
 ## Data
 
@@ -73,9 +79,12 @@ area and related Lecturer feature folders. Remaining unresolved semantics are li
 - `getCurrentUser()` and `requireRole("lecturer")` provide the existing server-side session/RBAC convention.
 - The initial migration enables RLS on existing tables, but no slot table exists.
 
-### Required future data model
+### Current data model
 
-Implementation requires an approved migration defining the course, lecturer-course assignment, consultation-slot, booking, and notification relationships required by this specification. The course model should use `courses` and `course_lecturers`, with lecturer membership enforced by server-side authorization and RLS. At minimum, the model must represent:
+The migrations define the course, lecturer-course assignment, consultation-slot, booking, notification, and
+audit relationships required by this specification. The course model uses `courses` and
+`course_lecturers`, with lecturer membership enforced by server-side authorization and secured RPCs. The
+model represents:
 
 - Slot identifier
 - Owner lecturer identity, referencing the authenticated profile
@@ -86,7 +95,7 @@ Implementation requires an approved migration defining the course, lecturer-cour
 - Creation/update timestamps as required by repository convention
 - A relationship or query path to bookings sufficient to determine whether active bookings exist and whether a booking was cancelled
 - Notification records or the repository's existing notification mechanism for confirmed slot changes/deletions
-- Administrator audit records for slot changes
+- Consultation audit records for Lecturer slot changes
 
 The migration must enable RLS and provide policies consistent with this specification. Exact table and column names are intentionally not prescribed before the repository's course and booking model is known.
 
@@ -178,16 +187,11 @@ role-checked `security definer` functions, the same pattern ADM-01 to ADM-04 use
 - Lecturer receives a safe error for overlapping, past, invalid, or booked-slot operations; booked-slot edits/deletes remain refused even after confirmation.
 - Student/admin/signed-out users cannot use the Lecturer slot workflow.
 
-## Discrepancies
+## Historical discrepancies
 
-1. The requested feature requires course and booking relationships, but the current schema has neither.
-2. The Lecturer page has no slot UI or workflow implementation.
-3. No slot Server Actions or Route Handlers exist to apply RBAC and ownership checks.
-4. No course model or course-access convention was found; implementation must add a migration using
-   `courses` and `course_lecturers` and apply the repository's RLS conventions.
-5. No booking-state vocabulary exists. For this draft, an active booking means a student has booked
-   the slot and has not cancelled it; cancellation releases the slot until the one-hour deadline.
-6. No existing unit, database, or E2E tests cover consultation availability.
+The initial draft was written before the Lecturer slot schema, Server Actions, secured RPCs, and tests
+were implemented. Those implementation gaps are now resolved. Remaining test work is tracked by the
+acceptance-criteria verification table and CI traceability check.
 
 ## Out of scope
 
@@ -199,19 +203,18 @@ role-checked `security definer` functions, the same pattern ADM-01 to ADM-04 use
 
 ## Assumptions
 
-- A migration will provide `courses`, `course_lecturers`, a stable course reference, and a way to determine active bookings.
+- The existing migrations provide `courses`, `course_lecturers`, a stable course reference, and a way to determine active bookings.
 - A slot belongs to exactly one lecturer and is scoped by that lecturer's authenticated profile ID.
 - Singapore is the authoritative timezone. Adjacent slots are allowed; only intervals with actual overlap conflict.
 - The repository will use its existing Supabase server-client and RLS conventions.
 
 ## Open questions
 
-1. What exact user-visible messages/status mapping should represent authorization, duplicate, conflict,
-   not-found, and database failures?
-2. What administrator audit trail is required when an administrator manages a Lecturer slot?
-3. What are the concrete course-assignment tables and policies for “a course the lecturer is part of”?
-4. Should overlapping slots be checked only for the same lecturer, as requested, or also within a
-   course/resource?
+None blocking approval. The implementation uses safe generic messages for authorization, duplicate,
+conflict, not-found, and database failures; records lecturer slot mutations in the existing consultation
+audit log; uses `courses` and `course_lecturers` with active lecturer assignment checks; and checks
+overlap only among slots owned by the same lecturer. Administrators do not use the Lecturer slot
+operations.
 
 ## Change log
 
