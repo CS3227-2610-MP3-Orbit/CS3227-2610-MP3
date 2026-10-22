@@ -1,9 +1,16 @@
 "use server";
 
+import { redirect } from "next/navigation";
+
 import {
   generateLecturerBriefing,
 } from "@/features/lecturer/ai-briefing";
 
 export async function submitLecturerBriefing(formData: FormData): Promise<void> {
-  await generateLecturerBriefing({ kind: "idle" }, formData);
+  const result = await generateLecturerBriefing({ kind: "idle" }, formData);
+  const params = new URLSearchParams({
+    briefing: result.kind,
+    ...(result.kind === "error" ? { message: result.message } : {}),
+  });
+  redirect(`/lecturer?${params.toString()}`);
 }

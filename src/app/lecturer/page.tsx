@@ -15,9 +15,14 @@ import { SlotForm } from "./slot-form";
 import { deleteSlotForForm } from "./actions";
 import { RequestCard } from "./request-card";
 
-export default async function LecturerDashboardPage() {
+export default async function LecturerDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ briefing?: string; message?: string }>;
+}) {
   const user = await requireRole("lecturer");
   const supabase = await createClient();
+  const params = await searchParams;
   const [{ data: courses }, { data: slots }, [result, history], requests, briefings] =
     await Promise.all([
       supabase.from("courses").select("id, code, name").order("code"),
@@ -40,6 +45,16 @@ export default async function LecturerDashboardPage() {
     <main className="space-y-8">
       <section className="space-y-5">
         <h1 className="text-2xl font-semibold">{greetingFor(new Date(), user.fullName)}</h1>
+        {params.briefing === "success" && (
+          <p role="status" className="rounded-lg border border-primary/50 p-3">
+            AI briefing generated and saved successfully.
+          </p>
+        )}
+        {params.briefing === "error" && (
+          <p role="alert" className="rounded-lg border border-destructive/50 p-3">
+            {params.message ?? "The AI briefing could not be generated."}
+          </p>
+        )}
         <StatTileRow>
           <StatTile
             label="Your consultation slots"
