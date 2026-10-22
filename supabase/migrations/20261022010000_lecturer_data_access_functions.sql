@@ -196,6 +196,10 @@ begin
   from public.bookings b
   where b.slot_id = p_slot_id and b.status in ('pending', 'approved');
 
+  if cardinality(v_students) > 0 and not coalesce(p_confirm, false) then
+    return jsonb_build_object('kind', 'confirmation_required');
+  end if;
+
   begin
     update public.consultation_slots
     set course_id = p_course_id, starts_at = p_starts_at, ends_at = p_ends_at, updated_at = now()

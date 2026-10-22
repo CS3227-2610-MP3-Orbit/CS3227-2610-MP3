@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -44,6 +44,15 @@ function courseDetails(slot: Slot) {
   return Array.isArray(slot.courses) ? slot.courses[0] : slot.courses;
 }
 
+function confirmSlotAction(event: FormEvent<HTMLFormElement>, message: string) {
+  if (!window.confirm(message)) {
+    event.preventDefault();
+    return;
+  }
+  const field = event.currentTarget.elements.namedItem("confirm");
+  if (field instanceof HTMLInputElement) field.value = "true";
+}
+
 export function SlotRow({ slot, courses }: { slot: Slot; courses: Course[] }) {
   const [editing, setEditing] = useState(false);
   const [updateState, updateAction, updatePending] = useActionState(
@@ -61,8 +70,19 @@ export function SlotRow({ slot, courses }: { slot: Slot; courses: Course[] }) {
   return (
     <li className="rounded-lg border bg-card p-3">
       {editing ? (
-        <form action={updateAction} className="grid gap-3" aria-label={`Edit slot ${slot.id}`}>
+        <form
+          action={updateAction}
+          onSubmit={(event) =>
+            confirmSlotAction(
+              event,
+              "Confirm this slot change? Students with bookings may be notified.",
+            )
+          }
+          className="grid gap-3"
+          aria-label={`Edit slot ${slot.id}`}
+        >
           <input type="hidden" name="slotId" value={slot.id} />
+          <input type="hidden" name="confirm" value="false" />
           <Label className="font-normal">
             Course
             <select name="courseId" required defaultValue={slot.course_id} className={inputClass}>
@@ -139,8 +159,17 @@ export function SlotRow({ slot, courses }: { slot: Slot; courses: Course[] }) {
             <Button type="button" variant="outline" onClick={() => setEditing(true)}>
               Edit
             </Button>
-            <form action={deleteAction}>
+            <form
+              action={deleteAction}
+              onSubmit={(event) =>
+                confirmSlotAction(
+                  event,
+                  "Delete this consultation slot? Students with bookings may be notified.",
+                )
+              }
+            >
               <input type="hidden" name="slotId" value={slot.id} />
+              <input type="hidden" name="confirm" value="false" />
               <Button variant="destructive" type="submit" disabled={deletePending}>
                 {deletePending ? "Deleting…" : "Delete"}
               </Button>

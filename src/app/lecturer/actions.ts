@@ -6,7 +6,7 @@ import { requireRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { slotInputSchema, validateSlotInput } from "@/features/lecturer/availability";
 
-export type ActionResult = { ok: boolean; message: string };
+export type ActionResult = { ok: boolean; message: string; confirmationRequired?: boolean };
 const idSchema = z.string().uuid();
 
 // LEC-01 "Data access path": every slot write goes through a role-checked database function,
@@ -72,13 +72,14 @@ export async function updateSlot(formData: FormData): Promise<ActionResult> {
     p_course_id: input.courseId,
     p_starts_at: validation.start.toISOString(),
     p_ends_at: validation.end.toISOString(),
-    p_confirm: true,
+    p_confirm: formData.get("confirm") === "true",
   });
   const kind = error ? "error" : resultKind(data);
   if (kind === "confirmation_required")
     return {
       ok: false,
       message: "This slot has active bookings. Confirm the change to notify students.",
+      confirmationRequired: true,
     };
   if (kind === "reserved")
     return {
@@ -101,13 +102,14 @@ export async function deleteSlot(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("lecturer_delete_slot", {
     p_slot_id: slotId.data,
-    p_confirm: true,
+    p_confirm: formData.get("confirm") === "true",
   });
   const kind = error ? "error" : resultKind(data);
   if (kind === "confirmation_required")
     return {
       ok: false,
       message: "This slot has active bookings. Confirm deletion to notify students.",
+      confirmationRequired: true,
     };
   if (kind === "not_found") return { ok: false, message: REFUSALS.not_found };
   if (kind !== "ok")
